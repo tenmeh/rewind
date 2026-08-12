@@ -1,0 +1,61 @@
+# Multi-platform R CMD check, run to CRAN standards.
+#
+# The matrix mirrors what CRAN itself builds on, so a green run here is
+# reasonable evidence a submission will clear the incoming queue.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+name: R-CMD-check
+
+permissions: read-all
+
+jobs:
+  R-CMD-check:
+    runs-on: ${{ matrix.config.os }}
+
+    name: ${{ matrix.config.os }} (${{ matrix.config.r }})
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {os: macos-latest,   r: 'release'}
+          - {os: windows-latest, r: 'release'}
+          - {os: ubuntu-latest,  r: 'devel', http-user-agent: 'release'}
+          - {os: ubuntu-latest,  r: 'release'}
+          - {os: ubuntu-latest,  r: 'oldrel-1'}
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+      # The "New submission" and unreachable-URL notes only fire against the
+      # live CRAN index and would red every run; the real CRAN incoming check
+      # happens at submission time via devtools::check(remote = TRUE).
+      _R_CHECK_CRAN_INCOMING_: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Without pandoc, R CMD check cannot validate README.md/NEWS.md and
+      # emits a NOTE - which, at error-on note, would fail the build.
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.config.r }}
+          http-user-agent: ${{ matrix.config.http-user-agent }}
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          # CRAN accepts no NOTEs, so neither does this gate.
+          error-on: '"note"'
+          upload-snapshots: true

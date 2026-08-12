@@ -59,7 +59,7 @@ RewindController <- R6::R6Class(
         # The browser has not finished applying our restore yet. Ignore
         # intermediate states until it has, or until we give up waiting.
         if (difftime(Sys.time(), private$.expecting_since, units = "secs") <
-            private$.expect_timeout) {
+              private$.expect_timeout) {
           private$log("ignoring intermediate state while restoring")
           return(invisible(FALSE))
         }
@@ -146,8 +146,16 @@ RewindController <- R6::R6Class(
       invisible(TRUE)
     },
 
-    pause  = function() { private$.paused <- TRUE;  invisible(TRUE) },
-    resume = function() { private$.paused <- FALSE; invisible(TRUE) },
+    pause = function() {
+      private$.paused <- TRUE
+      invisible(TRUE)
+    },
+
+    resume = function() {
+      private$.paused <- FALSE
+      invisible(TRUE)
+    },
+
     is_paused = function() private$.paused,
 
     # ---- client ----------------------------------------------------------

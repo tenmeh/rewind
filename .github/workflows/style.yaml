@@ -1,0 +1,50 @@
+# Manual formatter. Deliberately NOT automatic: lint.yaml is the gate that
+# decides pass/fail, and this is the tool that fixes what it complains about.
+#
+# It opens a pull request rather than pushing to main, because main requires a
+# PR and a linear history - a bot pushing directly would simply be rejected.
+on:
+  workflow_dispatch:
+
+name: style
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  style:
+    runs-on: ubuntu-latest
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::styler, any::roxygen2
+          needs: styler
+
+      - name: Style
+        run: styler::style_pkg()
+        shell: Rscript {0}
+
+      - name: Open a pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/styler
+          delete-branch: true
+          title: "chore(style): apply styler::style_pkg()"
+          body: |
+            Automated `styler::style_pkg()` run, triggered manually.
+
+            Review the diff before merging - styler reformats mechanically and
+            occasionally makes deliberate alignment worse. Confirm
+            `lintr::lint_package()` is still clean afterwards.
+          commit-message: "chore(style): apply styler::style_pkg()"

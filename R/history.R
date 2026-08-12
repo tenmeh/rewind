@@ -49,7 +49,7 @@ History <- R6::R6Class(
     # @return `TRUE` if an entry was added, `FALSE` if it was a no-op.
     push = function(state, label = NULL) {
       if (private$.index > 0L &&
-          states_equal(state, private$.entries[[private$.index]]$state)) {
+            states_equal(state, private$.entries[[private$.index]]$state)) {
         return(invisible(FALSE))
       }
 
