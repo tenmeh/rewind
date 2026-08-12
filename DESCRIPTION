@@ -6,7 +6,7 @@ Authors@R: person(
     given = "Tanmay",
     family = "Chanda",
     email = "jadevenom2430@gmail.com",
-    role = c("aut", "cre"))
+    role = c("aut", "cre", "cph"))
 Description: Adds a user-facing undo and redo history to 'Shiny'
     applications. Application state, comprising registered inputs and
     optionally server-side reactive values, is snapshotted as the user

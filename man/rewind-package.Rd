@@ -17,11 +17,11 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Tanmay Chanda \email{jadevenom2430@gmail.com}
+\strong{Maintainer}: Tanmay Chanda \email{jadevenom2430@gmail.com} [copyright holder]
 
 Authors:
 \itemize{
-  \item Tanmay Chanda \email{jadevenom2430@gmail.com}
+  \item Tanmay Chanda \email{jadevenom2430@gmail.com} [copyright holder]
 }
 
 }
