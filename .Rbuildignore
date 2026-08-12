@@ -8,3 +8,6 @@
 ^\.claude$
 ^\.Rcheck$
 ^.*\.tar\.gz$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$

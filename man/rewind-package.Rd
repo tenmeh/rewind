@@ -12,6 +12,7 @@ Adds a user-facing undo and redo history to 'Shiny' applications. Application st
 Useful links:
 \itemize{
   \item \url{https://github.com/tenmeh/rewind}
+  \item \url{https://tenmeh.github.io/rewind/}
   \item Report bugs at \url{https://github.com/tenmeh/rewind/issues}
 }
 

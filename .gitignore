@@ -10,5 +10,8 @@
 *.Rcheck/
 ..Rcheck/
 
+# pkgdown (the site is built and deployed by CI, never committed)
+docs/
+
 # Tooling
 .claude/
