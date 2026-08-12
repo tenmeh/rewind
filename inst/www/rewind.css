@@ -1,0 +1,107 @@
+/* rewind — undo/redo for Shiny applications */
+
+.rewind-buttons {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+.rewind-buttons .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+}
+
+.rewind-buttons .btn[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.rewind-buttons .rewind-label {
+  font-size: 0.95em;
+}
+
+/* --- history rail ------------------------------------------------------- */
+
+.rewind-rail-wrap {
+  font-size: 0.875rem;
+}
+
+.rewind-rail-title {
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+  opacity: 0.75;
+}
+
+.rewind-rail {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 0.75rem;
+  overflow-y: auto;
+  border-left: 2px solid rgba(128, 128, 128, 0.25);
+}
+
+.rewind-step {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.3rem 0.45rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.rewind-step:hover,
+.rewind-step:focus {
+  background: rgba(128, 128, 128, 0.12);
+  opacity: 1;
+  outline: none;
+}
+
+.rewind-step:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+
+/* The dot on the rail. */
+.rewind-step::before {
+  content: "";
+  position: absolute;
+  left: -1.16rem;
+  top: 0.75em;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: rgba(128, 128, 128, 0.45);
+}
+
+.rewind-step.is-current {
+  opacity: 1;
+  font-weight: 600;
+  background: rgba(128, 128, 128, 0.16);
+}
+
+.rewind-step.is-current::before {
+  background: currentColor;
+  box-shadow: 0 0 0 3px rgba(128, 128, 128, 0.2);
+}
+
+.rewind-step-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rewind-step-time {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8em;
+  opacity: 0.6;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .rewind-step {
+    transition: background 120ms ease, opacity 120ms ease;
+  }
+}

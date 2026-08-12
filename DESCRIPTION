@@ -1,0 +1,33 @@
+Package: rewind
+Type: Package
+Title: Undo and Redo for 'Shiny' Applications
+Version: 0.1.0
+Authors@R: person(
+    given = "Tanmay",
+    family = "Chanda",
+    email = "jadevenom2430@gmail.com",
+    role = c("aut", "cre"))
+Description: Adds a user-facing undo and redo history to 'Shiny'
+    applications. Application state, comprising registered inputs and
+    optionally server-side reactive values, is snapshotted as the user
+    interacts with the application. Users may then step backwards and
+    forwards through that history with the keyboard, with buttons, or by
+    scrubbing a visual history rail. Rapid successive changes, such as
+    dragging a slider, are coalesced into a single history entry, and
+    related changes may be grouped explicitly into semantic steps.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Depends: R (>= 4.1.0)
+Imports:
+    htmltools,
+    R6,
+    shiny (>= 1.7.0),
+    utils
+Suggests:
+    bslib,
+    testthat (>= 3.0.0)
+URL: https://github.com/tenmeh/rewind
+BugReports: https://github.com/tenmeh/rewind/issues
+Config/testthat/edition: 3
+Roxygen: list(markdown = TRUE)
+Config/roxygen2/version: 8.0.0
