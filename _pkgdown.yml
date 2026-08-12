@@ -1,0 +1,69 @@
+url: https://tenmeh.github.io/rewind/
+
+template:
+  bootstrap: 5
+  light-switch: true
+  default-theme: light
+  bslib:
+    primary: "#3b6ea5"
+    border-radius: "0.6rem"
+    headings-font-weight: 600
+
+home:
+  title: Undo and redo for Shiny
+  description: >
+    Adds a user-facing undo and redo history to Shiny applications, with
+    coalescing so a slider drag is one step rather than forty.
+
+navbar:
+  structure:
+    left: [reference, news]
+    right: [search, lightswitch, github]
+  components:
+    reference:
+      text: Reference
+      href: reference/index.html
+    news:
+      text: Changelog
+      href: news/index.html
+    github:
+      icon: fa-github fa-lg
+      href: https://github.com/tenmeh/rewind
+      aria-label: GitHub repository
+
+reference:
+  - title: Getting started
+    desc: >
+      The one call that turns undo on, and the one that extends it to state
+      Shiny cannot see for itself.
+    contents:
+      - rewind_enable
+      - rewind_track
+
+  - title: Controlling what becomes a step
+    desc: >
+      Time-based coalescing handles the common case. These are for when the
+      boundary between steps is a decision rather than a pause.
+    contents:
+      - rewind_step
+      - rewind_pause
+
+  - title: Driving the history yourself
+    desc: >
+      The keyboard shortcuts and the bundled buttons cover most needs; these
+      let you wire the history to your own controls, and read its state
+      reactively.
+    contents:
+      - rewind_undo
+      - rewind_history
+
+  - title: User interface
+    desc: Drop-in controls, and the asset bundle behind them.
+    contents:
+      - rewind_buttons
+      - rewind_ui
+      - rewind_dependency
+
+  - title: Package
+    contents:
+      - rewind-package
