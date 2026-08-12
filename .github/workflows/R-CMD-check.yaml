@@ -39,10 +39,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Without pandoc, R CMD check cannot validate README.md/NEWS.md and
-      # emits a NOTE - which, at error-on note, would fail the build.
-      - uses: r-lib/actions/setup-pandoc@v2
-
+      # No setup-pandoc here on purpose. The only NOTE pandoc suppresses is the
+      # README.md/NEWS.md validation one, and that check is part of the CRAN
+      # incoming set disabled above - so with _R_CHECK_CRAN_INCOMING_ false the
+      # check is Status OK without pandoc present. Installing it anyway meant
+      # every run depended on a GitHub release download that returns 503s often
+      # enough to red the build for reasons that have nothing to do with the
+      # package. The package ships no vignettes, so nothing else needs it.
       - uses: r-lib/actions/setup-r@v2
         with:
           r-version: ${{ matrix.config.r }}
