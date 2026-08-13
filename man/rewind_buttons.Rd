@@ -8,7 +8,9 @@ rewind_buttons(undo_label = "Undo", redo_label = "Redo", class = NULL)
 }
 \arguments{
 \item{undo_label, redo_label}{Button labels. Pass \code{NULL} for an icon-only
-button.}
+button; the accessible name (\code{aria-label}) is set to "Undo"/"Redo" in
+that case, so the button remains announced correctly without visible
+text.}
 
 \item{class}{Extra CSS classes applied to the containing element. The
 buttons themselves carry \verb{btn btn-default}, so Bootstrap themes apply.}
