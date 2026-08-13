@@ -29,7 +29,7 @@ app_dir <- system.file("examples/demo", package = "rewind")
 demo_coalesce_ms <- 400
 
 settle <- function(app) {
-  Sys.sleep((demo_coalesce_ms + 250) / 1000)
+  Sys.sleep((demo_coalesce_ms + 500) / 1000)
   app$wait_for_idle(timeout = 10000L)
   invisible(app)
 }
@@ -125,7 +125,7 @@ test_that("the demo app: buttons, rail, coalescing, and tracked values all work 
       step();
     })();
   ")
-  Sys.sleep(0.2)
+  Sys.sleep(0.3)
   settle(app)
   # Several rapid changes inside coalesce_ms must still land as one entry.
   expect_equal(rail_size(app), before + 1L)

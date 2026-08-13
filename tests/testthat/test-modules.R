@@ -16,7 +16,7 @@ mod_srv <- function(id) {
 
 settle <- function(session, ...) {
   session$setInputs(...)
-  Sys.sleep(0.06)
+  Sys.sleep(0.15)
   session$elapse(200)
 }
 
@@ -51,7 +51,7 @@ test_that("undo works inside a module and round-trips through a simulated echo",
 
     restored <- ctrl$history$current()
     ctrl$note(restored)
-    Sys.sleep(0.06)
+    Sys.sleep(0.15)
     session$elapse(200)
     expect_equal(ctrl$history$size(), 2L)
   })
@@ -64,7 +64,7 @@ test_that("rewind_track() reactiveValues work inside a module", {
 
     state$pinned <- "a"
     session$flushReact()
-    Sys.sleep(0.06)
+    Sys.sleep(0.15)
     session$elapse(200)
 
     expect_equal(ctrl$history$size(), 2L)

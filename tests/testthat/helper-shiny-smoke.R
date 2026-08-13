@@ -71,17 +71,43 @@ expect_no_shiny_errors <- function(app) {
 #' Start an AppDriver for `app_dir`, skipping (not failing) if a headless
 #' Chrome is not available in this environment.
 #'
+#' On Linux, Chrome writes its own internal scratch files (singleton-instance
+#' lock files named like `com.google.Chrome.*`) into `TMPDIR`, inherited from
+#' the R process that spawns it as a child. R CMD check runs tests with
+#' `TMPDIR` pointed inside the exact directory it later scans for leftover
+#' files ("detritus in the temp directory"), so those files get flagged as a
+#' NOTE - nothing to do with rewind, purely Chrome's own housekeeping
+#' outliving the scan. `TMPDIR`/`TMP`/`TEMP` are redirected to a fresh
+#' directory outside that tree for the duration of the browser session to
+#' keep them out of the way; child processes read these at their own
+#' startup, so already-running processes are unaffected when they revert.
+#'
 #' @param app_dir Path to the Shiny app.
 #' @param ... Passed on to `shinytest2::AppDriver$new()`.
 #' @return A live `AppDriver`.
 local_app_driver <- function(app_dir, ...) {
   testthat::skip_if_not_installed("shinytest2")
+
+  chrome_tmp <- file.path(dirname(tempdir()), paste0("rewind-chromote-", Sys.getpid()))
+  dir.create(chrome_tmp, showWarnings = FALSE)
+  withr::local_envvar(
+    list(TMPDIR = chrome_tmp, TMP = chrome_tmp, TEMP = chrome_tmp),
+    .local_envir = parent.frame()
+  )
+
   app <- tryCatch(
     shinytest2::AppDriver$new(app_dir, ...),
     error = function(e) {
+      unlink(chrome_tmp, recursive = TRUE)
       testthat::skip(paste("Could not start a headless browser:", conditionMessage(e)))
     }
   )
-  withr::defer(app$stop(), envir = parent.frame())
+  withr::defer(
+    {
+      app$stop()
+      unlink(chrome_tmp, recursive = TRUE)
+    },
+    envir = parent.frame()
+  )
   app
 }

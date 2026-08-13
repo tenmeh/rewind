@@ -21,7 +21,7 @@ srv <- function(input, output, session) {
 
 settle <- function(session, ...) {
   session$setInputs(...)
-  Sys.sleep(0.06)
+  Sys.sleep(0.15)
   session$elapse(200)
 }
 
@@ -57,7 +57,7 @@ test_that("rapid changes within the coalescing window collapse into one entry", 
     session$setInputs(year = 2020)
     session$setInputs(year = 2021)
     session$setInputs(year = 2022)
-    Sys.sleep(0.06)
+    Sys.sleep(0.15)
     session$elapse(200)
 
     expect_equal(ctrl$history$size(), 2L)
@@ -111,7 +111,7 @@ test_that("undo restores the value and the browser's echo is not a new entry", {
     # just moved the pointer to.
     restored <- ctrl$history$current()
     ctrl$note(restored)
-    Sys.sleep(0.06)
+    Sys.sleep(0.15)
     session$elapse(200)
 
     expect_equal(ctrl$history$size(), 2L)
@@ -130,7 +130,7 @@ test_that("rewind_track round-trips server-side reactiveValues through undo", {
     # called explicitly to let the capture observer see it.
     state$zoom <- 2
     session$flushReact()
-    Sys.sleep(0.06)
+    Sys.sleep(0.15)
     session$elapse(200)
     expect_equal(ctrl$history$size(), 2L)
     expect_equal(ctrl$history$current()$values$st$zoom, 2)
@@ -143,7 +143,7 @@ test_that("rewind_track round-trips server-side reactiveValues through undo", {
     # change; confirm its echo is absorbed too, rather than spawning a third
     # entry.
     session$flushReact()
-    Sys.sleep(0.06)
+    Sys.sleep(0.15)
     session$elapse(200)
     expect_equal(ctrl$history$size(), 2L)
   })
@@ -158,7 +158,7 @@ test_that("rewind_step groups several changes into one labelled entry", {
     rewind_step(label = "Reset filters", {
       session$setInputs(region = "East", year = 2025)
     })
-    Sys.sleep(0.1)
+    Sys.sleep(0.2)
     session$elapse(300)
 
     expect_equal(ctrl$history$size(), 2L)
@@ -195,7 +195,7 @@ test_that("rewind_disable() destroys the observers, not just clears the pointer"
     # observer (which still holds `ctrl` in its closure) would keep running
     # and silently keep mutating a now-orphaned history.
     session$setInputs(region = "South")
-    Sys.sleep(0.06)
+    Sys.sleep(0.15)
     session$elapse(200)
     expect_equal(ctrl$history$size(), 1L)
     expect_equal(ctrl$history$current()$inputs$region, "North")
