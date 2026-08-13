@@ -71,16 +71,24 @@ expect_no_shiny_errors <- function(app) {
 #' Start an AppDriver for `app_dir`, skipping (not failing) if a headless
 #' Chrome is not available in this environment.
 #'
-#' On Linux, Chrome writes its own internal scratch files (singleton-instance
-#' lock files named like `com.google.Chrome.*`) into `TMPDIR`, inherited from
-#' the R process that spawns it as a child. R CMD check runs tests with
-#' `TMPDIR` pointed inside the exact directory it later scans for leftover
-#' files ("detritus in the temp directory"), so those files get flagged as a
-#' NOTE - nothing to do with rewind, purely Chrome's own housekeeping
-#' outliving the scan. `TMPDIR`/`TMP`/`TEMP` are redirected to a fresh
-#' directory outside that tree for the duration of the browser session to
-#' keep them out of the way; child processes read these at their own
-#' startup, so already-running processes are unaffected when they revert.
+#' Chrome writes its own internal scratch files as a side effect of running
+#' (on Linux, singleton-instance lock files named like `com.google.Chrome.*`;
+#' its user-data-dir profile everywhere) into `TMPDIR`/`TMP`/`TEMP`, inherited
+#' from the R process that spawns it as a child. R CMD check runs tests with
+#' those pointed inside the exact tree it later scans for leftover files
+#' ("detritus in the temp directory"), so anything Chrome leaves behind gets
+#' flagged as a NOTE - nothing to do with rewind, purely Chrome's own
+#' housekeeping outliving the scan.
+#'
+#' A sibling of `tempdir()` is not a safe fix: it landed inside the scanned
+#' tree on every platform this was tried on. `tools::R_user_dir()` and
+#' `Sys.getenv("RUNNER_TEMP")` (GitHub Actions' own scratch directory for
+#' exactly this purpose) are unrelated to `tempdir()`'s hierarchy entirely,
+#' so redirecting Chrome there for the duration of the browser session
+#' avoids the overlap regardless of how any given platform nests its temp
+#' directories. Whether cleanup afterwards fully succeeds no longer matters
+#' for the check - it is attempted on a best-effort basis regardless, since
+#' Chrome's process may not release every file handle the instant it exits.
 #'
 #' @param app_dir Path to the Shiny app.
 #' @param ... Passed on to `shinytest2::AppDriver$new()`.
@@ -88,8 +96,10 @@ expect_no_shiny_errors <- function(app) {
 local_app_driver <- function(app_dir, ...) {
   testthat::skip_if_not_installed("shinytest2")
 
-  chrome_tmp <- file.path(dirname(tempdir()), paste0("rewind-chromote-", Sys.getpid()))
-  dir.create(chrome_tmp, showWarnings = FALSE)
+  runner_tmp <- Sys.getenv("RUNNER_TEMP", unset = "")
+  chrome_root <- if (nzchar(runner_tmp)) runner_tmp else tools::R_user_dir("rewind", "cache")
+  chrome_tmp <- file.path(chrome_root, paste0("chromote-", Sys.getpid()))
+  dir.create(chrome_tmp, showWarnings = FALSE, recursive = TRUE)
   withr::local_envvar(
     list(TMPDIR = chrome_tmp, TMP = chrome_tmp, TEMP = chrome_tmp),
     .local_envir = parent.frame()
