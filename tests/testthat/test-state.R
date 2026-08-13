@@ -38,6 +38,27 @@ test_that("nested value groups compare recursively", {
   expect_false(rewind:::states_equal(a, c_))
 })
 
+test_that("is_file_input_value matches fileInput()'s documented shape", {
+  file_val <- data.frame(
+    name = "a.csv", size = 12, type = "text/csv",
+    datapath = "/tmp/0x1.csv", stringsAsFactors = FALSE
+  )
+  expect_true(rewind:::is_file_input_value(file_val))
+
+  multi <- data.frame(
+    name = c("a.csv", "b.csv"), size = c(12, 34),
+    type = c("text/csv", "text/csv"),
+    datapath = c("/tmp/0x1.csv", "/tmp/0x2.csv"), stringsAsFactors = FALSE
+  )
+  expect_true(rewind:::is_file_input_value(multi))
+
+  expect_false(rewind:::is_file_input_value(data.frame(x = 1)))
+  expect_false(rewind:::is_file_input_value(list(name = "a", size = 1)))
+  expect_false(rewind:::is_file_input_value(1))
+  expect_false(rewind:::is_file_input_value(NULL))
+  expect_false(rewind:::is_file_input_value("a.csv"))
+})
+
 test_that("flatten_state namespaces tracked values", {
   s <- list(inputs = list(x = 1), values = list(rv = list(sel = "a", zoom = 2)))
   flat <- rewind:::flatten_state(s)

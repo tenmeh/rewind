@@ -35,6 +35,11 @@ jobs:
       # live CRAN index and would red every run; the real CRAN incoming check
       # happens at submission time via devtools::check(remote = TRUE).
       _R_CHECK_CRAN_INCOMING_: false
+      # The shinytest2 AppDriver smoke test skips itself on CRAN
+      # (skip_on_cran()), since CRAN's check machines are not guaranteed to
+      # have a headless Chrome available. This is what makes it actually run
+      # here instead of being skipped everywhere.
+      NOT_CRAN: true
 
     steps:
       - uses: actions/checkout@v4

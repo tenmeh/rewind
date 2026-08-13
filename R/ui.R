@@ -26,7 +26,9 @@ rewind_dependency <- function() {
 #' server.
 #'
 #' @param undo_label,redo_label Button labels. Pass `NULL` for an icon-only
-#'   button.
+#'   button; the accessible name (`aria-label`) is set to "Undo"/"Redo" in
+#'   that case, so the button remains announced correctly without visible
+#'   text.
 #' @param class Extra CSS classes applied to the containing element. The
 #'   buttons themselves carry `btn btn-default`, so Bootstrap themes apply.
 #'
@@ -46,6 +48,7 @@ rewind_buttons <- function(undo_label = "Undo",
         class = "btn btn-default rewind-undo",
         disabled = NA,
         title = "Undo (Ctrl+Z)",
+        `aria-label` = undo_label %||% "Undo",
         htmltools::HTML("&#8630;"),
         if (!is.null(undo_label)) htmltools::tags$span(
           class = "rewind-label", undo_label
@@ -56,6 +59,7 @@ rewind_buttons <- function(undo_label = "Undo",
         class = "btn btn-default rewind-redo",
         disabled = NA,
         title = "Redo (Ctrl+Shift+Z)",
+        `aria-label` = redo_label %||% "Redo",
         htmltools::HTML("&#8631;"),
         if (!is.null(redo_label)) htmltools::tags$span(
           class = "rewind-label", redo_label

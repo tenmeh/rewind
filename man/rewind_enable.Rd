@@ -47,10 +47,13 @@ with \code{\link[=rewind_track]{rewind_track()}}) as the user interacts with the
 them step back and forth through that history.
 }
 \section{What gets captured}{
-By default every input in the session is captured, with three exclusions
+By default every input in the session is captured, with four exclusions
 that are never useful to restore:
 \itemize{
 \item action buttons and links, whose value is a click counter;
+\item \code{\link[shiny:fileInput]{shiny::fileInput()}}, whose value points at a server-side temp file that
+Shiny deletes on the next upload, so restoring an old snapshot would
+point at a path that no longer exists;
 \item inputs whose names begin with \code{rewind_}, which belong to this package;
 \item inputs whose names begin with \code{.}, which are internal to Shiny.
 }
@@ -64,6 +67,15 @@ user thinks of as filters, not every stray input on the page.
 Changes that arrive within \code{coalesce_ms} of one another become a single
 history entry, so dragging a slider produces one undo step rather than
 forty. Use \code{\link[=rewind_step]{rewind_step()}} when you need to group changes explicitly.
+}
+
+\section{Modules}{
+Calling this inside a \code{moduleServer()} works: inputs are captured under
+their module-local names (the same names \verb{input$} sees inside that
+module) and re-qualified with \code{session$ns()} on restore. \code{session$userData}
+is shared across modules, so calling \code{rewind_enable()} more than once
+reuses the same session-wide history rather than creating an independent
+one per module - call it once, wherever in the module tree suits the app.
 }
 
 \examples{

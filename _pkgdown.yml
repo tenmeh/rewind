@@ -23,9 +23,12 @@ home:
 
 navbar:
   structure:
-    left: [reference, news]
+    left: [intro, reference, news]
     right: [search, lightswitch, github]
   components:
+    intro:
+      text: Get Started
+      href: articles/get-started.html
     reference:
       text: Reference
       href: reference/index.html
@@ -49,10 +52,12 @@ reference:
   - title: Controlling what becomes a step
     desc: >
       Time-based coalescing handles the common case. These are for when the
-      boundary between steps is a decision rather than a pause.
+      boundary between steps is a decision rather than a pause, or when
+      capture needs to stop altogether.
     contents:
       - rewind_step
       - rewind_pause
+      - rewind_disable
 
   - title: Driving the history yourself
     desc: >
