@@ -2,7 +2,7 @@
 % Please edit documentation in R/ui.R
 \name{rewind_ui}
 \alias{rewind_ui}
-\title{A scrubable history rail}
+\title{A scrubbable history rail}
 \usage{
 rewind_ui(label = "History", max_height = "20rem", class = NULL)
 }
