@@ -153,6 +153,9 @@ makes this robust rather than merely usually-correct.
 
 - **Action buttons and links.** Their value is a click counter; restoring one
   either does nothing or spuriously re-fires whatever observes it.
+- **`fileInput()`.** Its value points at a server-side temp file that Shiny
+  deletes on the next upload, so restoring an old snapshot would point at a
+  path that no longer exists.
 - **Inputs beginning with `.`**, which are Shiny's own.
 - **Inputs beginning with `rewind_`**, which are this package's.
 
@@ -164,9 +167,13 @@ Being honest about the edges, since they will bite you before the docs do:
   doubles. Comparison is tolerant of this, but an input holding an exotic
   R object will not survive. Keep exotic state in `reactiveValues` and track it
   there, where no serialisation happens.
-- **Modules.** `rewind_enable()` is designed to be called once in the top-level
-  server function. Input IDs are namespaced through `session$ns()` on restore,
-  but calling it inside a module is untested.
+- **Modules.** Calling `rewind_enable()` inside a `moduleServer()` works and is
+  tested: inputs are captured under their module-local names (the same names
+  `input$` sees inside that module) and re-qualified with `session$ns()` on
+  restore. `session$userData` is shared across modules, so calling it in more
+  than one module reuses the same session-wide history rather than creating
+  independent ones per module - call it once, wherever in the module tree
+  suits your app.
 - **Undo does not undo side effects.** If an observer wrote to a database when
   the filter changed, stepping back changes the filter, not the database.
 - **`renderUI`-generated inputs** are captured once they exist, but undoing to
@@ -182,6 +189,7 @@ Being honest about the edges, since they will bite you before the docs do:
 | `rewind_undo()`, `rewind_redo()`, `rewind_jump()` | Drive the history yourself |
 | `rewind_clear()` | Drop everything but the present |
 | `rewind_pause()`, `rewind_resume()` | Suspend capture around programmatic churn |
+| `rewind_disable()` | Fully tear down capture for the session |
 | `rewind_history()`, `rewind_can_undo()`, `rewind_can_redo()` | Inspect, reactively |
 | `rewind_buttons()`, `rewind_ui()` | Drop-in UI |
 

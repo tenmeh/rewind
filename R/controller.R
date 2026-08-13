@@ -34,6 +34,32 @@ RewindController <- R6::R6Class(
     # Lets [rewind_history()] and friends be used inside `render*()`.
     version_dep = function() private$.version(),
 
+    # @description
+    # Register the observers [rewind_enable()] created, so [rewind_disable()]
+    # has something to destroy. Called once, immediately after they are
+    # created.
+    # @param observers A list of observer-like objects, each with a
+    #   `destroy()` method (as returned by `shiny::observe()` /
+    #   `shiny::observeEvent()`).
+    set_observers = function(observers) {
+      private$.observers <- observers
+      invisible(self)
+    },
+
+    # @description
+    # Stop capturing and tear down every observer this controller's session
+    # owns, then tell the browser the buttons and rail are gone. The history
+    # itself is left intact in case the caller wants to read it after
+    # disabling; only the reactive wiring and client state are torn down.
+    destroy = function() {
+      for (obs in private$.observers) obs$destroy()
+      private$.observers <- list()
+      private$.session$sendCustomMessage("rewind:history", list(
+        entries = list(), canUndo = FALSE, canRedo = FALSE, index = 0
+      ))
+      invisible(self)
+    },
+
     # ---- capture ---------------------------------------------------------
 
     # Read the current state of everything we track. Must be called from a
@@ -199,6 +225,7 @@ RewindController <- R6::R6Class(
     .paused         = FALSE,
     .tick           = NULL,
     .version        = NULL,
+    .observers      = list(),
 
     log = function(msg) {
       if (private$.verbose) message("[rewind] ", msg)
@@ -220,6 +247,12 @@ RewindController <- R6::R6Class(
         function(v) inherits(v, "shinyActionButtonValue"),
         logical(1)
       )]
+
+      # fileInput()'s value is a data frame pointing at a server-side temp
+      # file (see ?shiny::fileInput). That file is cleaned up on the next
+      # upload, so restoring an old snapshot would point input$file at a path
+      # that no longer exists.
+      keep <- keep[!vapply(all[keep], is_file_input_value, logical(1))]
 
       if (!is.null(private$.inputs)) keep <- intersect(keep, private$.inputs)
       if (!is.null(private$.exclude)) keep <- setdiff(keep, private$.exclude)
@@ -277,6 +310,20 @@ RewindController <- R6::R6Class(
     }
   )
 )
+
+
+#' Is this the value of a `fileInput()`?
+#'
+#' `fileInput()`'s server-side value is a data frame with a fixed, documented
+#' set of columns (`name`, `size`, `type`, `datapath`; see [shiny::fileInput])
+#' rather than a distinguishing S3 class, so that shape is what is matched on.
+#'
+#' @param x A candidate input value.
+#' @keywords internal
+#' @noRd
+is_file_input_value <- function(x) {
+  is.data.frame(x) && identical(names(x), c("name", "size", "type", "datapath"))
+}
 
 
 #' Flatten a snapshot into a single named list

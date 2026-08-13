@@ -14,6 +14,13 @@ test_that("the public API refuses to run before rewind_enable()", {
   expect_error(rewind_track(shiny::reactiveValues(), session = fake), "not enabled")
 })
 
+test_that("rewind_disable requires a session but tolerates a missing controller", {
+  expect_error(rewind_disable(session = NULL), "No Shiny session")
+
+  fake <- list(userData = new.env(parent = emptyenv()))
+  expect_false(rewind_disable(session = fake))
+})
+
 test_that("rewind_enable validates its arguments", {
   fake <- list(userData = new.env(parent = emptyenv()))
 
@@ -55,6 +62,16 @@ test_that("UI helpers build tags and carry the dependency", {
 test_that("labels are omitted when NULL", {
   bare <- as.character(rewind_buttons(undo_label = NULL, redo_label = NULL))
   expect_false(grepl("rewind-label", bare))
+})
+
+test_that("icon-only buttons still carry an accessible name", {
+  bare <- as.character(rewind_buttons(undo_label = NULL, redo_label = NULL))
+  expect_match(bare, 'aria-label="Undo"')
+  expect_match(bare, 'aria-label="Redo"')
+
+  custom <- as.character(rewind_buttons(undo_label = "Back", redo_label = "Forward"))
+  expect_match(custom, 'aria-label="Back"')
+  expect_match(custom, 'aria-label="Forward"')
 })
 
 test_that("the html dependency points at installed assets", {

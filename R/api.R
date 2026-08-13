@@ -7,10 +7,13 @@
 #'
 #' # What gets captured
 #'
-#' By default every input in the session is captured, with three exclusions
+#' By default every input in the session is captured, with four exclusions
 #' that are never useful to restore:
 #'
 #' * action buttons and links, whose value is a click counter;
+#' * [shiny::fileInput()], whose value points at a server-side temp file that
+#'   Shiny deletes on the next upload, so restoring an old snapshot would
+#'   point at a path that no longer exists;
 #' * inputs whose names begin with `rewind_`, which belong to this package;
 #' * inputs whose names begin with `.`, which are internal to Shiny.
 #'
@@ -23,6 +26,15 @@
 #' Changes that arrive within `coalesce_ms` of one another become a single
 #' history entry, so dragging a slider produces one undo step rather than
 #' forty. Use [rewind_step()] when you need to group changes explicitly.
+#'
+#' # Modules
+#'
+#' Calling this inside a `moduleServer()` works: inputs are captured under
+#' their module-local names (the same names `input$` sees inside that
+#' module) and re-qualified with `session$ns()` on restore. `session$userData`
+#' is shared across modules, so calling `rewind_enable()` more than once
+#' reuses the same session-wide history rather than creating an independent
+#' one per module - call it once, wherever in the module tree suits the app.
 #'
 #' @param session The Shiny session. Defaults to the current one.
 #' @param inputs Character vector of input IDs to capture, or `NULL` (the
@@ -121,12 +133,22 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
   )
 
   # Capture: reads every tracked reactive, so it re-runs on any change.
-  shiny::observe({
-    ctrl$note(ctrl$snapshot())
+  #
+  # The snapshot is taken as its own statement, not inlined as
+  # ctrl$note(ctrl$snapshot()). note()'s first line returns early while
+  # paused, and R's lazy argument evaluation means an inlined snapshot()
+  # would then never actually run - so the observer would never read the
+  # tracked reactives it depends on, and would permanently stop re-running on
+  # future input changes (pausing before the very first flush is enough to
+  # trigger this). Reading the snapshot first forces those reads
+  # unconditionally, keeping the dependency alive across pause/resume.
+  obs_capture <- shiny::observe({
+    state <- ctrl$snapshot()
+    ctrl$note(state)
   }, domain = session)
 
   # Coalesce: waits for the dust to settle, then commits one entry.
-  shiny::observe({
+  obs_coalesce <- shiny::observe({
     ctrl$tick_dep()
     wait <- ctrl$time_to_flush()
     if (!is.finite(wait)) return(NULL)
@@ -137,12 +159,14 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
     }
   }, domain = session)
 
-  shiny::observeEvent(session$input$rewind_undo, ctrl$undo(),
-                      ignoreInit = TRUE, domain = session)
-  shiny::observeEvent(session$input$rewind_redo, ctrl$redo(),
-                      ignoreInit = TRUE, domain = session)
-  shiny::observeEvent(session$input$rewind_jump, ctrl$jump(session$input$rewind_jump$index),
-                      ignoreInit = TRUE, domain = session)
+  obs_undo <- shiny::observeEvent(session$input$rewind_undo, ctrl$undo(),
+                                  ignoreInit = TRUE, domain = session)
+  obs_redo <- shiny::observeEvent(session$input$rewind_redo, ctrl$redo(),
+                                  ignoreInit = TRUE, domain = session)
+  obs_jump <- shiny::observeEvent(session$input$rewind_jump, ctrl$jump(session$input$rewind_jump$index),
+                                  ignoreInit = TRUE, domain = session)
+
+  ctrl$set_observers(list(obs_capture, obs_coalesce, obs_undo, obs_redo, obs_jump))
 
   invisible(ctrl)
 }
@@ -376,4 +400,45 @@ rewind_pause <- function(session = shiny::getDefaultReactiveDomain()) {
 #' @export
 rewind_resume <- function(session = shiny::getDefaultReactiveDomain()) {
   require_controller(session)$resume()
+}
+
+
+#' Fully disable undo/redo for a session
+#'
+#' Unlike [rewind_pause()], which suspends capture temporarily and expects
+#' a matching [rewind_resume()], this tears down what [rewind_enable()] set
+#' up entirely: every observer it created is destroyed, the buttons and
+#' history rail in the browser go back to their empty, disabled state, and
+#' the session goes back to not having rewind enabled at all. Call
+#' [rewind_enable()] again to start a fresh history.
+#'
+#' Useful when undo/redo should be available only conditionally - for
+#' example, gated behind a user role that is not known until partway through
+#' the session.
+#'
+#' @param session The Shiny session. Defaults to the current one.
+#'
+#' @return `TRUE` if a session was disabled, `FALSE` if rewind was not
+#'   enabled to begin with, invisibly.
+#'
+#' @examples
+#' if (interactive()) {
+#'   library(shiny)
+#'
+#'   server <- function(input, output, session) {
+#'     rewind_enable()
+#'     observeEvent(input$readonly_mode, {
+#'       if (input$readonly_mode) rewind_disable()
+#'     })
+#'   }
+#' }
+#' @export
+rewind_disable <- function(session = shiny::getDefaultReactiveDomain()) {
+  session <- require_session(session)
+  ctrl <- get_controller(session)
+  if (is.null(ctrl)) return(invisible(FALSE))
+
+  ctrl$destroy()
+  session$userData$.rewind <- NULL
+  invisible(TRUE)
 }
