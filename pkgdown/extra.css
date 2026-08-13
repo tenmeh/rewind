@@ -1,0 +1,259 @@
+/* rewind documentation.
+ *
+ * Adapted from the tanmai site's stylesheet. Poppins is self-hosted rather
+ * than pulled from Google's CDN: the site then makes no third-party request,
+ * and works offline once loaded. The accent is rewind's own blue rather than
+ * tanmai's green, since the palette should identify this package.
+ */
+
+/* ---- Poppins, Latin subset, SIL OFL 1.1 (see fonts/OFL.txt) ------------- */
+
+@font-face {
+  font-family: "Poppins";
+  src: url("fonts/poppins-300.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Poppins";
+  src: url("fonts/poppins-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Poppins";
+  src: url("fonts/poppins-500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Poppins";
+  src: url("fonts/poppins-600.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Poppins";
+  src: url("fonts/poppins-700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---- tokens ------------------------------------------------------------ */
+
+:root {
+  --rw-accent: #3b6ea5;
+  --rw-accent-soft: rgba(59, 110, 165, 0.12);
+  --rw-line: rgba(16, 22, 32, 0.09);
+  --rw-ink-2: #495260;
+}
+[data-bs-theme="dark"] {
+  --rw-accent: #74a9d8;
+  --rw-accent-soft: rgba(116, 169, 216, 0.16);
+  --rw-line: rgba(255, 255, 255, 0.1);
+  --rw-ink-2: #a3adba;
+}
+
+body {
+  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  letter-spacing: -0.003em;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.navbar-brand {
+  font-family: "Poppins", sans-serif;
+  letter-spacing: -0.018em;
+}
+
+/* Poppins runs large and round; the default pkgdown scale looks shouty in it. */
+h1 {
+  font-size: 2.1rem;
+  font-weight: 650;
+}
+h2 {
+  font-size: 1.45rem;
+  font-weight: 600;
+  margin-top: 2.2rem;
+}
+h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+code,
+pre,
+kbd {
+  font-family: "JetBrains Mono", "SF Mono", "Cascadia Mono", Consolas, monospace;
+  font-size: 0.86em;
+}
+
+/* ---- navbar ------------------------------------------------------------ */
+
+.navbar {
+  border-bottom: 1px solid var(--rw-line);
+  box-shadow: 0 1px 3px rgba(16, 22, 32, 0.04);
+}
+.navbar-brand {
+  font-weight: 650;
+}
+.navbar .nav-link {
+  font-weight: 500;
+}
+.navbar .nav-link:hover,
+.navbar .nav-link:focus {
+  color: var(--rw-accent) !important;
+}
+.navbar .nav-item {
+  margin-right: 0.35rem;
+}
+
+/* Dropdowns: pkgdown's default sits flush against the bar and reads as part of
+   the page rather than as a menu. */
+.dropdown-menu {
+  border: 1px solid var(--rw-line);
+  border-radius: 0.6rem;
+  box-shadow: 0 10px 28px rgba(16, 22, 32, 0.14);
+  padding: 0.35rem;
+  margin-top: 0.4rem;
+  min-width: 15rem;
+}
+.dropdown-item {
+  border-radius: 0.4rem;
+  padding: 0.45rem 0.7rem;
+  white-space: normal;
+}
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background-color: var(--rw-accent-soft);
+  color: inherit;
+}
+.dropdown-item.active,
+.dropdown-item:active {
+  background-color: var(--rw-accent);
+  color: #fff;
+}
+[data-bs-theme="dark"] .dropdown-menu {
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+
+/* ---- content ----------------------------------------------------------- */
+
+main a,
+.page-header a {
+  text-decoration-color: var(--rw-accent-soft);
+  text-underline-offset: 0.15em;
+}
+main a:hover {
+  color: var(--rw-accent);
+}
+
+blockquote {
+  border-left: 3px solid var(--rw-accent);
+  background: var(--rw-accent-soft);
+  padding: 0.75rem 1rem;
+  border-radius: 0 0.5rem 0.5rem 0;
+  color: inherit;
+}
+
+/* The README's API summary is a table, and the reference pages put argument
+   descriptions in one, so tables should look deliberate rather than like
+   leftover Bootstrap. */
+main table {
+  border: 1px solid var(--rw-line);
+  border-radius: 0.6rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  font-size: 0.94em;
+}
+main table th {
+  background: var(--rw-accent-soft);
+  font-weight: 600;
+  border-bottom: 1px solid var(--rw-line) !important;
+}
+main table td,
+main table th {
+  padding: 0.5rem 0.75rem;
+}
+
+main img {
+  max-width: 100%;
+  border: 1px solid var(--rw-line);
+  border-radius: 0.6rem;
+}
+/* ...but not inline badges, which are images too. */
+main p > img[src*="badge"],
+main p > a > img {
+  border: 0;
+  border-radius: 0;
+}
+
+/* ---- reference index --------------------------------------------------- */
+
+.template-reference-index h2 {
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--rw-line);
+}
+.ref-index .icon img {
+  border: 0;
+}
+/* The one-line description beside each function is the useful part of this
+   page; the default styling makes it an afterthought. */
+.ref-desc {
+  color: var(--rw-ink-2);
+}
+
+/* ---- sidebar / footer -------------------------------------------------- */
+
+.page-sidebar .sidebar-section {
+  border-top: 1px solid var(--rw-line);
+  padding-top: 0.9rem;
+  margin-top: 0.9rem;
+}
+.page-sidebar h2 {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--rw-ink-2);
+  margin-top: 0;
+}
+
+footer {
+  border-top: 1px solid var(--rw-line);
+  margin-top: 3rem;
+  padding-top: 1.25rem;
+  font-size: 0.9em;
+  color: var(--rw-ink-2);
+}
+
+/* ---- search ------------------------------------------------------------ */
+
+#search-input {
+  border-radius: 0.5rem;
+  border: 1px solid var(--rw-line);
+}
+#search-input:focus {
+  border-color: var(--rw-accent);
+  box-shadow: 0 0 0 3px var(--rw-accent-soft);
+}
+
+@media (max-width: 767.98px) {
+  h1 {
+    font-size: 1.7rem;
+  }
+  main table {
+    display: block;
+    overflow-x: auto;
+  }
+}
