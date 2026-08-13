@@ -1,0 +1,11 @@
+Poppins is Copyright 2020 The Poppins Project Authors
+(https://github.com/itfoundry/Poppins), licensed under the SIL Open Font
+License, Version 1.1.
+
+The Latin subset is redistributed here in WOFF2 form so the documentation site
+serves its own fonts rather than calling out to a third party on every visit.
+The OFL permits this: the font is bundled with, but not sold as part of, other
+software, and it is not renamed.
+
+Full licence text: https://openfontlicense.org
+Upstream: https://fonts.google.com/specimen/Poppins
