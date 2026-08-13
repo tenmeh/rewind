@@ -107,7 +107,7 @@ same time.
 
 ## A visual history rail
 
-`rewind_ui()` renders the stack as a scrubable list. Click any step to jump
+`rewind_ui()` renders the stack as a scrubbable list. Click any step to jump
 straight to it. Labels come from what actually changed, so the rail reads
 "region, year" rather than "state 7":
 

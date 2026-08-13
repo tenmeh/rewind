@@ -1,7 +1,7 @@
 Package: rewind
 Type: Package
 Title: Undo and Redo for 'Shiny' Applications
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: person(
     given = "Tanmay",
     family = "Chanda",
@@ -9,7 +9,7 @@ Authors@R: person(
     role = c("aut", "cre", "cph"))
 Description: Adds a user-facing undo and redo history to 'Shiny'
     applications. Application state, comprising registered inputs and
-    optionally server-side reactive values, is snapshotted as the user
+    optionally server-side reactive values, is captured as the user
     interacts with the application. Users may then step backwards and
     forwards through that history with the keyboard, with buttons, or by
     scrubbing a visual history rail. Rapid successive changes, such as
@@ -17,6 +17,7 @@ Description: Adds a user-facing undo and redo history to 'Shiny'
     related changes may be grouped explicitly into semantic steps.
 License: MIT + file LICENSE
 Encoding: UTF-8
+Language: en-GB
 Depends: R (>= 4.1.0)
 Imports:
     htmltools,

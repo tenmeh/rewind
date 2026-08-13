@@ -1,4 +1,4 @@
-# rewind (development version)
+# rewind 0.2.0
 
 * `rewind_disable()` fully tears down a session's undo/redo history:
   destroys every observer `rewind_enable()` created and resets the buttons
@@ -27,7 +27,7 @@ First release.
 * `rewind_track()` extends the history to server-side `reactiveValues`.
 * `rewind_step()` groups several changes into a single labelled entry.
 * `rewind_buttons()` and `rewind_ui()` provide drop-in undo/redo controls and a
-  scrubable history rail.
+  scrubbable history rail.
 * Keyboard shortcuts (`Ctrl`/`Cmd` + `Z`, `Ctrl`/`Cmd` + `Shift` + `Z`,
   `Ctrl` + `Y`) that stand down while the user is typing in a text field.
 * Restore goes through each input's registered Shiny binding rather than a

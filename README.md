@@ -90,7 +90,7 @@ rewind_track(state, fields = c("pinned", "zoom"))
 
 ### A history rail
 
-`rewind_ui()` renders the stack as a scrubable list. Click any step to jump
+`rewind_ui()` renders the stack as a scrubbable list. Click any step to jump
 straight to it. Labels are generated from what actually changed, so it reads
 `region, year` rather than `state 7`.
 

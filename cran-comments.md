@@ -2,11 +2,13 @@
 
 ## Submission
 
-This is a new release.
+This is a new submission. The package has not been on CRAN before; the
+version is 0.2.0 because 0.1.0 was released publicly on GitHub only, and
+the code has changed materially since.
 
 ## Test environments
 
-* local Windows 11, R 4.6.1
+* local Windows 11, R 4.6.1, with `_R_CHECK_CRAN_INCOMING_REMOTE_=TRUE`
 * GitHub Actions: macOS (release), Windows (release),
   Ubuntu (devel, release, oldrel-1)
 
@@ -28,5 +30,11 @@ example to run. The functions with no session requirement
 (`rewind_buttons()`, `rewind_ui()`, `rewind_dependency()`) have examples that
 execute during check.
 
-The package writes nothing to the filesystem, opens no connections, and starts
-no processes. All state is held per Shiny session in `session$userData`.
+One test (`tests/testthat/test-app-smoke.R`) drives the bundled demo app in a
+headless browser via shinytest2. It calls `skip_on_cran()` and additionally
+skips itself, rather than failing, if a browser cannot be started, so it does
+not run on CRAN's check machines and does not require Chrome to be present.
+
+The package writes nothing to the filesystem outside of `tempdir()`, opens no
+connections, and starts no processes. All state is held per Shiny session in
+`session$userData`.

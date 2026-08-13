@@ -71,7 +71,7 @@ rewind_buttons <- function(undo_label = "Undo",
 }
 
 
-#' A scrubable history rail
+#' A scrubbable history rail
 #'
 #' Renders the history as a vertical list of steps, newest last, with the
 #' current position highlighted. Clicking a step jumps straight to it. The rail
