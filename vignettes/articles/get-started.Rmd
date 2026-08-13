@@ -1,0 +1,157 @@
+---
+title: "Get started with rewind"
+output: rmarkdown::html_document
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>",
+  eval     = FALSE # Shiny apps can't run inside a static document.
+)
+```
+
+Shiny has bookmarking, which captures a state you can link to. It has
+`reactlog`, which lets *you* replay a session while debugging. It has no
+undo - the thing every user already expects from every other application
+they use. `rewind` adds it in one line.
+
+## Install
+
+`rewind` isn't on CRAN yet. Install the development version from GitHub:
+
+```{r}
+# install.packages("remotes")
+remotes::install_github("tenmeh/rewind")
+```
+
+## The one-line version
+
+```{r}
+library(shiny)
+library(rewind)
+
+ui <- fluidPage(
+  rewind_buttons(),
+  selectInput("region", "Region", c("North", "South", "East", "West")),
+  sliderInput("year", "Year", 2018, 2026, 2024),
+  plotOutput("plot")
+)
+
+server <- function(input, output, session) {
+  rewind_enable() # <- that's it
+
+  output$plot <- renderPlot(plot_for(input$region, input$year))
+}
+
+shinyApp(ui, server)
+```
+
+`Ctrl+Z` now walks backwards through the user's filter choices. `Ctrl+Shift+Z`
+walks forwards. Every input in the session is captured automatically, with a
+short list of exclusions (action buttons, `fileInput()`, and rewind's own
+inputs) covered in `?rewind_enable`.
+
+## Dragging a slider is one undo step, not forty
+
+`sliderInput` fires an input change on every pixel of a drag. Without
+coalescing, undoing that drag would take forty presses of `Ctrl+Z` to get
+back to where you started. `rewind` groups changes that land within
+`coalesce_ms` (400ms by default) of one another into a single history entry:
+
+```{r}
+rewind_enable(coalesce_ms = 600) # group more aggressively
+```
+
+Raise `coalesce_ms` for widgets that fire very rapidly, or lower it if you
+want finer-grained undo steps.
+
+## Grouping several changes into one step
+
+A "reset filters" button that changes four inputs at once deserves one undo
+entry, with a label a human wrote - not four entries, and not an
+auto-generated label like "4 values changed". Wrap the block in
+`rewind_step()`:
+
+```{r}
+observeEvent(input$reset, {
+  rewind_step(label = "Reset filters", {
+    updateSelectInput(session, "region", selected = "All")
+    updateSliderInput(session, "year", value = c(2018, 2026))
+    updateCheckboxInput(session, "active_only", value = FALSE)
+  })
+})
+```
+
+## Undoing state that isn't an input
+
+Anything you keep in `reactiveValues()` - a pinned-items list, a running
+selection, a computed cache you want to be undoable - is invisible to
+`rewind` until you register it with `rewind_track()`:
+
+```{r}
+server <- function(input, output, session) {
+  rewind_enable()
+
+  state <- reactiveValues(pinned = character(0))
+  rewind_track(state, fields = "pinned")
+
+  observeEvent(input$pin, {
+    state$pinned <- c(state$pinned, input$item)
+  })
+}
+```
+
+Undo now rolls the pin list back along with whatever inputs changed at the
+same time.
+
+## A visual history rail
+
+`rewind_ui()` renders the stack as a scrubable list. Click any step to jump
+straight to it. Labels come from what actually changed, so the rail reads
+"region, year" rather than "state 7":
+
+```{r}
+ui <- fluidPage(
+  sidebarLayout(
+    sidebarPanel(rewind_ui()),
+    mainPanel(plotOutput("plot"))
+  )
+)
+```
+
+## Modules
+
+`rewind_enable()` works inside a `moduleServer()`. Inputs are captured under
+their module-local names and re-qualified with `session$ns()` on restore, the
+same as any other Shiny input handling inside a module. `session$userData` is
+shared across modules, so call `rewind_enable()` once, wherever in the module
+tree suits the app - calling it again elsewhere reuses the same session-wide
+history rather than creating a second, independent one.
+
+## Suspending capture around programmatic changes
+
+Restoring a saved session or applying a URL bookmark on startup shouldn't
+itself become an undo step the user can step back into. Wrap that code in
+`rewind_pause()` / `rewind_resume()`:
+
+```{r}
+server <- function(input, output, session) {
+  rewind_enable()
+
+  rewind_pause()
+  # ... apply a saved bookmark here ...
+  rewind_resume()
+}
+```
+
+For turning undo/redo off entirely partway through a session - for example,
+gated behind a user role decided after the session starts - see
+`rewind_disable()`.
+
+## What's next
+
+- `?rewind_enable` for the full list of what is and isn't captured by default
+- The [README](https://github.com/tenmeh/rewind#readme) for the mechanics of
+  how restore works and the echo problem it has to avoid
+- The [reference index](../reference/index.html) for every exported function
