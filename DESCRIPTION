@@ -25,7 +25,9 @@ Imports:
     utils
 Suggests:
     bslib,
-    testthat (>= 3.0.0)
+    shinytest2,
+    testthat (>= 3.0.0),
+    withr
 URL: https://github.com/tenmeh/rewind, https://tenmeh.github.io/rewind/
 BugReports: https://github.com/tenmeh/rewind/issues
 Config/testthat/edition: 3
