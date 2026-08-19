@@ -1,35 +1,37 @@
 # rewind 0.2.0
 
-* `rewind_disable()` fully tears down a session's undo/redo history:
-  destroys every observer `rewind_enable()` created and resets the buttons
-  and rail in the browser. `rewind_pause()`/`rewind_resume()` remain for
-  temporarily suspending capture; this is for turning it off for good,
-  mid-session.
-* `fileInput()` is now excluded from capture. Its value points at a
-  server-side temp file that Shiny deletes on the next upload, so restoring
-  an old snapshot would have pointed at a path that no longer exists.
-* Fixed: calling `rewind_pause()` before the very first reactive flush (for
-  example, immediately after `rewind_enable()`, before any input has
-  changed) permanently stopped capture from ever starting, even after a
-  matching `rewind_resume()`.
+* `rewind_disable()` stops undo and redo for a session completely. It
+  destroys each observer that `rewind_enable()` made. It also clears the
+  buttons and the rail in the browser. Use `rewind_pause()` and
+  `rewind_resume()` to stop capture for a short time. Use
+  `rewind_disable()` to stop it for the rest of the session.
+* `rewind` no longer captures `fileInput()`. Its value points to a
+  temporary file on the server. Shiny deletes that file at the next upload.
+  An old snapshot would thus point to a file that does not exist.
+* Fixed: a call to `rewind_pause()` before the first reactive flush stopped
+  capture for the rest of the session. A later `rewind_resume()` did not
+  start it again. This occurred, for example, with a call to
+  `rewind_pause()` immediately after `rewind_enable()`, before any input
+  changed.
 * `rewind_buttons(undo_label = NULL, redo_label = NULL)` now sets
-  `aria-label` on the resulting icon-only buttons, so they have a correct
-  accessible name.
-* `rewind_enable()` inside a `moduleServer()` is now confirmed to work and
-  is covered by tests; previously documented as untested.
+  `aria-label` on the buttons. A button with an icon and no text thus has a
+  correct accessible name.
+* `rewind_enable()` inside a `moduleServer()` now has tests. The documents
+  said "untested" before.
 
 # rewind 0.1.0
 
 First release.
 
-* `rewind_enable()` captures session inputs into an undo/redo history, with
-  time-based coalescing so a slider drag is one step rather than forty.
-* `rewind_track()` extends the history to server-side `reactiveValues`.
-* `rewind_step()` groups several changes into a single labelled entry.
-* `rewind_buttons()` and `rewind_ui()` provide drop-in undo/redo controls and a
-  scrubbable history rail.
-* Keyboard shortcuts (`Ctrl`/`Cmd` + `Z`, `Ctrl`/`Cmd` + `Shift` + `Z`,
-  `Ctrl` + `Y`) that stand down while the user is typing in a text field.
-* Restore goes through each input's registered Shiny binding rather than a
-  hard-coded `update*Input()` table, so third-party inputs work without
-  special-casing.
+* `rewind_enable()` captures the session inputs into an undo and redo
+  history. It groups the changes by time. One movement of a slider is thus
+  one step, and not forty steps.
+* `rewind_track()` adds the `reactiveValues` on the server to the history.
+* `rewind_step()` puts several changes into one entry with a label.
+* `rewind_buttons()` and `rewind_ui()` give ready-made undo and redo
+  controls, and a scrubbable history rail.
+* Keyboard shortcuts: `Ctrl`/`Cmd` + `Z`, `Ctrl`/`Cmd` + `Shift` + `Z`, and
+  `Ctrl` + `Y`. They do nothing while the user types in a text field.
+* A restore uses the Shiny binding of each input. It does not use a fixed
+  `update*Input()` table. Inputs from other packages thus operate with no
+  extra code.

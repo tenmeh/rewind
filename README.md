@@ -190,15 +190,15 @@ These are the limits of the package. Read them before you start:
 
 | Function | Purpose |
 |---|---|
-| `rewind_enable()` | Turn on capture for the session |
+| `rewind_enable()` | Start capture for the session |
 | `rewind_track()` | Add `reactiveValues` fields to the history |
-| `rewind_step()` | Group changes into one labelled entry |
-| `rewind_undo()`, `rewind_redo()`, `rewind_jump()` | Drive the history yourself |
-| `rewind_clear()` | Drop everything but the present |
-| `rewind_pause()`, `rewind_resume()` | Suspend capture around programmatic churn |
-| `rewind_disable()` | Fully tear down capture for the session |
-| `rewind_history()`, `rewind_can_undo()`, `rewind_can_redo()` | Inspect, reactively |
-| `rewind_buttons()`, `rewind_ui()` | Drop-in UI |
+| `rewind_step()` | Put several changes into one entry with a label |
+| `rewind_undo()`, `rewind_redo()`, `rewind_jump()` | Move through the history from your own controls |
+| `rewind_clear()` | Remove each entry but the current one |
+| `rewind_pause()`, `rewind_resume()` | Stop capture around changes that your code makes |
+| `rewind_disable()` | Stop capture for the session completely |
+| `rewind_history()`, `rewind_can_undo()`, `rewind_can_redo()` | Read the history in a reactive context |
+| `rewind_buttons()`, `rewind_ui()` | Ready-made controls |
 
 ## License
 
