@@ -7,24 +7,30 @@
 rewind_disable(session = shiny::getDefaultReactiveDomain())
 }
 \arguments{
-\item{session}{The Shiny session. Defaults to the current one.}
+\item{session}{The Shiny session. The default is the current session.}
 }
 \value{
-\code{TRUE} if a session was disabled, \code{FALSE} if rewind was not
-enabled to begin with, invisibly.
+\code{TRUE} if the function disabled a session. \code{FALSE} if \code{rewind}
+was not enabled. The function returns the value invisibly.
 }
 \description{
-Unlike \code{\link[=rewind_pause]{rewind_pause()}}, which suspends capture temporarily and expects
-a matching \code{\link[=rewind_resume]{rewind_resume()}}, this tears down what \code{\link[=rewind_enable]{rewind_enable()}} set
-up entirely: every observer it created is destroyed, the buttons and
-history rail in the browser go back to their empty, disabled state, and
-the session goes back to not having rewind enabled at all. Call
-\code{\link[=rewind_enable]{rewind_enable()}} again to start a fresh history.
+\code{\link[=rewind_pause]{rewind_pause()}} stops capture for a short time. It needs a
+\code{\link[=rewind_resume]{rewind_resume()}} call after it. This function is different. It removes
+everything that \code{\link[=rewind_enable]{rewind_enable()}} made:
 }
 \details{
-Useful when undo/redo should be available only conditionally - for
-example, gated behind a user role that is not known until partway through
-the session.
+\itemize{
+\item it destroys each observer;
+\item it sets the buttons and the history rail in the browser to their empty,
+disabled condition;
+\item it returns the session to the condition before \code{rewind_enable()}.
+}
+
+Call \code{\link[=rewind_enable]{rewind_enable()}} again to start a new history.
+
+Use this function when the application permits undo and redo only in some
+conditions. An example is a user role that the application does not know
+at the start of the session.
 }
 \examples{
 if (interactive()) {

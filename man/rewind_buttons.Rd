@@ -7,21 +7,22 @@
 rewind_buttons(undo_label = "Undo", redo_label = "Redo", class = NULL)
 }
 \arguments{
-\item{undo_label, redo_label}{Button labels. Pass \code{NULL} for an icon-only
-button; the accessible name (\code{aria-label}) is set to "Undo"/"Redo" in
-that case, so the button remains announced correctly without visible
-text.}
+\item{undo_label, redo_label}{The button labels. Use \code{NULL} for a button
+with an icon only. The function then sets the accessible name
+(\code{aria-label}) to "Undo" or "Redo". A screen reader can thus announce
+the button correctly when it has no text.}
 
-\item{class}{Extra CSS classes applied to the containing element. The
-buttons themselves carry \verb{btn btn-default}, so Bootstrap themes apply.}
+\item{class}{More CSS classes for the container element. The buttons
+have the classes \verb{btn btn-default}. Bootstrap themes thus apply to
+them.}
 }
 \value{
 A \code{\link[htmltools:tagList]{htmltools::tagList()}}.
 }
 \description{
-A pair of buttons wired to the session's history. They enable and disable
-themselves as the history allows, so there is nothing to observe on the
-server.
+These two buttons connect to the history of the session. They become
+enabled and disabled as the history permits. You thus do not have to
+write an observer on the server.
 }
 \examples{
 rewind_buttons()

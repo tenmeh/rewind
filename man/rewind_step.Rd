@@ -12,29 +12,30 @@ rewind_step(
 )
 }
 \arguments{
-\item{expr}{Code to run. Typically a series of \code{update*Input()} calls or
-assignments to tracked reactive values.}
+\item{expr}{The code to run. This is usually a set of \code{update*Input()}
+calls, or assignments to tracked reactive values.}
 
-\item{label}{Label for the resulting history entry.}
+\item{label}{The label for the history entry.}
 
-\item{hold_ms}{How long to keep the entry open, in milliseconds. Defaults to
-twice the session's \code{coalesce_ms}. Raise it if a slow round trip is
-splitting your step in two.}
+\item{hold_ms}{The time in milliseconds to keep the entry open. The
+default is two times the \code{coalesce_ms} of the session. Increase it if a
+slow browser makes two steps from one block.}
 
-\item{session}{The Shiny session. Defaults to the current one.}
+\item{session}{The Shiny session. The default is the current session.}
 }
 \value{
 The value of \code{expr}, invisibly.
 }
 \description{
-Wraps a block of code so that everything it changes becomes a single history
-entry with a label of your choosing. Use it for the "reset all filters" or
-"apply preset" buttons, where the default time-based coalescing would either
-split the change into several steps or label it unhelpfully.
+This function holds a block of code. Every change in that block becomes
+one history entry with the label that you give. Use it for buttons such
+as "reset all filters" or "apply preset". For these buttons, the standard
+time-based grouping can make several steps, or it can give a label that
+does not help the user.
 }
 \details{
-The block itself runs immediately; the resulting history entry is written
-once the changes have made their round trip through the browser.
+The block runs immediately. \code{rewind} writes the history entry after the
+changes return from the browser.
 }
 \examples{
 if (interactive()) {

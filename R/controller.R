@@ -1,8 +1,8 @@
 #' The per-session rewind controller
 #'
-#' Owns the history stack, the capture/coalesce machinery, and the restore
-#' path. One instance is created per Shiny session by [rewind_enable()] and
-#' stashed in `session$userData$.rewind`.
+#' This class owns the history stack, the capture and grouping code, and the
+#' restore code. [rewind_enable()] makes one instance for each Shiny session.
+#' It keeps that instance in `session$userData$.rewind`.
 #'
 #' @keywords internal
 #' @noRd
@@ -30,27 +30,28 @@ RewindController <- R6::R6Class(
       invisible(self)
     },
 
-    # A reactive dependency that invalidates whenever the history changes.
-    # Lets [rewind_history()] and friends be used inside `render*()`.
+    # A reactive dependency. It becomes invalid at each change of the
+    # history. [rewind_history()] and the related functions can thus run
+    # inside `render*()`.
     version_dep = function() private$.version(),
 
     # @description
-    # Register the observers [rewind_enable()] created, so [rewind_disable()]
-    # has something to destroy. Called once, immediately after they are
-    # created.
-    # @param observers A list of observer-like objects, each with a
-    #   `destroy()` method (as returned by `shiny::observe()` /
-    #   `shiny::observeEvent()`).
+    # Keep the observers that [rewind_enable()] made. [rewind_disable()]
+    # then has objects to destroy. Call this once, immediately after you
+    # make the observers.
+    # @param observers A list of observer objects. Each object must have a
+    #   `destroy()` method. `shiny::observe()` and `shiny::observeEvent()`
+    #   give such objects.
     set_observers = function(observers) {
       private$.observers <- observers
       invisible(self)
     },
 
     # @description
-    # Stop capturing and tear down every observer this controller's session
-    # owns, then tell the browser the buttons and rail are gone. The history
-    # itself is left intact in case the caller wants to read it after
-    # disabling; only the reactive wiring and client state are torn down.
+    # Stop capture and destroy each observer of this session. Then tell the
+    # browser to clear the buttons and the rail. This method keeps the
+    # history. The caller can thus read it after the method runs. The method
+    # removes only the reactive connections and the data in the client.
     destroy = function() {
       for (obs in private$.observers) obs$destroy()
       private$.observers <- list()
@@ -62,8 +63,8 @@ RewindController <- R6::R6Class(
 
     # ---- capture ---------------------------------------------------------
 
-    # Read the current state of everything we track. Must be called from a
-    # reactive context; that is what makes capture automatic.
+    # Read the current state of each tracked value. Call this from a
+    # reactive context. This is what makes the capture automatic.
     snapshot = function() {
       list(
         inputs = private$snapshot_inputs(),
@@ -71,19 +72,19 @@ RewindController <- R6::R6Class(
       )
     },
 
-    # Record a candidate state and (re)start the coalescing window.
+    # Keep a possible new state. Then start the grouping period again.
     note = function(state) {
       if (private$.paused) return(invisible(FALSE))
 
-      # Is this the echo of a restore we just performed?
+      # Is this the echo of the restore that we just did?
       if (!is.null(private$.expecting)) {
         if (states_equal(state, private$.expecting)) {
           private$.expecting <- NULL
           private$log("echo absorbed")
           return(invisible(FALSE))
         }
-        # The browser has not finished applying our restore yet. Ignore
-        # intermediate states until it has, or until we give up waiting.
+        # The browser has not applied all of the restore yet. Ignore the
+        # states between, until it is complete or the time limit ends.
         if (difftime(Sys.time(), private$.expecting_since, units = "secs") <
               private$.expect_timeout) {
           private$log("ignoring intermediate state while restoring")
@@ -103,18 +104,18 @@ RewindController <- R6::R6Class(
       invisible(TRUE)
     },
 
-    # Milliseconds until the pending state should be committed. `Inf` when
-    # nothing is pending.
+    # The time in milliseconds until `rewind` must write the state that
+    # waits. The result is `Inf` when no state waits.
     time_to_flush = function() {
       if (is.null(private$.pending)) return(Inf)
       ms <- as.numeric(difftime(private$.deadline, Sys.time(), units = "secs")) * 1000
       max(ms, 0)
     },
 
-    # Reactive dependency used by the flush observer.
+    # The reactive dependency that the flush observer uses.
     tick_dep = function() private$.tick(),
 
-    # Commit the pending state to the history stack.
+    # Write the state that waits to the history stack.
     flush = function() {
       state <- private$.pending
       private$.pending <- NULL
@@ -151,13 +152,13 @@ RewindController <- R6::R6Class(
 
     # ---- transactions ----------------------------------------------------
 
-    # Label the next commit and widen the coalescing window so that every
-    # change produced by a block of code lands in one history entry.
+    # Set the label for the next write, and increase the grouping period.
+    # Each change from a block of code thus goes into one history entry.
     open_step = function(label = NULL, hold_ms = NULL) {
       if (is.null(hold_ms)) hold_ms <- private$.coalesce_ms * 2
       private$.pending_label <- label
       private$.hold_until <- Sys.time() + hold_ms / 1000
-      # If a state is already pending, extend its deadline too.
+      # If a state waits already, increase its time limit also.
       if (!is.null(private$.pending) && private$.hold_until > private$.deadline) {
         private$.deadline <- private$.hold_until
         private$.tick(shiny::isolate(private$.tick()) + 1L)
@@ -186,8 +187,8 @@ RewindController <- R6::R6Class(
 
     # ---- client ----------------------------------------------------------
 
-    # Push the current history to the browser so the rail and the button
-    # enabled/disabled states stay in sync.
+    # Send the current history to the browser. The rail and the buttons thus
+    # show the correct condition.
     sync_client = function() {
       private$.version(shiny::isolate(private$.version()) + 1L)
       entries <- self$history$entries()
@@ -239,19 +240,19 @@ RewindController <- R6::R6Class(
       keep <- keep[!startsWith(keep, "rewind_")]
       keep <- keep[!startsWith(keep, ".")]
 
-      # Action buttons carry a monotonically increasing click count. Restoring
-      # one would either do nothing or spuriously re-fire downstream observers,
-      # so they are never part of the state.
+      # The value of an action button is a click counter. The counter only
+      # increases. A restore of that value does nothing, or it starts the
+      # observers again by mistake. The state thus never holds these values.
       keep <- keep[!vapply(
         all[keep],
         function(v) inherits(v, "shinyActionButtonValue"),
         logical(1)
       )]
 
-      # fileInput()'s value is a data frame pointing at a server-side temp
-      # file (see ?shiny::fileInput). That file is cleaned up on the next
-      # upload, so restoring an old snapshot would point input$file at a path
-      # that no longer exists.
+      # The value of a fileInput() is a data frame. It points to a temporary
+      # file on the server (refer to ?shiny::fileInput). Shiny deletes that
+      # file at the next upload. An old snapshot would thus set input$file to
+      # a path that does not exist.
       keep <- keep[!vapply(all[keep], is_file_input_value, logical(1))]
 
       if (!is.null(private$.inputs)) keep <- intersect(keep, private$.inputs)
@@ -283,7 +284,7 @@ RewindController <- R6::R6Class(
       private$.expecting <- state
       private$.expecting_since <- Sys.time()
 
-      # Server-side reactive values can be assigned directly.
+      # You can set the reactive values on the server directly.
       for (id in names(state$values)) {
         spec <- private$.tracked[[id]]
         if (is.null(spec)) next
@@ -293,9 +294,10 @@ RewindController <- R6::R6Class(
         }
       }
 
-      # Inputs have to go through the browser, because the widget itself owns
-      # the visible value. The client applies them via each input's registered
-      # Shiny binding, which works for third-party inputs too.
+      # Inputs must go through the browser. The widget owns the value that
+      # the user sees. The client applies each value with the Shiny binding
+      # of that input. This method also works for inputs from other
+      # packages.
       payload <- state$inputs
       if (length(payload)) {
         names(payload) <- vapply(names(payload), private$.session$ns, character(1))
@@ -314,11 +316,12 @@ RewindController <- R6::R6Class(
 
 #' Is this the value of a `fileInput()`?
 #'
-#' `fileInput()`'s server-side value is a data frame with a fixed, documented
-#' set of columns (`name`, `size`, `type`, `datapath`; see [shiny::fileInput])
-#' rather than a distinguishing S3 class, so that shape is what is matched on.
+#' The server value of a `fileInput()` is a data frame. It has a fixed set
+#' of columns: `name`, `size`, `type` and `datapath` (refer to
+#' [shiny::fileInput]). It has no special S3 class. This function thus
+#' compares the column names.
 #'
-#' @param x A candidate input value.
+#' @param x An input value to examine.
 #' @keywords internal
 #' @noRd
 is_file_input_value <- function(x) {
@@ -328,8 +331,9 @@ is_file_input_value <- function(x) {
 
 #' Flatten a snapshot into a single named list
 #'
-#' Used for labelling: `list(inputs = list(a = 1), values = list(rv = list(b = 2)))`
-#' becomes `list(a = 1, "rv$b" = 2)`.
+#' `rewind` uses this for the labels. It changes
+#' `list(inputs = list(a = 1), values = list(rv = list(b = 2)))` into
+#' `list(a = 1, "rv$b" = 2)`.
 #'
 #' @param state A snapshot, or `NULL`.
 #' @keywords internal

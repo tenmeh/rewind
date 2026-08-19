@@ -1,29 +1,33 @@
 # test-app-smoke.R -------------------------------------------------------
 #
-# The unit tests (test-history.R, test-state.R) and the testServer
-# integration tests (test-controller.R, test-modules.R) prove the reactive
-# *logic*. Neither proves the client half actually works: that rewind.js
-# finds the right input binding, that a real slider drag really does
-# coalesce under real timing (test-controller.R's coalescing tests run
-# against testServer's virtual clock, not a real one), or that clicking the
-# bundled buttons in a real page does what the custom-message wiring
-# promises.
+# The unit tests (test-history.R, test-state.R) and the testServer tests
+# (test-controller.R, test-modules.R) examine the reactive *logic*. They do
+# not examine the code in the browser. They do not show that rewind.js finds
+# the correct input binding. They do not show that a real movement of a
+# slider becomes one step with real time. The grouping tests in
+# test-controller.R use the virtual clock of testServer, and not a real
+# clock. They also do not show that the buttons operate in a real page.
 #
-# This launches the real demo app (inst/examples/demo) in a headless
-# browser and drives it the way a user would: change an input, undo it,
-# redo it, pin something tracked via rewind_track(), drag the year slider,
-# and exercise both keyboard-shortcut branches. See helper-shiny-smoke.R for
-# why "browser console is clean" is not itself proof of success, and for
-# why this skips (rather than fails) when no headless Chrome is available.
+# This test starts the real demo application (inst/examples/demo) in a
+# headless browser. It then uses the application as a user does. It changes
+# an input, and does an undo and a redo. It pins a value that
+# rewind_track() records. It moves the year slider. It uses both keyboard
+# shortcuts.
 #
-# A note on timing: unlike test-controller.R's testServer-based tests, this
-# is a real R process and a real browser, so the demo's real coalesce_ms
-# (400, see the app's rewind_enable() call) is a genuine wall-clock delay.
-# app$wait_for_idle() is not enough on its own: between an input changing
-# and the coalesce window elapsing, Shiny is genuinely idle (nothing is
-# computing - it is just waiting on a timer), so wait_for_idle() can return
-# before the entry is actually committed. settle() adds a real Sys.sleep()
-# comfortably longer than the app's coalesce_ms first.
+# helper-shiny-smoke.R tells you why "the browser console is clean" does not
+# show success. It also tells you why this test skips, and does not fail,
+# when there is no headless Chrome.
+#
+# A note about time. The tests in test-controller.R use testServer. This
+# test is different. It uses a real R process and a real browser. The
+# coalesce_ms of the demo (400, refer to its rewind_enable() call) is thus a
+# real delay.
+#
+# app$wait_for_idle() alone is not sufficient. Between a change of an input
+# and the end of the grouping period, Shiny is idle. It computes nothing,
+# and only waits for a timer. wait_for_idle() can thus return before rewind
+# writes the entry. settle() first uses a real Sys.sleep(). That sleep is
+# longer than the coalesce_ms of the application.
 
 app_dir <- system.file("examples/demo", package = "rewind")
 demo_coalesce_ms <- 400
@@ -68,7 +72,7 @@ test_that("the demo app: buttons, rail, coalescing, and tracked values all work 
   expect_true(is_undo_disabled(app))
   expect_equal(rail_labels(app), "Initial state")
 
-  # --- a plain input change becomes one entry, undo/redo round-trip -------
+  # --- one input change makes one entry. Then undo and redo. -------------
   app$set_inputs(region = "South")
   settle(app)
   expect_equal(rail_size(app), 2L)
@@ -77,14 +81,14 @@ test_that("the demo app: buttons, rail, coalescing, and tracked values all work 
   app$click(selector = ".rewind-undo")
   settle(app)
   expect_equal(app$get_value(input = "region"), "All")
-  # The browser's echo of the restored value must not add a third entry.
+  # The echo from the browser must not add a third entry.
   expect_equal(rail_size(app), 2L)
 
   app$click(selector = ".rewind-redo")
   settle(app)
   expect_equal(app$get_value(input = "region"), "South")
 
-  # --- rewind_track(): server-side reactiveValues round-trip through undo -
+  # --- rewind_track(): undo must restore the values on the server --------
   app$click("pin")
   settle(app)
   expect_match(app$get_value(output = "selection"), "^Pinned:")
@@ -97,7 +101,7 @@ test_that("the demo app: buttons, rail, coalescing, and tracked values all work 
   app$click(selector = ".rewind-redo")
   settle(app)
 
-  # --- rewind_step(): several inputs, one labelled entry ------------------
+  # --- rewind_step(): several inputs give one entry with a label ---------
   before <- rail_size(app)
   app$click("reset")
   settle(app)
@@ -107,7 +111,7 @@ test_that("the demo app: buttons, rail, coalescing, and tracked values all work 
   labels <- rail_labels(app)
   expect_equal(labels[length(labels)], "Reset filters")
 
-  # --- coalescing: a real, rapid slider drag under real timing ------------
+  # --- grouping: a fast, real movement of a slider, with real time -------
   before <- rail_size(app)
   app$run_js("
     (function () {
@@ -127,10 +131,10 @@ test_that("the demo app: buttons, rail, coalescing, and tracked values all work 
   ")
   Sys.sleep(0.3)
   settle(app)
-  # Several rapid changes inside coalesce_ms must still land as one entry.
+  # Several fast changes inside coalesce_ms must give one entry.
   expect_equal(rail_size(app), before + 1L)
 
-  # --- keyboard: Ctrl+Z undoes from the page body --------------------------
+  # --- keyboard: Ctrl+Z does an undo from the page body ------------------
   before <- rail_size(app)
   before_label <- current_step_label(app)
   app$run_js("
@@ -142,7 +146,7 @@ test_that("the demo app: buttons, rail, coalescing, and tracked values all work 
   expect_equal(rail_size(app), before)
   expect_false(identical(current_step_label(app), before_label))
 
-  # --- keyboard: Ctrl+Z inside the text box does NOT undo (native undo) ---
+  # --- keyboard: Ctrl+Z in the text box must NOT do an undo --------------
   before_label <- current_step_label(app)
   app$run_js("
     var box = document.getElementById('search');
@@ -152,12 +156,12 @@ test_that("the demo app: buttons, rail, coalescing, and tracked values all work 
   settle(app)
   expect_equal(current_step_label(app), before_label)
 
-  # --- rail: clicking a step jumps straight to it --------------------------
+  # --- rail: a click on a step moves to that step ------------------------
   app$run_js("document.querySelector('.rewind-step[data-index=\"1\"]').click();")
   settle(app)
   expect_equal(app$get_value(input = "region"), "All")
   expect_true(is_undo_disabled(app))
 
-  # --- the universal gate: nothing threw, on either side of the wire ------
+  # --- the last check: nothing threw an error, on the server or client ---
   expect_no_shiny_errors(app)
 })

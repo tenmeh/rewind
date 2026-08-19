@@ -1,56 +1,60 @@
 #' Enable undo and redo for a Shiny session
 #'
-#' Call once, near the top of your `server` function. From that point on,
-#' `rewind` snapshots the session's inputs (and any reactive values registered
-#' with [rewind_track()]) as the user interacts with the application, and lets
-#' them step back and forth through that history.
+#' Call this once, near the top of your `server` function. After that,
+#' `rewind` records the session inputs as the user works. It also records
+#' the reactive values that you register with [rewind_track()]. The user can
+#' then move backwards and forwards through that history.
 #'
 #' # What gets captured
 #'
-#' By default every input in the session is captured, with four exclusions
-#' that are never useful to restore:
+#' By default `rewind` captures every input in the session. There are four
+#' exclusions. It is never useful to restore these:
 #'
-#' * action buttons and links, whose value is a click counter;
-#' * [shiny::fileInput()], whose value points at a server-side temp file that
-#'   Shiny deletes on the next upload, so restoring an old snapshot would
-#'   point at a path that no longer exists;
-#' * inputs whose names begin with `rewind_`, which belong to this package;
-#' * inputs whose names begin with `.`, which are internal to Shiny.
+#' * action buttons and links. Their value is a click counter.
+#' * [shiny::fileInput()]. Its value points to a temporary file on the
+#'   server. Shiny deletes that file at the next upload. An old snapshot
+#'   would thus point to a file that does not exist.
+#' * inputs with names that start with `rewind_`. These belong to this
+#'   package.
+#' * inputs with names that start with `.`. These are internal to Shiny.
 #'
-#' Pass `inputs` to capture an explicit allow-list instead, which is usually
-#' what you want in a large application: undoing should move the controls the
-#' user thinks of as filters, not every stray input on the page.
+#' Use `inputs` to give a list of the inputs to capture. This is usually
+#' better in a large application. Undo must move the controls that the user
+#' thinks of as filters. It must not move every other input on the page.
 #'
 #' # Grouping
 #'
-#' Changes that arrive within `coalesce_ms` of one another become a single
-#' history entry, so dragging a slider produces one undo step rather than
-#' forty. Use [rewind_step()] when you need to group changes explicitly.
+#' Changes that occur within `coalesce_ms` of each other become one history
+#' entry. One drag of a slider is thus one undo step, not forty. Use
+#' [rewind_step()] to group changes yourself.
 #'
 #' # Modules
 #'
-#' Calling this inside a `moduleServer()` works: inputs are captured under
-#' their module-local names (the same names `input$` sees inside that
-#' module) and re-qualified with `session$ns()` on restore. `session$userData`
-#' is shared across modules, so calling `rewind_enable()` more than once
-#' reuses the same session-wide history rather than creating an independent
-#' one per module - call it once, wherever in the module tree suits the app.
+#' You can call this function inside a `moduleServer()`. `rewind` captures
+#' the inputs with their module-local names. These are the same names that
+#' `input$` uses inside the module. `rewind` adds the namespace with
+#' `session$ns()` when it restores them.
 #'
-#' @param session The Shiny session. Defaults to the current one.
-#' @param inputs Character vector of input IDs to capture, or `NULL` (the
-#'   default) to capture all eligible inputs.
-#' @param exclude Character vector of input IDs to skip. Applied after
-#'   `inputs`.
-#' @param depth Maximum number of history entries to retain. Older entries are
-#'   dropped from the far end.
-#' @param coalesce_ms Quiet period, in milliseconds, before a change is
-#'   committed to history. Raise it to group more aggressively.
-#' @param shortcuts Whether to bind `Ctrl`/`Cmd` + `Z` and
-#'   `Ctrl`/`Cmd` + `Shift` + `Z` (and `Ctrl` + `Y`) in the browser. Shortcuts
-#'   are ignored while the user is typing in a text field, so native text undo
-#'   keeps working.
-#' @param verbose Emit messages describing what is being captured and
-#'   restored. Useful while developing.
+#' All modules share `session$userData`. A second call to `rewind_enable()`
+#' thus uses the same history as the first call. It does not make a second
+#' history. Call the function once, at the position in the module tree that
+#' is best for your application.
+#'
+#' @param session The Shiny session. The default is the current session.
+#' @param inputs Character vector of the input IDs to capture. Use `NULL`
+#'   (the default) to capture all permitted inputs.
+#' @param exclude Character vector of input IDs to skip. `rewind` applies
+#'   this after `inputs`.
+#' @param depth The maximum number of history entries to keep. `rewind`
+#'   removes the oldest entries first.
+#' @param coalesce_ms The quiet period in milliseconds before `rewind`
+#'   writes a change to the history. Increase it to group more changes.
+#' @param shortcuts Set to `TRUE` to bind `Ctrl`/`Cmd` + `Z` and
+#'   `Ctrl`/`Cmd` + `Shift` + `Z` (and `Ctrl` + `Y`) in the browser. The
+#'   shortcuts do nothing while the user types in a text field. The text
+#'   undo of the browser thus continues to work.
+#' @param verbose Set to `TRUE` to show messages about what `rewind`
+#'   captures and restores. This is useful during development.
 #'
 #' @return The controller, invisibly. Most applications can ignore it.
 #'
@@ -111,7 +115,7 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
   )
   session$userData$.rewind <- ctrl
 
-  # Make the assets available without requiring the user to touch their UI.
+  # Add the assets here. The user thus does not have to change the UI.
   shiny::insertUI(
     selector  = "head",
     where     = "beforeEnd",
@@ -119,8 +123,8 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
       htmltools::tags$script(
         type = "application/json",
         `data-rewind-config` = "",
-        # HTML() because script bodies are raw text: htmltools would otherwise
-        # escape the quotes and the browser would not decode them back.
+        # Use HTML() because the body of a script tag is raw text. Without
+        # it, htmltools escapes the quotes. The browser cannot decode them.
         htmltools::HTML(sprintf(
           '{"shortcuts": %s}',
           if (isTRUE(shortcuts)) "true" else "false"
@@ -132,22 +136,28 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
     session   = session
   )
 
-  # Capture: reads every tracked reactive, so it re-runs on any change.
+  # Capture. This observer reads every tracked reactive. It thus runs again
+  # after each change.
   #
-  # The snapshot is taken as its own statement, not inlined as
-  # ctrl$note(ctrl$snapshot()). note()'s first line returns early while
-  # paused, and R's lazy argument evaluation means an inlined snapshot()
-  # would then never actually run - so the observer would never read the
-  # tracked reactives it depends on, and would permanently stop re-running on
-  # future input changes (pausing before the very first flush is enough to
-  # trigger this). Reading the snapshot first forces those reads
-  # unconditionally, keeping the dependency alive across pause/resume.
+  # Take the snapshot in its own statement. Do not write it as
+  # ctrl$note(ctrl$snapshot()).
+  #
+  # note() returns at its first line while capture is paused. R evaluates
+  # arguments only when it needs them. An inline snapshot() thus never runs
+  # while capture is paused. The observer then reads no reactive values, and
+  # it loses all its dependencies. It never runs again, even after
+  # rewind_resume(). One pause before the first flush is enough to cause
+  # this.
+  #
+  # The separate statement forces the reads. The dependencies thus stay
+  # alive across a pause and a resume.
   obs_capture <- shiny::observe({
     state <- ctrl$snapshot()
     ctrl$note(state)
   }, domain = session)
 
-  # Coalesce: waits for the dust to settle, then commits one entry.
+  # Coalesce. This observer waits for the changes to stop. It then writes one
+  # entry.
   obs_coalesce <- shiny::observe({
     ctrl$tick_dep()
     wait <- ctrl$time_to_flush()
@@ -174,23 +184,23 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
 
 #' Include server-side reactive values in the history
 #'
-#' Inputs are captured automatically, but state you hold yourself in a
-#' [shiny::reactiveValues()] object is invisible to `rewind` until you register
-#' it here. Registered fields are snapshotted alongside inputs and assigned
-#' back on undo.
+#' `rewind` captures inputs automatically. It cannot see the state that you
+#' keep in a [shiny::reactiveValues()] object. Register that object here.
+#' `rewind` then records the registered fields with the inputs, and writes
+#' them back at an undo.
 #'
-#' Only register values that are genuinely *state*. Registering a derived or
-#' cached value is harmless but pointless, and registering something an
-#' observer immediately recomputes will produce an undo step that appears to do
-#' nothing.
+#' Register only the values that are true *state*. A derived value or a
+#' cached value does no harm, but it has no use. Do not register a value
+#' that an observer computes again immediately. The undo step then appears
+#' to do nothing.
 #'
 #' @param values A [shiny::reactiveValues()] object.
-#' @param fields Character vector of field names to track, or `NULL` for all
-#'   fields present at snapshot time.
-#' @param id A name for this group, used to keep multiple registered objects
-#'   apart and to label history entries. Defaults to the name of the `values`
-#'   argument at the call site.
-#' @param session The Shiny session. Defaults to the current one.
+#' @param fields Character vector of the field names to track. Use `NULL`
+#'   for all the fields that exist when `rewind` takes the snapshot.
+#' @param id A name for this group. `rewind` uses it to keep the registered
+#'   objects apart, and to label the history entries. The default is the
+#'   name of the `values` argument at the call.
+#' @param session The Shiny session. The default is the current session.
 #'
 #' @return `TRUE`, invisibly.
 #'
@@ -231,21 +241,22 @@ rewind_track <- function(values,
 
 #' Group several changes into one undo step
 #'
-#' Wraps a block of code so that everything it changes becomes a single history
-#' entry with a label of your choosing. Use it for the "reset all filters" or
-#' "apply preset" buttons, where the default time-based coalescing would either
-#' split the change into several steps or label it unhelpfully.
+#' This function holds a block of code. Every change in that block becomes
+#' one history entry with the label that you give. Use it for buttons such
+#' as "reset all filters" or "apply preset". For these buttons, the standard
+#' time-based grouping can make several steps, or it can give a label that
+#' does not help the user.
 #'
-#' The block itself runs immediately; the resulting history entry is written
-#' once the changes have made their round trip through the browser.
+#' The block runs immediately. `rewind` writes the history entry after the
+#' changes return from the browser.
 #'
-#' @param expr Code to run. Typically a series of `update*Input()` calls or
-#'   assignments to tracked reactive values.
-#' @param label Label for the resulting history entry.
-#' @param hold_ms How long to keep the entry open, in milliseconds. Defaults to
-#'   twice the session's `coalesce_ms`. Raise it if a slow round trip is
-#'   splitting your step in two.
-#' @param session The Shiny session. Defaults to the current one.
+#' @param expr The code to run. This is usually a set of `update*Input()`
+#'   calls, or assignments to tracked reactive values.
+#' @param label The label for the history entry.
+#' @param hold_ms The time in milliseconds to keep the entry open. The
+#'   default is two times the `coalesce_ms` of the session. Increase it if a
+#'   slow browser makes two steps from one block.
+#' @param session The Shiny session. The default is the current session.
 #'
 #' @return The value of `expr`, invisibly.
 #'
@@ -278,14 +289,16 @@ rewind_step <- function(expr,
 
 #' Move through the history programmatically
 #'
-#' The keyboard shortcuts and [rewind_buttons()] cover the common cases; these
-#' let you drive the history from your own controls.
+#' The keyboard shortcuts and [rewind_buttons()] are sufficient for most
+#' applications. Use these functions to move through the history from your
+#' own controls.
 #'
-#' @param index Position to jump to, 1-based, where 1 is the oldest retained
-#'   entry.
-#' @param session The Shiny session. Defaults to the current one.
+#' @param index The position to move to. The first position is 1. Position 1
+#'   holds the oldest entry that `rewind` keeps.
+#' @param session The Shiny session. The default is the current session.
 #'
-#' @return `TRUE` if the pointer moved, `FALSE` otherwise, invisibly.
+#' @return `TRUE` if the position changed. If not, `FALSE`. The functions
+#'   return the value invisibly.
 #'
 #' @examples
 #' if (interactive()) {
@@ -326,16 +339,17 @@ rewind_clear <- function(session = shiny::getDefaultReactiveDomain()) {
 
 #' Inspect the history
 #'
-#' `rewind_history()` returns one row per retained entry. `rewind_can_undo()`
-#' and `rewind_can_redo()` report whether the pointer can move. All three take
-#' a reactive dependency on the history, so they can be used inside
-#' `render*()` and `observe()` to drive your own UI.
+#' `rewind_history()` gives one row for each entry that `rewind` keeps.
+#' `rewind_can_undo()` and `rewind_can_redo()` tell you if the position can
+#' change. All three functions depend on the history. You can thus use them
+#' in `render*()` and `observe()` to control your own UI.
 #'
-#' @param session The Shiny session. Defaults to the current one.
+#' @param session The Shiny session. The default is the current session.
 #'
 #' @return
-#' For `rewind_history()`, a data frame with columns `index`, `label`, `time`
-#' and `current`. For the others, a single logical.
+#' `rewind_history()` gives a data frame. It has the columns `index`,
+#' `label`, `time` and `current`. The other two functions give one logical
+#' value.
 #'
 #' @examples
 #' if (interactive()) {
@@ -372,11 +386,12 @@ rewind_can_redo <- function(session = shiny::getDefaultReactiveDomain()) {
 
 #' Suspend and resume history capture
 #'
-#' While paused, changes are applied normally but not recorded. Useful around
-#' programmatic churn you do not want the user to be able to step back into,
-#' such as restoring a saved session or applying a URL bookmark.
+#' While capture is paused, the application applies changes as usual. But
+#' `rewind` does not record them. Use this around changes that your code
+#' makes, and that the user must not step back into. Examples are a saved
+#' session that you restore, or a URL bookmark that you apply.
 #'
-#' @param session The Shiny session. Defaults to the current one.
+#' @param session The Shiny session. The default is the current session.
 #'
 #' @return `TRUE`, invisibly.
 #'
@@ -405,21 +420,25 @@ rewind_resume <- function(session = shiny::getDefaultReactiveDomain()) {
 
 #' Fully disable undo/redo for a session
 #'
-#' Unlike [rewind_pause()], which suspends capture temporarily and expects
-#' a matching [rewind_resume()], this tears down what [rewind_enable()] set
-#' up entirely: every observer it created is destroyed, the buttons and
-#' history rail in the browser go back to their empty, disabled state, and
-#' the session goes back to not having rewind enabled at all. Call
-#' [rewind_enable()] again to start a fresh history.
+#' [rewind_pause()] stops capture for a short time. It needs a
+#' [rewind_resume()] call after it. This function is different. It removes
+#' everything that [rewind_enable()] made:
 #'
-#' Useful when undo/redo should be available only conditionally - for
-#' example, gated behind a user role that is not known until partway through
-#' the session.
+#' * it destroys each observer;
+#' * it sets the buttons and the history rail in the browser to their empty,
+#'   disabled condition;
+#' * it returns the session to the condition before `rewind_enable()`.
 #'
-#' @param session The Shiny session. Defaults to the current one.
+#' Call [rewind_enable()] again to start a new history.
 #'
-#' @return `TRUE` if a session was disabled, `FALSE` if rewind was not
-#'   enabled to begin with, invisibly.
+#' Use this function when the application permits undo and redo only in some
+#' conditions. An example is a user role that the application does not know
+#' at the start of the session.
+#'
+#' @param session The Shiny session. The default is the current session.
+#'
+#' @return `TRUE` if the function disabled a session. `FALSE` if `rewind`
+#'   was not enabled. The function returns the value invisibly.
 #'
 #' @examples
 #' if (interactive()) {

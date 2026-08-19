@@ -1,7 +1,7 @@
-# Multi-platform R CMD check, run to CRAN standards.
+# R CMD check on several systems, at CRAN standards.
 #
-# The matrix mirrors what CRAN itself builds on, so a green run here is
-# reasonable evidence a submission will clear the incoming queue.
+# The matrix uses the same systems as CRAN. A successful run here is thus
+# good evidence that CRAN will accept a submission.
 on:
   push:
     branches: [main]
@@ -31,26 +31,28 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
-      # The "New submission" and unreachable-URL notes only fire against the
-      # live CRAN index and would red every run; the real CRAN incoming check
-      # happens at submission time via devtools::check(remote = TRUE).
+      # The "New submission" note and the unreachable-URL note occur only
+      # against the live CRAN index. They would fail each run. Do the real
+      # CRAN incoming check at submission time, with
+      # devtools::check(remote = TRUE).
       _R_CHECK_CRAN_INCOMING_: false
-      # The shinytest2 AppDriver smoke test skips itself on CRAN
-      # (skip_on_cran()), since CRAN's check machines are not guaranteed to
-      # have a headless Chrome available. This is what makes it actually run
-      # here instead of being skipped everywhere.
+      # The AppDriver smoke test calls skip_on_cran(). The check machines of
+      # CRAN do not always have a headless Chrome. This variable makes the
+      # test run here. Without it, the test skips on each system.
       NOT_CRAN: true
 
     steps:
       - uses: actions/checkout@v4
 
-      # No setup-pandoc here on purpose. The only NOTE pandoc suppresses is the
-      # README.md/NEWS.md validation one, and that check is part of the CRAN
-      # incoming set disabled above - so with _R_CHECK_CRAN_INCOMING_ false the
-      # check is Status OK without pandoc present. Installing it anyway meant
-      # every run depended on a GitHub release download that returns 503s often
-      # enough to red the build for reasons that have nothing to do with the
-      # package. The package ships no vignettes, so nothing else needs it.
+      # There is no setup-pandoc step here, and this is intentional. pandoc
+      # stops only one NOTE: the check of README.md and NEWS.md. That check
+      # is part of the CRAN incoming set that the variable above disables.
+      # The result is thus Status OK with no pandoc.
+      #
+      # A setup-pandoc step made each run depend on a download from a GitHub
+      # release. That download returns 503 errors frequently. The build then
+      # failed for a reason with no relation to the package. The package has
+      # no vignettes, so no other step needs pandoc.
       - uses: r-lib/actions/setup-r@v2
         with:
           r-version: ${{ matrix.config.r }}
@@ -64,6 +66,6 @@ jobs:
 
       - uses: r-lib/actions/check-r-package@v2
         with:
-          # CRAN accepts no NOTEs, so neither does this gate.
+          # CRAN accepts no NOTEs. This check thus accepts none.
           error-on: '"note"'
           upload-snapshots: true

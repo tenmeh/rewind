@@ -15,67 +15,71 @@ rewind_enable(
 )
 }
 \arguments{
-\item{session}{The Shiny session. Defaults to the current one.}
+\item{session}{The Shiny session. The default is the current session.}
 
-\item{inputs}{Character vector of input IDs to capture, or \code{NULL} (the
-default) to capture all eligible inputs.}
+\item{inputs}{Character vector of the input IDs to capture. Use \code{NULL}
+(the default) to capture all permitted inputs.}
 
-\item{exclude}{Character vector of input IDs to skip. Applied after
-\code{inputs}.}
+\item{exclude}{Character vector of input IDs to skip. \code{rewind} applies
+this after \code{inputs}.}
 
-\item{depth}{Maximum number of history entries to retain. Older entries are
-dropped from the far end.}
+\item{depth}{The maximum number of history entries to keep. \code{rewind}
+removes the oldest entries first.}
 
-\item{coalesce_ms}{Quiet period, in milliseconds, before a change is
-committed to history. Raise it to group more aggressively.}
+\item{coalesce_ms}{The quiet period in milliseconds before \code{rewind}
+writes a change to the history. Increase it to group more changes.}
 
-\item{shortcuts}{Whether to bind \code{Ctrl}/\code{Cmd} + \code{Z} and
-\code{Ctrl}/\code{Cmd} + \code{Shift} + \code{Z} (and \code{Ctrl} + \code{Y}) in the browser. Shortcuts
-are ignored while the user is typing in a text field, so native text undo
-keeps working.}
+\item{shortcuts}{Set to \code{TRUE} to bind \code{Ctrl}/\code{Cmd} + \code{Z} and
+\code{Ctrl}/\code{Cmd} + \code{Shift} + \code{Z} (and \code{Ctrl} + \code{Y}) in the browser. The
+shortcuts do nothing while the user types in a text field. The text
+undo of the browser thus continues to work.}
 
-\item{verbose}{Emit messages describing what is being captured and
-restored. Useful while developing.}
+\item{verbose}{Set to \code{TRUE} to show messages about what \code{rewind}
+captures and restores. This is useful during development.}
 }
 \value{
 The controller, invisibly. Most applications can ignore it.
 }
 \description{
-Call once, near the top of your \code{server} function. From that point on,
-\code{rewind} snapshots the session's inputs (and any reactive values registered
-with \code{\link[=rewind_track]{rewind_track()}}) as the user interacts with the application, and lets
-them step back and forth through that history.
+Call this once, near the top of your \code{server} function. After that,
+\code{rewind} records the session inputs as the user works. It also records
+the reactive values that you register with \code{\link[=rewind_track]{rewind_track()}}. The user can
+then move backwards and forwards through that history.
 }
 \section{What gets captured}{
-By default every input in the session is captured, with four exclusions
-that are never useful to restore:
+By default \code{rewind} captures every input in the session. There are four
+exclusions. It is never useful to restore these:
 \itemize{
-\item action buttons and links, whose value is a click counter;
-\item \code{\link[shiny:fileInput]{shiny::fileInput()}}, whose value points at a server-side temp file that
-Shiny deletes on the next upload, so restoring an old snapshot would
-point at a path that no longer exists;
-\item inputs whose names begin with \code{rewind_}, which belong to this package;
-\item inputs whose names begin with \code{.}, which are internal to Shiny.
+\item action buttons and links. Their value is a click counter.
+\item \code{\link[shiny:fileInput]{shiny::fileInput()}}. Its value points to a temporary file on the
+server. Shiny deletes that file at the next upload. An old snapshot
+would thus point to a file that does not exist.
+\item inputs with names that start with \code{rewind_}. These belong to this
+package.
+\item inputs with names that start with \code{.}. These are internal to Shiny.
 }
 
-Pass \code{inputs} to capture an explicit allow-list instead, which is usually
-what you want in a large application: undoing should move the controls the
-user thinks of as filters, not every stray input on the page.
+Use \code{inputs} to give a list of the inputs to capture. This is usually
+better in a large application. Undo must move the controls that the user
+thinks of as filters. It must not move every other input on the page.
 }
 
 \section{Grouping}{
-Changes that arrive within \code{coalesce_ms} of one another become a single
-history entry, so dragging a slider produces one undo step rather than
-forty. Use \code{\link[=rewind_step]{rewind_step()}} when you need to group changes explicitly.
+Changes that occur within \code{coalesce_ms} of each other become one history
+entry. One drag of a slider is thus one undo step, not forty. Use
+\code{\link[=rewind_step]{rewind_step()}} to group changes yourself.
 }
 
 \section{Modules}{
-Calling this inside a \code{moduleServer()} works: inputs are captured under
-their module-local names (the same names \verb{input$} sees inside that
-module) and re-qualified with \code{session$ns()} on restore. \code{session$userData}
-is shared across modules, so calling \code{rewind_enable()} more than once
-reuses the same session-wide history rather than creating an independent
-one per module - call it once, wherever in the module tree suits the app.
+You can call this function inside a \code{moduleServer()}. \code{rewind} captures
+the inputs with their module-local names. These are the same names that
+\verb{input$} uses inside the module. \code{rewind} adds the namespace with
+\code{session$ns()} when it restores them.
+
+All modules share \code{session$userData}. A second call to \code{rewind_enable()}
+thus uses the same history as the first call. It does not make a second
+history. Call the function once, at the position in the module tree that
+is best for your application.
 }
 
 \examples{

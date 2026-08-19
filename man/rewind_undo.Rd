@@ -16,17 +16,19 @@ rewind_jump(index, session = shiny::getDefaultReactiveDomain())
 rewind_clear(session = shiny::getDefaultReactiveDomain())
 }
 \arguments{
-\item{session}{The Shiny session. Defaults to the current one.}
+\item{session}{The Shiny session. The default is the current session.}
 
-\item{index}{Position to jump to, 1-based, where 1 is the oldest retained
-entry.}
+\item{index}{The position to move to. The first position is 1. Position 1
+holds the oldest entry that \code{rewind} keeps.}
 }
 \value{
-\code{TRUE} if the pointer moved, \code{FALSE} otherwise, invisibly.
+\code{TRUE} if the position changed. If not, \code{FALSE}. The functions
+return the value invisibly.
 }
 \description{
-The keyboard shortcuts and \code{\link[=rewind_buttons]{rewind_buttons()}} cover the common cases; these
-let you drive the history from your own controls.
+The keyboard shortcuts and \code{\link[=rewind_buttons]{rewind_buttons()}} are sufficient for most
+applications. Use these functions to move through the history from your
+own controls.
 }
 \examples{
 if (interactive()) {

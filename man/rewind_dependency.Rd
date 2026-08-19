@@ -10,9 +10,9 @@ rewind_dependency()
 An \code{\link[htmltools:htmlDependency]{htmltools::htmlDependency()}}.
 }
 \description{
-\code{\link[=rewind_enable]{rewind_enable()}} injects this automatically, so you rarely need it. It is
-exported for the case where you want the assets present before the server
-function runs, or where \code{insertUI()} is unavailable to you.
+\code{\link[=rewind_enable]{rewind_enable()}} adds this automatically. You thus rarely need this
+function. Use it when you want the assets before the server function
+runs. Use it also when you cannot use \code{insertUI()}.
 }
 \examples{
 rewind_dependency()

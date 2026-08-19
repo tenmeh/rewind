@@ -1,11 +1,11 @@
-/* rewind — undo/redo for Shiny applications
+/* rewind - undo and redo for Shiny applications
  *
- * The interesting part of this file is applyValue(). Rather than maintaining a
- * table of "sliderInput -> updateSliderInput", we go through the input binding
- * that Shiny itself registered against the element. Every Shiny input, and
- * every well-behaved third-party input, exposes either setValue() or
- * receiveMessage() through that binding, so restoring works for widgets this
- * package has never heard of.
+ * The important function in this file is applyValue(). It does not keep a
+ * table of "sliderInput -> updateSliderInput". It uses the input binding
+ * that Shiny registered on the element. Each Shiny input gives a setValue()
+ * or a receiveMessage() function through that binding. Correct inputs from
+ * other packages do the same. A restore thus operates on widgets that this
+ * package does not know.
  */
 (function () {
   "use strict";
@@ -38,8 +38,8 @@
       if (typeof binding.setValue === "function") {
         binding.setValue(el, value);
       } else if (typeof binding.receiveMessage === "function") {
-        // Not every binding implements setValue, but the update*Input()
-        // message path is universal.
+        // Some bindings have no setValue function. But each binding
+        // accepts the message that update*Input() sends.
         binding.receiveMessage(el, { value: value });
       } else {
         return false;
@@ -51,12 +51,12 @@
       return false;
     }
 
-    // Nudge the binding into reporting the new value back to the server, so
-    // the server's view of the session matches what is now on screen.
+    // Make the binding send the new value to the server. The server then
+    // has the same values as the screen.
     try {
       $el.trigger("change");
     } catch (e) {
-      /* the binding may use a different event; the value is set regardless */
+      /* The binding can use a different event. The value is set already. */
     }
     return true;
   }
@@ -91,8 +91,8 @@
 
         var label = document.createElement("span");
         label.className = "rewind-step-label";
-        // textContent, not innerHTML: labels are derived from input names and
-        // must never be interpreted as markup.
+        // Use textContent and not innerHTML. The labels come from the
+        // input names. The browser must not read them as markup.
         label.textContent = e.label;
 
         var time = document.createElement("span");
@@ -168,7 +168,7 @@
   }
 
   document.addEventListener("keydown", function (ev) {
-    // Enter/Space on a focused history step.
+    // The user pressed Enter or Space on a history step that has focus.
     if (ev.key === "Enter" || ev.key === " ") {
       if (closest(ev.target, ".rewind-step")) {
         ev.preventDefault();
@@ -183,7 +183,8 @@
     var key = (ev.key || "").toLowerCase();
     if (key !== "z" && key !== "y") return;
 
-    // Leave native undo alone while the user is typing.
+    // Do nothing while the user types. The text undo of the browser must
+    // continue to operate.
     if (isTextEntry(document.activeElement)) return;
 
     ev.preventDefault();

@@ -1,7 +1,7 @@
 # Build the documentation site and publish it to GitHub Pages.
 #
-# Pull requests build the site but do not publish, so a broken reference index
-# or a failing example is caught before it goes live rather than after.
+# A pull request builds the site, but does not publish it. A bad reference
+# index or an example that fails is thus found before the site goes live.
 on:
   push:
     branches: [main]

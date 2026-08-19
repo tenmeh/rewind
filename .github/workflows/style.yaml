@@ -1,8 +1,9 @@
-# Manual formatter. Deliberately NOT automatic: lint.yaml is the gate that
-# decides pass/fail, and this is the tool that fixes what it complains about.
+# A formatter that you start by hand. It is not automatic, and this is
+# intentional. lint.yaml decides pass or fail. This workflow corrects the
+# problems that lint.yaml reports.
 #
-# It opens a pull request rather than pushing to main, because main requires a
-# PR and a linear history - a bot pushing directly would simply be rejected.
+# It opens a pull request. It does not push to main. main needs a pull
+# request and a linear history. A direct push from a bot thus fails.
 on:
   workflow_dispatch:
 

@@ -1,5 +1,6 @@
-# Style gate. Configuration lives in .lintr at the repo root, so what CI
-# enforces and what `lintr::lint_package()` reports locally are the same thing.
+# The style check. Its configuration is in .lintr at the root of the
+# repository. This workflow and a local `lintr::lint_package()` thus give the
+# same results.
 on:
   push:
     branches: [main]
