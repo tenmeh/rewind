@@ -1,33 +1,71 @@
-# helper-shiny-smoke.R --------------------------------------------------------
+# helper-shiny-smoke.R --------------------------------------------------
 #
-# An AppDriver check that you can use again: "did the application throw an
-# error?" testthat reads each helper-*.R file before the tests. This file
-# runs in the TEST process. It examines the application through the
-# AppDriver object. It does not run inside the application.
+# A check that you can use again: "did the application report an error?"
+# testthat reads each helper-*.R file before the tests. This file runs in
+# the TEST process. It examines the application through the AppDriver
+# object. It does not run inside the application.
 #
 # WHY THIS FILE EXISTS
-# A simple smoke test looks for the absence of a signal. But that signal
-# does not always occur:
-#   * "the browser console has no errors". Shiny catches a RENDER error and
-#     shows it in the output element. Shiny does NOT write it to the browser
+# Two obvious checks do not find a render error:
+#
+#   * "the browser console has no errors". Shiny catches a render error and
+#     puts it in the output element. Shiny does NOT send it to the browser
 #     console.
 #   * "the output element is not empty". A render that fails leaves a
-#     `shiny-output-error` <div>. That div is not empty. "The element has
-#     some HTML" is thus a false pass.
+#     `shiny-output-error` <div>. That div holds text. The element is thus
+#     not empty, and the check passes when it must fail.
 #
-# One signal always occurs at a render error: the stderr of the application.
-# Shiny prints "Warning: Error in <fn>: ..." there. shinytest2 keeps that
-# text in `app$get_logs()`, with `location == "shiny"`. This is the check
-# that finds each error. It needs no output IDs and no markers for each
-# widget.
+# A render error always goes to the stderr of the application. Shiny writes
+# a line there that holds the word "Error". shinytest2 keeps that line in
+# `app$get_logs()`, with `location == "shiny"`.
 #
-# This helper examines the stderr, the error class in the DOM, and the
-# browser console. An error at run time thus cannot pass without a failure.
+# This file examines three places: the stderr, the browser console, and the
+# DOM. It collects each problem into one character vector. One assertion
+# then reports all of them together. A test failure thus shows every
+# problem at the same time, and not only the first one.
 
-`%||%` <- function(a, b) if (is.null(a)) b else a
+#' Collect each error that the running application reports.
+#'
+#' @param app A live `shinytest2::AppDriver`.
+#' @return A character vector. It holds one line for each problem. The
+#'   vector is empty when the application reported no error.
+collect_shiny_problems <- function(app) {
+  problems <- character(0)
 
-#' Make sure that the application logged no Shiny error and no JS error.
-#' Make sure also that no output shows an error.
+  logs <- as.data.frame(app$get_logs())
+  has_logs <- nrow(logs) > 0 && all(c("location", "message") %in% names(logs))
+
+  if (has_logs) {
+    # The stderr of the application. A render error reaches this place even
+    # when it never reaches the browser console.
+    from_r <- logs$message[logs$location == "shiny" &
+                             grepl("Error", logs$message, fixed = TRUE)]
+    if (length(from_r) > 0) {
+      problems <- c(problems, paste("R stderr:", from_r))
+    }
+
+    # The browser console. These are failures in the JS code.
+    if ("level" %in% names(logs)) {
+      is_error <- !is.na(logs$level) & logs$level == "error"
+      from_browser <- logs$message[is_error & logs$location == "chromote"]
+      if (length(from_browser) > 0) {
+        problems <- c(problems, paste("Browser console:", from_browser))
+      }
+    }
+  }
+
+  # The DOM. No output must have the `shiny-output-error` class.
+  # get_html() gives NULL when it finds no such element.
+  in_dom <- tryCatch(app$get_html(".shiny-output-error"),
+                     error = function(e) NULL)
+  if (!is.null(in_dom)) {
+    problems <- c(problems, paste("Output element in an error state:", in_dom))
+  }
+
+  problems
+}
+
+#' Make sure that the running application reported no error.
 #'
 #' Call this AFTER the test uses the controls. A render error occurs only
 #' when its reactive runs.
@@ -35,45 +73,17 @@
 #' @param app A live `shinytest2::AppDriver`.
 #' @return The application, invisibly.
 expect_no_shiny_errors <- function(app) {
-  logs <- as.data.frame(app$get_logs())
-  have <- nrow(logs) > 0 && all(c("location", "message") %in% names(logs))
-
-  # 1. The stderr of Shiny. Errors at render time and at run time go here,
-  #    also when they never reach the browser console.
-  shiny_err <- character(0)
-  if (have) {
-    shiny_err <- logs$message[logs$location == "shiny" &
-                                grepl("Error( in |:)", logs$message)]
-  }
-  testthat::expect_identical(
-    shiny_err, character(0),
-    info = paste0("App logged Shiny errors:\n", paste(shiny_err, collapse = "\n"))
+  problems <- collect_shiny_problems(app)
+  testthat::expect_equal(
+    length(problems), 0L,
+    info = paste0("The application reported these problems:\n",
+                  paste(problems, collapse = "\n"))
   )
-
-  # 2. Errors in the browser console. These are failures in the JS code.
-  if (have && "level" %in% names(logs)) {
-    console_err <- logs$message[!is.na(logs$level) & logs$level == "error" &
-                                  logs$location == "chromote"]
-    testthat::expect_identical(
-      console_err, character(0),
-      info = paste0("Browser console errors:\n",
-                    paste(console_err, collapse = "\n"))
-    )
-  }
-
-  # 3. The DOM. No output must have the `shiny-output-error` class.
-  dom_err <- tryCatch(app$get_html(".shiny-output-error"),
-                      error = function(e) NULL)
-  testthat::expect_null(
-    dom_err,
-    info = paste0("An output is in an error state:\n", dom_err %||% "")
-  )
-
   invisible(app)
 }
 
-#' Start an AppDriver for `app_dir`, skipping (not failing) if a headless
-#' Chrome is not available in this environment.
+#' Start an AppDriver for `app_dir`. Skip the test, and do not fail it, when
+#' this computer has no headless Chrome.
 #'
 #' Chrome writes its own work files while it runs. On Linux these are lock
 #' files with names such as `com.google.Chrome.*`. On each system Chrome
