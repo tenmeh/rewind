@@ -1,9 +1,10 @@
-/* rewind documentation.
+/* The documentation of rewind.
  *
- * Adapted from the tanmai site's stylesheet. Poppins is self-hosted rather
- * than pulled from Google's CDN: the site then makes no third-party request,
- * and works offline once loaded. The accent is rewind's own blue rather than
- * tanmai's green, since the palette should identify this package.
+ * This file comes from the stylesheet of the tanmai site. The site holds
+ * the Poppins font itself. It does not use the CDN of Google. The site thus
+ * makes no request to another server, and it operates offline after it
+ * loads. The accent colour is the blue of rewind, and not the green of
+ * tanmai. The colours must identify this package.
  */
 
 /* ---- Poppins, Latin subset, SIL OFL 1.1 (see fonts/OFL.txt) ------------- */
@@ -76,7 +77,7 @@ h6,
   letter-spacing: -0.018em;
 }
 
-/* Poppins runs large and round; the default pkgdown scale looks shouty in it. */
+/* Poppins is large and round. The default pkgdown sizes are too big. */
 h1 {
   font-size: 2.1rem;
   font-weight: 650;
@@ -118,8 +119,8 @@ kbd {
   margin-right: 0.35rem;
 }
 
-/* Dropdowns: pkgdown's default sits flush against the bar and reads as part of
-   the page rather than as a menu. */
+/* Dropdown menus. The default of pkgdown touches the navigation bar. It
+   looks like part of the page, and not like a menu. */
 .dropdown-menu {
   border: 1px solid var(--rw-line);
   border-radius: 0.6rem;
@@ -166,9 +167,9 @@ blockquote {
   color: inherit;
 }
 
-/* The README's API summary is a table, and the reference pages put argument
-   descriptions in one, so tables should look deliberate rather than like
-   leftover Bootstrap. */
+/* The API summary in the README is a table. The reference pages also put
+   the argument descriptions in a table. The tables must thus look correct,
+   and not like the default Bootstrap style. */
 main table {
   border: 1px solid var(--rw-line);
   border-radius: 0.6rem;
@@ -192,7 +193,7 @@ main img {
   border: 1px solid var(--rw-line);
   border-radius: 0.6rem;
 }
-/* ...but not inline badges, which are images too. */
+/* But not the badges in the text. They are images also. */
 main p > img[src*="badge"],
 main p > a > img {
   border: 0;
@@ -208,8 +209,8 @@ main p > a > img {
 .ref-index .icon img {
   border: 0;
 }
-/* The one-line description beside each function is the useful part of this
-   page; the default styling makes it an afterthought. */
+/* The short description next to each function is the useful part of this
+   page. The default style makes it too small. */
 .ref-desc {
   color: var(--rw-ink-2);
 }

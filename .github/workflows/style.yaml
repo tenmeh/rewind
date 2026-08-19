@@ -1,8 +1,9 @@
-# Manual formatter. Deliberately NOT automatic: lint.yaml is the gate that
-# decides pass/fail, and this is the tool that fixes what it complains about.
+# A formatter that you start by hand. It is not automatic, and this is
+# intentional. lint.yaml decides pass or fail. This workflow corrects the
+# problems that lint.yaml reports.
 #
-# It opens a pull request rather than pushing to main, because main requires a
-# PR and a linear history - a bot pushing directly would simply be rejected.
+# It opens a pull request. It does not push to main. main needs a pull
+# request and a linear history. A direct push from a bot thus fails.
 on:
   workflow_dispatch:
 
@@ -42,9 +43,10 @@ jobs:
           delete-branch: true
           title: "chore(style): apply styler::style_pkg()"
           body: |
-            Automated `styler::style_pkg()` run, triggered manually.
+            A `styler::style_pkg()` run that a person started.
 
-            Review the diff before merging - styler reformats mechanically and
-            occasionally makes deliberate alignment worse. Confirm
-            `lintr::lint_package()` is still clean afterwards.
+            Examine the changes before you merge them. styler changes the
+            format automatically. It can thus make the alignment of some
+            lines worse. Make sure that `lintr::lint_package()` is still
+            clean after the merge.
           commit-message: "chore(style): apply styler::style_pkg()"

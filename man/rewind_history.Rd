@@ -13,17 +13,18 @@ rewind_can_undo(session = shiny::getDefaultReactiveDomain())
 rewind_can_redo(session = shiny::getDefaultReactiveDomain())
 }
 \arguments{
-\item{session}{The Shiny session. Defaults to the current one.}
+\item{session}{The Shiny session. The default is the current session.}
 }
 \value{
-For \code{rewind_history()}, a data frame with columns \code{index}, \code{label}, \code{time}
-and \code{current}. For the others, a single logical.
+\code{rewind_history()} gives a data frame. It has the columns \code{index},
+\code{label}, \code{time} and \code{current}. The other two functions give one logical
+value.
 }
 \description{
-\code{rewind_history()} returns one row per retained entry. \code{rewind_can_undo()}
-and \code{rewind_can_redo()} report whether the pointer can move. All three take
-a reactive dependency on the history, so they can be used inside
-\verb{render*()} and \code{observe()} to drive your own UI.
+\code{rewind_history()} gives one row for each entry that \code{rewind} keeps.
+\code{rewind_can_undo()} and \code{rewind_can_redo()} tell you if the position can
+change. All three functions depend on the history. You can thus use them
+in \verb{render*()} and \code{observe()} to control your own UI.
 }
 \examples{
 if (interactive()) {

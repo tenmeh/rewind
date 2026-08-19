@@ -1,17 +1,20 @@
-# Controller-level integration tests, driven through real Shiny sessions via
-# shiny::testServer(). Unlike test-history.R and test-state.R, which exercise
-# the pure R6/helper logic directly, these prove the reactive wiring
-# rewind_enable() creates: capture, coalescing, echo suppression, and restore.
+# Integration tests for the controller. They use real Shiny sessions through
+# shiny::testServer(). test-history.R and test-state.R examine the R6 class
+# and the helper functions directly. These tests are different. They examine
+# the reactive connections that rewind_enable() makes: capture, grouping,
+# echo control, and restore.
 #
-# A note on timing: the coalescing window is computed against Sys.time() (see
-# controller.R), which is correct and necessary in a real running app - but
-# shiny::testServer()'s session$elapse() drives a private virtual clock
-# entirely decoupled from Sys.time(), so elapse() alone never advances the
-# real clock rewind is actually waiting on. Each test bridges that gap with a
-# short Sys.sleep() longer than the test's own coalesce_ms, letting real time
-# genuinely pass, then calls elapse() to run the scheduled flush. This is a
-# testServer/Sys.time() interaction, not a bug: it does not affect production
-# behaviour, only how tests observe it.
+# A note about time. The grouping period uses Sys.time() (refer to
+# controller.R). This is correct, and necessary in a real application. But
+# session$elapse() in shiny::testServer() moves a private virtual clock.
+# That clock is separate from Sys.time(). elapse() alone thus never moves
+# the real clock that rewind waits for.
+#
+# Each test uses a short Sys.sleep() to move the real clock. The sleep is
+# longer than the coalesce_ms of the test. The test then calls elapse() to
+# run the flush. This is an effect of testServer and Sys.time() together. It
+# is not a defect. It changes only how the tests observe the package. It
+# does not change the package in production.
 
 srv <- function(input, output, session) {
   rewind_enable(coalesce_ms = 30)
@@ -106,9 +109,9 @@ test_that("undo restores the value and the browser's echo is not a new entry", {
     ctrl$undo()
     expect_equal(ctrl$history$current()$inputs$region, "North")
 
-    # Simulate the browser echoing the restored value back exactly, the way
-    # rewind.js does after applying rewind:restore: note() the state undo()
-    # just moved the pointer to.
+    # Do what the browser does after it applies rewind:restore. rewind.js
+    # sends the restored value back. This test thus calls note() with the
+    # state that undo() moved to.
     restored <- ctrl$history$current()
     ctrl$note(restored)
     Sys.sleep(0.15)
@@ -125,9 +128,9 @@ test_that("rewind_track round-trips server-side reactiveValues through undo", {
     settle(session, region = "Baseline")
     expect_equal(ctrl$history$current()$values$st$zoom, 1)
 
-    # A bare reactiveValues assignment (unlike session$setInputs()) doesn't
-    # itself trigger a reactive flush under testServer, so flushReact() is
-    # called explicitly to let the capture observer see it.
+    # An assignment to reactiveValues does not start a reactive flush in
+    # testServer. session$setInputs() does. This test thus calls
+    # flushReact() to let the capture observer see the change.
     state$zoom <- 2
     session$flushReact()
     Sys.sleep(0.15)
@@ -139,8 +142,8 @@ test_that("rewind_track round-trips server-side reactiveValues through undo", {
     expect_equal(ctrl$history$current()$values$st$zoom, 1)
     expect_equal(state$zoom, 1)
 
-    # The assignment inside undo()'s restore() is itself a tracked-value
-    # change; confirm its echo is absorbed too, rather than spawning a third
+    # The assignment inside restore() is also a change to a tracked value.
+    # Make sure that rewind absorbs its echo, and does not make a third
     # entry.
     session$flushReact()
     Sys.sleep(0.15)
@@ -190,17 +193,17 @@ test_that("rewind_disable() destroys the observers, not just clears the pointer"
     expect_true(result)
     expect_null(session$userData$.rewind)
 
-    # Further input changes must not be captured: if destroy() had merely
-    # detached the controller without destroying the observers, the capture
-    # observer (which still holds `ctrl` in its closure) would keep running
-    # and silently keep mutating a now-orphaned history.
+    # rewind must not capture more input changes. destroy() could remove
+    # only the controller and keep the observers. The capture observer holds
+    # `ctrl` in its closure. It would thus continue to run, and it would
+    # change a history that nothing uses.
     session$setInputs(region = "South")
     Sys.sleep(0.15)
     session$elapse(200)
     expect_equal(ctrl$history$size(), 1L)
     expect_equal(ctrl$history$current()$inputs$region, "North")
 
-    # The public API agrees the session is back to "not enabled".
+    # The public functions must also show that rewind is not enabled.
     expect_error(rewind_history(), "not enabled")
   })
 })

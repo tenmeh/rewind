@@ -1,41 +1,45 @@
 # helper-shiny-smoke.R --------------------------------------------------------
 #
-# Reusable AppDriver assertion: "did the running app throw anything?"
-# testthat auto-sources helper-*.R before the tests, and it runs in the TEST
-# process (it inspects the app via the AppDriver handle; it is not loaded
-# inside the app).
+# An AppDriver check that you can use again: "did the application throw an
+# error?" testthat reads each helper-*.R file before the tests. This file
+# runs in the TEST process. It examines the application through the
+# AppDriver object. It does not run inside the application.
 #
-# WHY THIS EXISTS
-# A naive smoke test asserts the absence of a signal that may not fire:
-#   * "browser console has no errors" - a Shiny RENDER error is caught by
-#     Shiny and shown in the output element; it is NOT written to the
-#     browser console.
-#   * "the output element is non-empty" - a failed render leaves a non-empty
-#     `shiny-output-error` <div> behind, so "got some HTML" is a false pass.
+# WHY THIS FILE EXISTS
+# A simple smoke test looks for the absence of a signal. But that signal
+# does not always occur:
+#   * "the browser console has no errors". Shiny catches a RENDER error and
+#     shows it in the output element. Shiny does NOT write it to the browser
+#     console.
+#   * "the output element is not empty". A render that fails leaves a
+#     `shiny-output-error` <div>. That div is not empty. "The element has
+#     some HTML" is thus a false pass.
 #
-# The signal that DOES fire on a render error is the app's stderr - Shiny
-# prints "Warning: Error in <fn>: ..." there, and shinytest2 captures it in
-# `app$get_logs()` under `location == "shiny"`. That is the universal catch:
-# it needs no output IDs and no per-widget markers. This helper asserts on
-# it, plus the DOM error class and the browser console, so a runtime
-# exception cannot pass silently.
+# One signal always occurs at a render error: the stderr of the application.
+# Shiny prints "Warning: Error in <fn>: ..." there. shinytest2 keeps that
+# text in `app$get_logs()`, with `location == "shiny"`. This is the check
+# that finds each error. It needs no output IDs and no markers for each
+# widget.
+#
+# This helper examines the stderr, the error class in the DOM, and the
+# browser console. An error at run time thus cannot pass without a failure.
 
 `%||%` <- function(a, b) if (is.null(a)) b else a
 
-#' Assert the running app logged no Shiny/JS errors and no output is in an
-#' error state.
+#' Make sure that the application logged no Shiny error and no JS error.
+#' Make sure also that no output shows an error.
 #'
-#' Call this AFTER exercising the interactions under test (a render error
-#' only fires when its reactive actually executes).
+#' Call this AFTER the test uses the controls. A render error occurs only
+#' when its reactive runs.
 #'
 #' @param app A live `shinytest2::AppDriver`.
-#' @return The app, invisibly.
+#' @return The application, invisibly.
 expect_no_shiny_errors <- function(app) {
   logs <- as.data.frame(app$get_logs())
   have <- nrow(logs) > 0 && all(c("location", "message") %in% names(logs))
 
-  # 1. Shiny stderr - render/runtime exceptions land here even when they
-  #    never reach the browser console.
+  # 1. The stderr of Shiny. Errors at render time and at run time go here,
+  #    also when they never reach the browser console.
   shiny_err <- character(0)
   if (have) {
     shiny_err <- logs$message[logs$location == "shiny" &
@@ -46,7 +50,7 @@ expect_no_shiny_errors <- function(app) {
     info = paste0("App logged Shiny errors:\n", paste(shiny_err, collapse = "\n"))
   )
 
-  # 2. Browser console errors (client-side JS failures).
+  # 2. Errors in the browser console. These are failures in the JS code.
   if (have && "level" %in% names(logs)) {
     console_err <- logs$message[!is.na(logs$level) & logs$level == "error" &
                                   logs$location == "chromote"]
@@ -57,7 +61,7 @@ expect_no_shiny_errors <- function(app) {
     )
   }
 
-  # 3. DOM - no output rendered into a `shiny-output-error` state.
+  # 3. The DOM. No output must have the `shiny-output-error` class.
   dom_err <- tryCatch(app$get_html(".shiny-output-error"),
                       error = function(e) NULL)
   testthat::expect_null(
@@ -71,27 +75,31 @@ expect_no_shiny_errors <- function(app) {
 #' Start an AppDriver for `app_dir`, skipping (not failing) if a headless
 #' Chrome is not available in this environment.
 #'
-#' Chrome writes its own internal scratch files as a side effect of running
-#' (on Linux, singleton-instance lock files named like `com.google.Chrome.*`;
-#' its user-data-dir profile everywhere) into `TMPDIR`/`TMP`/`TEMP`, inherited
-#' from the R process that spawns it as a child. R CMD check runs tests with
-#' those pointed inside the exact tree it later scans for leftover files
-#' ("detritus in the temp directory"), so anything Chrome leaves behind gets
-#' flagged as a NOTE - nothing to do with rewind, purely Chrome's own
-#' housekeeping outliving the scan.
+#' Chrome writes its own work files while it runs. On Linux these are lock
+#' files with names such as `com.google.Chrome.*`. On each system Chrome
+#' also writes its user-data directory. Chrome puts these files in
+#' `TMPDIR`, `TMP` or `TEMP`. It gets those values from the R process that
+#' starts it.
 #'
-#' A sibling of `tempdir()` is not a safe fix: it landed inside the scanned
-#' tree on every platform this was tried on. `tools::R_user_dir()` and
-#' `Sys.getenv("RUNNER_TEMP")` (GitHub Actions' own scratch directory for
-#' exactly this purpose) are unrelated to `tempdir()`'s hierarchy entirely,
-#' so redirecting Chrome there for the duration of the browser session
-#' avoids the overlap regardless of how any given platform nests its temp
-#' directories. Whether cleanup afterwards fully succeeds no longer matters
-#' for the check - it is attempted on a best-effort basis regardless, since
-#' Chrome's process may not release every file handle the instant it exits.
+#' R CMD check sets those values to a directory inside the tree that it
+#' examines later. That examination is the check for "detritus in the temp
+#' directory". Each file that Chrome leaves thus causes a NOTE. This has no
+#' relation to rewind. It is the normal operation of Chrome.
 #'
-#' @param app_dir Path to the Shiny app.
-#' @param ... Passed on to `shinytest2::AppDriver$new()`.
+#' A directory next to `tempdir()` does not solve this. That directory was
+#' inside the examined tree on each system that was tried.
+#' `tools::R_user_dir()` and `Sys.getenv("RUNNER_TEMP")` have no relation to
+#' the position of `tempdir()`. GitHub Actions gives `RUNNER_TEMP` for this
+#' purpose. This function thus sends Chrome to one of those directories
+#' while the browser runs. The position of the temporary directory on each
+#' system is then not important.
+#'
+#' The function removes the directory at the end. A failure to remove it has
+#' no effect on the check. Chrome can hold a file open for a short time
+#' after it stops.
+#'
+#' @param app_dir The path to the Shiny application.
+#' @param ... More arguments for `shinytest2::AppDriver$new()`.
 #' @return A live `AppDriver`.
 local_app_driver <- function(app_dir, ...) {
   testthat::skip_if_not_installed("shinytest2")

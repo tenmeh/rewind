@@ -3,21 +3,21 @@
 # Run with:
 #   shiny::runApp(system.file("examples/demo", package = "rewind"))
 #
-# Things to try:
-#   * change a few filters, then press Ctrl+Z (Cmd+Z on macOS)
-#   * drag the year slider around wildly, then undo once: the whole drag is
-#     a single step, not forty
-#   * click "Reset filters": three inputs change, but it is one undo step
-#   * pin a customer, undo, redo: the pin list lives in reactiveValues, not in
-#     an input, so it is tracked explicitly with rewind_track()
-#   * click any step in the history rail to jump straight to it
-#   * type in the search box and press Ctrl+Z: native text undo still works,
-#     because rewind stays out of the way while you are typing
+# Try these operations:
+#   * change some filters. Then press Ctrl+Z (Cmd+Z on macOS).
+#   * move the year slider quickly. Then do one undo. The full movement is
+#     one step, and not forty steps.
+#   * click "Reset filters". Three inputs change, but it is one undo step.
+#   * pin a customer. Then do an undo and a redo. The pin list is in
+#     reactiveValues and not in an input. rewind_track() thus records it.
+#   * click a step in the history rail to move to that step.
+#   * type in the search box and press Ctrl+Z. The text undo of the browser
+#     continues to operate, because rewind does nothing while you type.
 
 library(shiny)
 library(rewind)
 
-# A small synthetic dataset so the demo has no data dependencies.
+# A small set of test data. The demo thus needs no external data.
 set.seed(1)
 regions <- c("North", "South", "East", "West")
 sales <- data.frame(
@@ -70,14 +70,14 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
 
-  # One line. Everything below is ordinary Shiny.
+  # This is the only line that rewind needs. The code below is normal Shiny.
   rewind_enable(
     inputs      = c("region", "year", "active_only", "search"),
     depth       = 40,
     coalesce_ms = 400
   )
 
-  # Server-side state is invisible to rewind until registered.
+  # rewind cannot see the state on the server. You must register it.
   state <- reactiveValues(pinned = character(0))
   rewind_track(state, fields = "pinned", id = "pins")
 
@@ -92,7 +92,7 @@ server <- function(input, output, session) {
     out[order(-out$revenue), ]
   })
 
-  # Several changes, one undo step, one meaningful label.
+  # Several changes become one undo step with a clear label.
   observeEvent(input$reset, {
     rewind_step(label = "Reset filters", {
       updateSelectInput(session, "region", selected = "All")

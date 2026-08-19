@@ -1,10 +1,14 @@
-# rewind_enable() inside a moduleServer(). Previously documented as
-# "untested"; these confirm it works and pin down the scoping behaviour:
-# session$input read inside a module is already module-local (Shiny's own
-# contract, not rewind's), so captured snapshots use unprefixed names, and
-# restore() re-qualifies them with session$ns() before they go to the client.
+# Tests for rewind_enable() inside a moduleServer(). The documents said
+# "untested" before. These tests show that it operates, and they record the
+# names that rewind uses.
 #
-# Same Sys.sleep()/testServer virtual-clock note as test-controller.R.
+# A read of session$input inside a module gives module-local names already.
+# This is the operation of Shiny, and not of rewind. The snapshots thus hold
+# names with no namespace. restore() adds the namespace with session$ns()
+# before it sends the values to the client.
+#
+# The note about Sys.sleep() and the virtual clock of testServer is the same
+# as in test-controller.R.
 
 mod_srv <- function(id) {
   shiny::moduleServer(id, function(input, output, session) {
@@ -32,9 +36,9 @@ test_that("captured snapshots use module-local input names", {
 
 test_that("session$ns() qualifies module-local names the way restore() relies on", {
   shiny::testServer(mod_srv, args = list(id = "mymod"), {
-    # This is exactly the transform restore() applies to each captured input
-    # name before sending it to the client (controller.R's restore()); the
-    # snapshot must be module-local for this to produce the right DOM id.
+    # restore() in controller.R makes this change to each captured input
+    # name before it sends the values to the client. The snapshot must hold
+    # module-local names to give the correct DOM id.
     expect_equal(session$ns("region"), "mymod-region")
   })
 })
@@ -80,8 +84,8 @@ test_that("session$userData is shared across modules, so a second rewind_enable(
   two_mod_srv <- function(id) {
     shiny::moduleServer(id, function(input, output, session) {
       ctrl1 <- rewind_enable()
-      # expect_warning(expr, ...) returns the warning condition, not expr's
-      # value, so the reuse check needs the value captured separately.
+      # expect_warning(expr, ...) gives the warning condition. It does not
+      # give the value of expr. This test thus keeps the value separately.
       warned <- FALSE
       ctrl2 <- withCallingHandlers(
         rewind_enable(),

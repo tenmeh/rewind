@@ -7,19 +7,20 @@
 rewind_ui(label = "History", max_height = "20rem", class = NULL)
 }
 \arguments{
-\item{label}{Heading shown above the rail. Pass \code{NULL} to omit it.}
+\item{label}{The heading above the rail. Use \code{NULL} for no heading.}
 
-\item{max_height}{CSS height at which the rail starts scrolling.}
+\item{max_height}{The CSS height at which the rail starts to scroll.}
 
-\item{class}{Extra CSS classes for the containing element.}
+\item{class}{More CSS classes for the container element.}
 }
 \value{
 A \code{\link[htmltools:tagList]{htmltools::tagList()}}.
 }
 \description{
-Renders the history as a vertical list of steps, newest last, with the
-current position highlighted. Clicking a step jumps straight to it. The rail
-populates itself from the server; there is no \code{render} function to write.
+This function draws the history as a vertical list of steps. The newest
+step is at the end. The rail shows the current position. A click on a
+step moves to that step. The rail gets its data from the server. You thus
+do not have to write a \code{render} function.
 }
 \examples{
 rewind_ui()

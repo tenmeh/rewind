@@ -14,29 +14,29 @@ rewind_track(
 \arguments{
 \item{values}{A \code{\link[shiny:reactiveValues]{shiny::reactiveValues()}} object.}
 
-\item{fields}{Character vector of field names to track, or \code{NULL} for all
-fields present at snapshot time.}
+\item{fields}{Character vector of the field names to track. Use \code{NULL}
+for all the fields that exist when \code{rewind} takes the snapshot.}
 
-\item{id}{A name for this group, used to keep multiple registered objects
-apart and to label history entries. Defaults to the name of the \code{values}
-argument at the call site.}
+\item{id}{A name for this group. \code{rewind} uses it to keep the registered
+objects apart, and to label the history entries. The default is the
+name of the \code{values} argument at the call.}
 
-\item{session}{The Shiny session. Defaults to the current one.}
+\item{session}{The Shiny session. The default is the current session.}
 }
 \value{
 \code{TRUE}, invisibly.
 }
 \description{
-Inputs are captured automatically, but state you hold yourself in a
-\code{\link[shiny:reactiveValues]{shiny::reactiveValues()}} object is invisible to \code{rewind} until you register
-it here. Registered fields are snapshotted alongside inputs and assigned
-back on undo.
+\code{rewind} captures inputs automatically. It cannot see the state that you
+keep in a \code{\link[shiny:reactiveValues]{shiny::reactiveValues()}} object. Register that object here.
+\code{rewind} then records the registered fields with the inputs, and writes
+them back at an undo.
 }
 \details{
-Only register values that are genuinely \emph{state}. Registering a derived or
-cached value is harmless but pointless, and registering something an
-observer immediately recomputes will produce an undo step that appears to do
-nothing.
+Register only the values that are true \emph{state}. A derived value or a
+cached value does no harm, but it has no use. Do not register a value
+that an observer computes again immediately. The undo step then appears
+to do nothing.
 }
 \examples{
 if (interactive()) {

@@ -1,7 +1,7 @@
 `%||%` <- function(x, y) if (is.null(x)) y else x
 
 
-#' Resolve a session argument, erroring helpfully when there isn't one
+#' Get the session argument. Show a clear error if there is no session.
 #' @keywords internal
 #' @noRd
 require_session <- function(session) {
@@ -16,7 +16,7 @@ require_session <- function(session) {
 }
 
 
-#' Fetch the controller for a session, or `NULL`
+#' Get the controller of a session. Give `NULL` if there is none.
 #' @keywords internal
 #' @noRd
 get_controller <- function(session = shiny::getDefaultReactiveDomain()) {
@@ -25,7 +25,7 @@ get_controller <- function(session = shiny::getDefaultReactiveDomain()) {
 }
 
 
-#' Fetch the controller for a session, erroring if rewind is not enabled
+#' Get the controller of a session. Show an error if `rewind` is not enabled.
 #' @keywords internal
 #' @noRd
 require_controller <- function(session = shiny::getDefaultReactiveDomain()) {

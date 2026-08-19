@@ -91,7 +91,7 @@ test_that("diff_label notices additions and removals", {
   expect_equal(rewind:::diff_label(list(a = 1, b = 2), list(a = 1)), "b")
 })
 
-test_that("describe_state is a sane fallback label", {
+test_that("describe_state gives a correct default label", {
   expect_equal(rewind:::describe_state(list()), "Empty state")
   expect_equal(rewind:::describe_state(list(a = 1)), "1 value changed")
   expect_equal(rewind:::describe_state(list(a = 1, b = 2)), "2 values changed")

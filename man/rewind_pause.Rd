@@ -10,15 +10,16 @@ rewind_pause(session = shiny::getDefaultReactiveDomain())
 rewind_resume(session = shiny::getDefaultReactiveDomain())
 }
 \arguments{
-\item{session}{The Shiny session. Defaults to the current one.}
+\item{session}{The Shiny session. The default is the current session.}
 }
 \value{
 \code{TRUE}, invisibly.
 }
 \description{
-While paused, changes are applied normally but not recorded. Useful around
-programmatic churn you do not want the user to be able to step back into,
-such as restoring a saved session or applying a URL bookmark.
+While capture is paused, the application applies changes as usual. But
+\code{rewind} does not record them. Use this around changes that your code
+makes, and that the user must not step back into. Examples are a saved
+session that you restore, or a URL bookmark that you apply.
 }
 \examples{
 if (interactive()) {

@@ -16,7 +16,7 @@ the code has changed materially since.
 
 0 errors | 0 warnings | 1 note
 
-* Maintainer: 'Tanmay Chanda <jadevenom2430@gmail.com>'
+* Maintainer: 'Tanmay Chanda <tanmaychanda96@gmail.com>'
   New submission
 
 The only note is the standard first-submission note.

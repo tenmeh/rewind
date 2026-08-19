@@ -6,6 +6,6 @@
 #' @importFrom htmltools htmlDependency
 NULL
 
-# Avoid a NOTE about utils being imported but seemingly unused; it is used by
-# rewind_dependency() to stamp the asset version.
+# This line stops a NOTE. The NOTE says that the package imports utils but
+# does not use it. rewind_dependency() uses utils to get the asset version.
 utils::globalVariables(character(0))

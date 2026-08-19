@@ -1,8 +1,8 @@
 #' The rewind HTML dependency
 #'
-#' [rewind_enable()] injects this automatically, so you rarely need it. It is
-#' exported for the case where you want the assets present before the server
-#' function runs, or where `insertUI()` is unavailable to you.
+#' [rewind_enable()] adds this automatically. You thus rarely need this
+#' function. Use it when you want the assets before the server function
+#' runs. Use it also when you cannot use `insertUI()`.
 #'
 #' @return An [htmltools::htmlDependency()].
 #' @examples
@@ -21,16 +21,17 @@ rewind_dependency <- function() {
 
 #' Undo and redo buttons
 #'
-#' A pair of buttons wired to the session's history. They enable and disable
-#' themselves as the history allows, so there is nothing to observe on the
-#' server.
+#' These two buttons connect to the history of the session. They become
+#' enabled and disabled as the history permits. You thus do not have to
+#' write an observer on the server.
 #'
-#' @param undo_label,redo_label Button labels. Pass `NULL` for an icon-only
-#'   button; the accessible name (`aria-label`) is set to "Undo"/"Redo" in
-#'   that case, so the button remains announced correctly without visible
-#'   text.
-#' @param class Extra CSS classes applied to the containing element. The
-#'   buttons themselves carry `btn btn-default`, so Bootstrap themes apply.
+#' @param undo_label,redo_label The button labels. Use `NULL` for a button
+#'   with an icon only. The function then sets the accessible name
+#'   (`aria-label`) to "Undo" or "Redo". A screen reader can thus announce
+#'   the button correctly when it has no text.
+#' @param class More CSS classes for the container element. The buttons
+#'   have the classes `btn btn-default`. Bootstrap themes thus apply to
+#'   them.
 #'
 #' @return A [htmltools::tagList()].
 #' @examples
@@ -73,13 +74,14 @@ rewind_buttons <- function(undo_label = "Undo",
 
 #' A scrubbable history rail
 #'
-#' Renders the history as a vertical list of steps, newest last, with the
-#' current position highlighted. Clicking a step jumps straight to it. The rail
-#' populates itself from the server; there is no `render` function to write.
+#' This function draws the history as a vertical list of steps. The newest
+#' step is at the end. The rail shows the current position. A click on a
+#' step moves to that step. The rail gets its data from the server. You thus
+#' do not have to write a `render` function.
 #'
-#' @param label Heading shown above the rail. Pass `NULL` to omit it.
-#' @param max_height CSS height at which the rail starts scrolling.
-#' @param class Extra CSS classes for the containing element.
+#' @param label The heading above the rail. Use `NULL` for no heading.
+#' @param max_height The CSS height at which the rail starts to scroll.
+#' @param class More CSS classes for the container element.
 #'
 #' @return A [htmltools::tagList()].
 #' @examples
