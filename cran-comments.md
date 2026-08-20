@@ -8,9 +8,14 @@ the code has changed materially since.
 
 ## Test environments
 
-* local Windows 11, R 4.6.1, with `_R_CHECK_CRAN_INCOMING_REMOTE_=TRUE`
-* GitHub Actions: macOS (release), Windows (release),
+* local Windows 11, R 4.6.1 (release), with `--as-cran`,
+  `_R_CHECK_CRAN_INCOMING_REMOTE_=TRUE` and the PDF manual
+* GitHub Actions with `--as-cran`: macOS (release), Windows (release),
   Ubuntu (devel, release, oldrel-1)
+
+The tarball was checked with the current release of R, not R-devel, because
+this machine has only the release version. R-devel is covered by the
+Ubuntu (devel) job above, which also runs `R CMD check --as-cran`.
 
 ## R CMD check results
 

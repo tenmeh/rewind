@@ -25,7 +25,6 @@ Imports:
     shiny (>= 1.7.0),
     utils
 Suggests:
-    bslib,
     shinytest2,
     testthat (>= 3.0.0),
     withr
