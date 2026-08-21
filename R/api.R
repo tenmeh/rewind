@@ -49,10 +49,16 @@
 #'   removes the oldest entries first.
 #' @param coalesce_ms The quiet period in milliseconds before `rewind`
 #'   writes a change to the history. Increase it to group more changes.
-#' @param shortcuts Set to `TRUE` to bind `Ctrl`/`Cmd` + `Z` and
-#'   `Ctrl`/`Cmd` + `Shift` + `Z` (and `Ctrl` + `Y`) in the browser. The
-#'   shortcuts do nothing while the user types in a text field. The text
-#'   undo of the browser thus continues to work.
+#' @param shortcuts Set to `TRUE` to bind the keyboard shortcuts in the
+#'   browser. There are three:
+#'
+#'   * `Ctrl` + `Z` (`Cmd` + `Z` on macOS) does an undo;
+#'   * `Ctrl` + `Shift` + `Z` (`Cmd` + `Shift` + `Z` on macOS) does a redo;
+#'   * `Ctrl` + `Y` also does a redo. This is the usual redo shortcut on
+#'     Windows.
+#'
+#'   The shortcuts do nothing while the user types in a text field. The
+#'   text undo of the browser thus continues to work.
 #' @param verbose Set to `TRUE` to show messages about what `rewind`
 #'   captures and restores. This is useful during development.
 #'

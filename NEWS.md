@@ -1,3 +1,12 @@
+# rewind (development version)
+
+* The redo button now says "Redo (Ctrl+Shift+Z or Ctrl+Y)" when the pointer
+  rests on it. It said only "Redo (Ctrl+Shift+Z)" before. `Ctrl` + `Y` has
+  always done a redo, but the button did not say so.
+* The description of the `shortcuts` argument of `rewind_enable()` now
+  lists the three shortcuts, and says which one belongs to which system.
+* The demo application now names the redo shortcut in its hint.
+
 # rewind 0.2.0
 
 * `rewind_disable()` stops undo and redo for a session completely. It
