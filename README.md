@@ -1,5 +1,10 @@
 # rewind
 
+<!-- badges: start -->
+[![CRAN status](https://www.r-pkg.org/badges/version/rewind)](https://CRAN.R-project.org/package=rewind)
+[![R-CMD-check](https://github.com/tenmeh/rewind/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/tenmeh/rewind/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
+
 **Undo and redo for Shiny applications.**
 
 Shiny has bookmarking. It captures a state that you can send as a link.
@@ -33,6 +38,12 @@ shinyApp(ui, server)
 `Ctrl+Shift+Z` moves forwards.
 
 ## Installation
+
+```r
+install.packages("rewind")
+```
+
+To get the development version from GitHub:
 
 ```r
 # install.packages("remotes")
