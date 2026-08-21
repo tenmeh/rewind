@@ -53,10 +53,29 @@ server <- function(input, output, session) {
 shinyApp(ui, server)
 ```
 
-`Ctrl+Z` now walks backwards through the user's filter choices. `Ctrl+Shift+Z`
-walks forwards. Every input in the session is captured automatically, with a
-short list of exclusions (action buttons, `fileInput()`, and rewind's own
-inputs) covered in `?rewind_enable`.
+`Ctrl+Z` now moves backwards through the filter choices of the user.
+`Ctrl+Shift+Z` moves forwards. `rewind` captures every input in the session
+automatically. There is a short list of exclusions: action buttons,
+`fileInput()`, and the inputs of this package. `?rewind_enable` gives the
+full list.
+
+## Keyboard shortcuts
+
+| Keys | Action |
+|---|---|
+| `Ctrl` + `Z` (`Cmd` + `Z` on macOS) | Undo |
+| `Ctrl` + `Shift` + `Z` (`Cmd` + `Shift` + `Z` on macOS) | Redo |
+| `Ctrl` + `Y` | Redo |
+
+There are two shortcuts for redo. `Ctrl` + `Y` is the usual one on
+Windows. `Cmd` + `Shift` + `Z` is the usual one on macOS.
+
+The shortcuts do nothing while the user types in a text field. The text
+undo of the browser thus continues to work:
+
+```{r}
+rewind_enable(shortcuts = FALSE) # turn the shortcuts off
+```
 
 ## One movement of a slider is one undo step, not forty
 
