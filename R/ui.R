@@ -59,7 +59,7 @@ rewind_buttons <- function(undo_label = "Undo",
         type = "button",
         class = "btn btn-default rewind-redo",
         disabled = NA,
-        title = "Redo (Ctrl+Shift+Z)",
+        title = "Redo (Ctrl+Shift+Z or Ctrl+Y)",
         `aria-label` = redo_label %||% "Redo",
         htmltools::HTML("&#8631;"),
         if (!is.null(redo_label)) htmltools::tags$span(
