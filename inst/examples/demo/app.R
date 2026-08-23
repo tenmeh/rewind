@@ -41,7 +41,7 @@ ui <- fluidPage(
   div(
     class = "toolbar",
     rewind_buttons(),
-    span(class = "hint", "or press Ctrl/Cmd + Z")
+    span(class = "hint", "or press Ctrl/Cmd + Z to undo, Ctrl + Y to redo")
   ),
 
   sidebarLayout(

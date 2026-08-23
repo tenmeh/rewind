@@ -29,10 +29,17 @@ removes the oldest entries first.}
 \item{coalesce_ms}{The quiet period in milliseconds before \code{rewind}
 writes a change to the history. Increase it to group more changes.}
 
-\item{shortcuts}{Set to \code{TRUE} to bind \code{Ctrl}/\code{Cmd} + \code{Z} and
-\code{Ctrl}/\code{Cmd} + \code{Shift} + \code{Z} (and \code{Ctrl} + \code{Y}) in the browser. The
-shortcuts do nothing while the user types in a text field. The text
-undo of the browser thus continues to work.}
+\item{shortcuts}{Set to \code{TRUE} to bind the keyboard shortcuts in the
+browser. There are three:
+\itemize{
+\item \code{Ctrl} + \code{Z} (\code{Cmd} + \code{Z} on macOS) does an undo;
+\item \code{Ctrl} + \code{Shift} + \code{Z} (\code{Cmd} + \code{Shift} + \code{Z} on macOS) does a redo;
+\item \code{Ctrl} + \code{Y} also does a redo. This is the usual redo shortcut on
+Windows.
+}
+
+The shortcuts do nothing while the user types in a text field. The
+text undo of the browser thus continues to work.}
 
 \item{verbose}{Set to \code{TRUE} to show messages about what \code{rewind}
 captures and restores. This is useful during development.}
