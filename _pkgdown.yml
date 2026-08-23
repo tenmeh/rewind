@@ -20,6 +20,23 @@ home:
   description: >
     Adds a user-facing undo and redo history to Shiny applications, with
     coalescing so a slider drag is one step rather than forty.
+  sidebar:
+    # The built-in "dev" component holds the badges. pkgdown gives it the
+    # heading "Dev status", which is wrong for a release badge. This
+    # structure leaves "dev" out and uses the "status" component below in
+    # its place. The badges thus keep their position, with a correct
+    # heading.
+    #
+    # The badges appear here and in the README. pkgdown reads the README
+    # for the "dev" component only, and that component is not in use.
+    # Change both places together.
+    structure: [status, links, license, citation, authors]
+    components:
+      status:
+        title: Status
+        text: |
+          [![CRAN status](https://www.r-pkg.org/badges/version/rewind)](https://CRAN.R-project.org/package=rewind)
+          [![R-CMD-check](https://github.com/tenmeh/rewind/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/tenmeh/rewind/actions/workflows/R-CMD-check.yaml)
 
 navbar:
   structure:
