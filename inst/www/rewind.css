@@ -20,6 +20,13 @@
   font-size: 0.95em;
 }
 
+/* The arrow is an SVG with width and height in em. It thus follows the
+   font size of the button. flex: none stops it from becoming narrow when
+   the label is long. */
+.rewind-buttons .rewind-icon {
+  flex: none;
+}
+
 /* --- history rail ------------------------------------------------------- */
 
 .rewind-rail-wrap {
