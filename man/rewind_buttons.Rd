@@ -4,7 +4,12 @@
 \alias{rewind_buttons}
 \title{Undo and redo buttons}
 \usage{
-rewind_buttons(undo_label = "Undo", redo_label = "Redo", class = NULL)
+rewind_buttons(
+  undo_label = "Undo",
+  redo_label = "Redo",
+  class = NULL,
+  button_class = NULL
+)
 }
 \arguments{
 \item{undo_label, redo_label}{The button labels. Use \code{NULL} for a button
@@ -12,9 +17,11 @@ with an icon only. The function then sets the accessible name
 (\code{aria-label}) to "Undo" or "Redo". A screen reader can thus announce
 the button correctly when it has no text.}
 
-\item{class}{More CSS classes for the container element. The buttons
-have the classes \verb{btn btn-default}. Bootstrap themes thus apply to
-them.}
+\item{class}{More CSS classes for the container element.}
+
+\item{button_class}{More CSS classes for the two buttons. Use it for a
+Bootstrap variant such as \code{"btn-primary"} or \code{"btn-outline-secondary"},
+and for a size such as \code{"btn-sm"}.}
 }
 \value{
 A \code{\link[htmltools:tagList]{htmltools::tagList()}}.
@@ -24,7 +31,23 @@ These two buttons connect to the history of the session. They become
 enabled and disabled as the history permits. You thus do not have to
 write an observer on the server.
 }
+\section{Appearance}{
+The buttons carry \verb{btn btn-default}, so a Bootstrap theme applies to
+them without any work. Use \code{button_class} to give them a different
+Bootstrap variant, size or shape:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{rewind_buttons(button_class = "btn-primary")
+rewind_buttons(button_class = "btn-outline-secondary btn-sm")
+}\if{html}{\out{</div>}}
+
+A variant that you add wins over \code{btn-default}, so the buttons take the
+colours of the theme of your application. \code{bslib::bs_theme()} decides
+what those colours are. \code{rewind} thus has no colours of its own to keep
+in agreement with your application.
+}
+
 \examples{
 rewind_buttons()
 rewind_buttons(undo_label = NULL, redo_label = NULL)
+rewind_buttons(button_class = "btn-outline-primary btn-sm")
 }

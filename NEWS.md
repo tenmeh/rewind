@@ -1,5 +1,16 @@
 # rewind (development version)
 
+* `rewind_buttons()` takes a `button_class` argument. It adds CSS classes to
+  the two buttons. Use it for a Bootstrap variant such as `"btn-primary"` or
+  `"btn-outline-secondary"`, and for a size such as `"btn-sm"`. The `class`
+  argument continues to hold classes for the container element only, so
+  there was no way to reach the buttons before.
+* The arrows on the buttons are now SVG. They were the HTML entities
+  `&#8630;` and `&#8631;`, which come from the font of the browser and thus
+  have a different weight and size on each system. The SVG arrows use
+  `currentColor` and a size in `em`. They thus follow the colour and the
+  size of the button, including with `btn-sm`, `btn-lg`, an outline variant
+  and a dark theme.
 * The redo button now says "Redo (Ctrl+Shift+Z or Ctrl+Y)" when the pointer
   rests on it. It said only "Redo (Ctrl+Shift+Z)" before. `Ctrl` + `Y` has
   always done a redo, but the button did not say so.
