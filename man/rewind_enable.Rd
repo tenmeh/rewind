@@ -10,6 +10,7 @@ rewind_enable(
   exclude = NULL,
   depth = 50L,
   coalesce_ms = 400L,
+  restore_timeout = 2,
   shortcuts = TRUE,
   verbose = FALSE
 )
@@ -28,6 +29,18 @@ removes the oldest entries first.}
 
 \item{coalesce_ms}{The quiet period in milliseconds before \code{rewind}
 writes a change to the history. Increase it to group more changes.}
+
+\item{restore_timeout}{The time in seconds that \code{rewind} waits for the
+browser to finish a restore. The default of 2 suits a fast
+connection.
+
+Increase it for an application on a slow connection, such as one
+behind a VPN or on a mobile network. If the limit is too short,
+capture starts again while the browser is still applying the restore,
+and a partial state becomes a history entry that the user never made.
+
+Do not increase it more than you need. If a restore never returns,
+\code{rewind} ignores the changes of the user until this limit ends.}
 
 \item{shortcuts}{Set to \code{TRUE} to bind the keyboard shortcuts in the
 browser. There are three:

@@ -28,6 +28,13 @@ test_that("rewind_enable validates its arguments", {
   expect_error(rewind_enable(session = fake, exclude = 1), "`exclude`")
   expect_error(rewind_enable(session = fake, coalesce_ms = -1), "`coalesce_ms`")
   expect_error(rewind_enable(session = fake, coalesce_ms = c(1, 2)), "`coalesce_ms`")
+
+  # A restore timeout of zero would stop the guard against the echo of a
+  # restore, so it is not permitted.
+  expect_error(rewind_enable(session = fake, restore_timeout = 0), "`restore_timeout`")
+  expect_error(rewind_enable(session = fake, restore_timeout = -1), "`restore_timeout`")
+  expect_error(rewind_enable(session = fake, restore_timeout = c(1, 2)), "`restore_timeout`")
+  expect_error(rewind_enable(session = fake, restore_timeout = "2"), "`restore_timeout`")
 })
 
 test_that("rewind_track rejects things that are not reactiveValues", {
