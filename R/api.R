@@ -49,6 +49,17 @@
 #'   removes the oldest entries first.
 #' @param coalesce_ms The quiet period in milliseconds before `rewind`
 #'   writes a change to the history. Increase it to group more changes.
+#' @param restore_timeout The time in seconds that `rewind` waits for the
+#'   browser to finish a restore. The default of 2 suits a fast
+#'   connection.
+#'
+#'   Increase it for an application on a slow connection, such as one
+#'   behind a VPN or on a mobile network. If the limit is too short,
+#'   capture starts again while the browser is still applying the restore,
+#'   and a partial state becomes a history entry that the user never made.
+#'
+#'   Do not increase it more than you need. If a restore never returns,
+#'   `rewind` ignores the changes of the user until this limit ends.
 #' @param shortcuts Set to `TRUE` to bind the keyboard shortcuts in the
 #'   browser. There are three:
 #'
@@ -91,6 +102,7 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
                           exclude = NULL,
                           depth = 50L,
                           coalesce_ms = 400L,
+                          restore_timeout = 2,
                           shortcuts = TRUE,
                           verbose = FALSE) {
   session <- require_session(session)
@@ -104,6 +116,10 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
   if (!is.numeric(coalesce_ms) || length(coalesce_ms) != 1L || coalesce_ms < 0) {
     stop("`coalesce_ms` must be a single non-negative number.", call. = FALSE)
   }
+  if (!is.numeric(restore_timeout) || length(restore_timeout) != 1L ||
+        restore_timeout <= 0) {
+    stop("`restore_timeout` must be a single positive number.", call. = FALSE)
+  }
 
   if (!is.null(session$userData$.rewind)) {
     warning("rewind is already enabled for this session; ignoring.",
@@ -112,12 +128,13 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
   }
 
   ctrl <- RewindController$new(
-    session     = session,
-    inputs      = inputs,
-    exclude     = exclude,
-    depth       = depth,
-    coalesce_ms = coalesce_ms,
-    verbose     = verbose
+    session         = session,
+    inputs          = inputs,
+    exclude         = exclude,
+    depth           = depth,
+    coalesce_ms     = coalesce_ms,
+    restore_timeout = restore_timeout,
+    verbose         = verbose
   )
   session$userData$.rewind <- ctrl
 

@@ -56,6 +56,14 @@ current_step_label <- function(app) {
   app$get_js("document.querySelector('.rewind-step.is-current .rewind-step-label').textContent")
 }
 
+# The position in the rail, as a number. Two steps can carry the same label,
+# so the index is the reliable way to say which way the position moved.
+current_step_index <- function(app) {
+  as.integer(app$get_js(
+    "document.querySelector('.rewind-step.is-current').getAttribute('data-index')"
+  ))
+}
+
 test_that("the demo app: buttons, rail, coalescing, and tracked values all work in a real browser", {
   testthat::skip_on_cran()
 
@@ -136,7 +144,7 @@ test_that("the demo app: buttons, rail, coalescing, and tracked values all work 
 
   # --- keyboard: Ctrl+Z does an undo from the page body ------------------
   before <- rail_size(app)
-  before_label <- current_step_label(app)
+  start_index <- current_step_index(app)
   app$run_js("
     document.body.dispatchEvent(new KeyboardEvent(
       'keydown', {key: 'z', ctrlKey: true, bubbles: true, cancelable: true}
@@ -144,7 +152,31 @@ test_that("the demo app: buttons, rail, coalescing, and tracked values all work 
   ")
   settle(app)
   expect_equal(rail_size(app), before)
-  expect_false(identical(current_step_label(app), before_label))
+  # An undo moves the position back by one.
+  expect_equal(current_step_index(app), start_index - 1L)
+
+  # --- keyboard: Ctrl+Y does a redo --------------------------------------
+  # Ctrl+Y is the usual redo shortcut on Windows, and the documents name it.
+  # Nothing tested it before, so a change to the key handler could have
+  # stopped it and no test would have failed. The undo above makes a redo
+  # possible.
+  app$run_js("
+    document.body.dispatchEvent(new KeyboardEvent(
+      'keydown', {key: 'y', ctrlKey: true, bubbles: true, cancelable: true}
+    ));
+  ")
+  settle(app)
+  expect_equal(current_step_index(app), start_index)
+  expect_equal(rail_size(app), before)
+
+  # Put the position back where the rest of this test expects it.
+  app$run_js("
+    document.body.dispatchEvent(new KeyboardEvent(
+      'keydown', {key: 'z', ctrlKey: true, bubbles: true, cancelable: true}
+    ));
+  ")
+  settle(app)
+  expect_equal(current_step_index(app), start_index - 1L)
 
   # --- keyboard: Ctrl+Z in the text box must NOT do an undo --------------
   before_label <- current_step_label(app)

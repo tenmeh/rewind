@@ -17,11 +17,13 @@ RewindController <- R6::R6Class(
                           exclude = NULL,
                           depth = 50L,
                           coalesce_ms = 400L,
+                          restore_timeout = 2,
                           verbose = FALSE) {
       private$.session     <- session
       private$.inputs      <- inputs
       private$.exclude     <- exclude
       private$.coalesce_ms <- as.numeric(coalesce_ms)
+      private$.expect_timeout <- as.numeric(restore_timeout)
       private$.verbose     <- isTRUE(verbose)
       private$.tracked     <- list()
       private$.tick        <- shiny::reactiveVal(0L)
@@ -85,6 +87,13 @@ RewindController <- R6::R6Class(
         }
         # The browser has not applied all of the restore yet. Ignore the
         # states between, until it is complete or the time limit ends.
+        #
+        # The time limit matters on a slow connection. Too short, and
+        # capture starts again while the browser is still applying the
+        # restore, so a partial state becomes a history entry that the user
+        # never made. Too long, and a restore that never echoes holds
+        # capture off, so real changes from the user are lost until the
+        # limit ends. rewind_enable(restore_timeout=) sets it.
         if (difftime(Sys.time(), private$.expecting_since, units = "secs") <
               private$.expect_timeout) {
           private$log("ignoring intermediate state while restoring")
@@ -319,13 +328,23 @@ RewindController <- R6::R6Class(
 #' The server value of a `fileInput()` is a data frame. It has a fixed set
 #' of columns: `name`, `size`, `type` and `datapath` (refer to
 #' [shiny::fileInput]). It has no special S3 class. This function thus
-#' compares the column names.
+#' examines the shape of the value.
+#'
+#' The column types are examined as well as the names. A data frame of the
+#' user, with those four names but other types, is then kept in the
+#' history. Without the type test, `rewind` would drop such a value and
+#' give no message, and an undo would not restore it.
 #'
 #' @param x An input value to examine.
 #' @keywords internal
 #' @noRd
 is_file_input_value <- function(x) {
-  is.data.frame(x) && identical(names(x), c("name", "size", "type", "datapath"))
+  is.data.frame(x) &&
+    identical(names(x), c("name", "size", "type", "datapath")) &&
+    is.character(x$name) &&
+    is.character(x$type) &&
+    is.character(x$datapath) &&
+    is.numeric(x$size)
 }
 
 

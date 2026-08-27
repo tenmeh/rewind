@@ -59,6 +59,28 @@ test_that("is_file_input_value matches fileInput()'s documented shape", {
   expect_false(rewind:::is_file_input_value("a.csv"))
 })
 
+test_that("a data frame of the user with the same column names is kept", {
+  # Someone can hold a data frame in reactiveValues with these four names.
+  # Only the column types tell it apart from the value of a fileInput().
+  # Without the type test, rewind would drop it and give no message, and an
+  # undo would not restore it.
+  looks_similar <- data.frame(
+    name     = c("Ann", "Bo"),
+    size     = c("large", "small"),   # character, not numeric
+    type     = c("cat", "dog"),
+    datapath = c("north", "south"),
+    stringsAsFactors = FALSE
+  )
+  expect_false(rewind:::is_file_input_value(looks_similar))
+
+  # A numeric name column is also not a fileInput() value.
+  numeric_name <- data.frame(
+    name = 1:2, size = c(1, 2), type = c("a", "b"),
+    datapath = c("x", "y"), stringsAsFactors = FALSE
+  )
+  expect_false(rewind:::is_file_input_value(numeric_name))
+})
+
 test_that("flatten_state namespaces tracked values", {
   s <- list(inputs = list(x = 1), values = list(rv = list(sel = "a", zoom = 2)))
   flat <- rewind:::flatten_state(s)
