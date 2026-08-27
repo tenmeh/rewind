@@ -64,6 +64,50 @@ test_that("labels are omitted when NULL", {
   expect_false(grepl("rewind-label", bare))
 })
 
+test_that("button_class reaches the buttons, not the container", {
+  html <- as.character(rewind_buttons(button_class = "btn-outline-primary btn-sm"))
+
+  # Both buttons take the classes.
+  expect_match(html, "btn btn-default btn-outline-primary btn-sm rewind-undo")
+  expect_match(html, "btn btn-default btn-outline-primary btn-sm rewind-redo")
+
+  # The container keeps only its own class. A class given to `class` goes
+  # there instead, and the two arguments must not reach the same element.
+  expect_match(html, '<div class="rewind-buttons">')
+
+  container <- as.character(rewind_buttons(class = "my-toolbar"))
+  expect_match(container, '<div class="rewind-buttons my-toolbar">')
+  expect_false(grepl("my-toolbar rewind-undo", container))
+})
+
+test_that("the arrows are SVG, so they do not depend on the font", {
+  html <- as.character(rewind_buttons())
+
+  expect_match(html, "<svg")
+  expect_match(html, 'class="rewind-icon"')
+
+  # currentColor makes the arrow follow the colour of the button text, so a
+  # Bootstrap variant or a dark theme needs no extra rule.
+  expect_match(html, 'stroke="currentColor"')
+
+  # The button already has an aria-label. A screen reader must not announce
+  # the image as well.
+  expect_match(html, 'aria-hidden="true"')
+
+  # The old entities must not come back.
+  expect_false(grepl("&#8630;", html, fixed = TRUE))
+  expect_false(grepl("&#8631;", html, fixed = TRUE))
+})
+
+test_that("the undo and redo arrows point in opposite directions", {
+  html <- as.character(rewind_buttons())
+
+  # The redo arrow is the undo arrow mirrored: each x becomes 16 - x. A
+  # copy-and-paste mistake would give two arrows that point the same way.
+  expect_match(html, "M5.5 3 2.5 6l3 3", fixed = TRUE)   # undo head, points left
+  expect_match(html, "M10.5 3 13.5 6l-3 3", fixed = TRUE) # redo head, points right
+})
+
 test_that("icon-only buttons still carry an accessible name", {
   bare <- as.character(rewind_buttons(undo_label = NULL, redo_label = NULL))
   expect_match(bare, 'aria-label="Undo"')
