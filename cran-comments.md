@@ -2,9 +2,23 @@
 
 ## Submission
 
-This is a new submission. The package has not been on CRAN before; the
-version is 0.2.0 because 0.1.0 was released publicly on GitHub only, and
-the code has changed materially since.
+This is an update of a package that is on CRAN. It moves the version from
+0.2.0 to 0.2.1.
+
+The changes correct two faults and add two arguments. `NEWS.md` gives the
+full list.
+
+* `rewind_enable()` waited a fixed 2 seconds for the browser to finish a
+  restore. That is enough on a fast connection. On a slow one the wait can
+  be too short, and a partial state then becomes a history entry that the
+  user never made. The wait is now the `restore_timeout` argument.
+* A data frame of the user with the same four column names as the value of
+  a `fileInput()` was dropped from the history, with no message. The test
+  now examines the column types as well as the names.
+* `rewind_buttons()` takes a `button_class` argument, so an application can
+  give the buttons a Bootstrap variant or a size.
+* The arrows on the buttons are now SVG and not HTML entities. They thus
+  have the same shape on each system.
 
 ## Test environments
 
@@ -19,12 +33,11 @@ Ubuntu (devel) job above, which also runs `R CMD check --as-cran`.
 
 ## R CMD check results
 
-0 errors | 0 warnings | 1 note
+0 errors | 0 warnings | 0 notes
 
-* Maintainer: 'Tanmay Chanda <tanmaychanda96@gmail.com>'
-  New submission
+## Reverse dependencies
 
-The only note is the standard first-submission note.
+There are no reverse dependencies.
 
 ## Notes for the reviewer
 
