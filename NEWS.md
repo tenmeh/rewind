@@ -1,4 +1,4 @@
-# rewind (development version)
+# rewind 0.2.1
 
 * `rewind_enable()` takes a `restore_timeout` argument, in seconds. It sets
   how long `rewind` waits for the browser to finish a restore. The value
@@ -10,7 +10,6 @@
   column names as the value of a `fileInput()`. It now examines the column
   types as well as the names. Such a value was dropped from the history
   before, with no message.
-
 * `rewind_buttons()` takes a `button_class` argument. It adds CSS classes to
   the two buttons. Use it for a Bootstrap variant such as `"btn-primary"` or
   `"btn-outline-secondary"`, and for a size such as `"btn-sm"`. The `class`
