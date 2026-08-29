@@ -2,10 +2,21 @@
 #
 # A pull request builds the site, but does not publish it. A bad reference
 # index or an example that fails is thus found before the site goes live.
+#
+# There is no trigger on a tag here, and that is intentional. The template
+# from r-lib has one, because it sends the site to a gh-pages branch, and a
+# branch has no environment rules. This workflow uses the newer method:
+# actions/deploy-pages, with the github-pages environment. That environment
+# permits the default branch only, so a push of a tag gives:
+#
+#   Tag "v0.2.1" is not allowed to deploy to github-pages due to
+#   environment protection rules.
+#
+# A tag always points at a commit that main has already built and
+# published, so a build on a tag adds nothing and fails every time.
 on:
   push:
     branches: [main]
-    tags: ["*"]
   pull_request:
     branches: [main]
   workflow_dispatch:
