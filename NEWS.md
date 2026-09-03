@@ -1,3 +1,12 @@
+# rewind 0.2.2
+
+* The history rail no longer scrolls the page or the sidebar that holds it.
+  It kept the current step in view with `scrollIntoView()`, which scrolls
+  every scrollable ancestor of the element and not only the nearest one. In
+  a layout that puts `rewind_ui()` in a sidebar, every change to the history
+  scrolled that sidebar, so the application appeared to scroll by itself.
+  The rail now sets its own `scrollTop`, and moves nothing else.
+
 # rewind 0.2.1
 
 * `rewind_enable()` takes a `restore_timeout` argument, in seconds. It sets
