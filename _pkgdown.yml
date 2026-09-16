@@ -84,6 +84,7 @@ reference:
     contents:
       - rewind_undo
       - rewind_history
+      - rewind_diff
 
   - title: User interface
     desc: Drop-in controls, and the asset bundle behind them.

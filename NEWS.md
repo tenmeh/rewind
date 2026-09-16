@@ -1,5 +1,18 @@
 # rewind 0.2.2
 
+* New `rewind_diff()`. It shows what changed between two steps, and not only
+  which names changed. [rewind_history()] gives a label such as
+  `"region, year"`; `rewind_diff()` gives one row for each value, with the
+  value before, the value after, and a short description such as
+  `"North -> South"`. The `old` and `new` columns are list columns, so a
+  value of any type survives, including a date range, a multiple selection
+  or a whole data frame. The result depends on the history, so it works
+  inside `render*()` and `observe()`.
+
+  It is not an audit trail, and the documents say so. The history is in the
+  memory of one session, it drops the oldest entries when it passes `depth`,
+  and it drops the steps in front of the position after a change. Write a
+  record for an inspection as each change occurs, and keep it elsewhere.
 * The history rail no longer scrolls the page or the sidebar that holds it.
   It kept the current step in view with `scrollIntoView()`, which scrolls
   every scrollable ancestor of the element and not only the nearest one. In
