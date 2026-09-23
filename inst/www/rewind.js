@@ -63,6 +63,20 @@
 
   // --------------------------------------------------------------- render
 
+  // The server sends each time as milliseconds since the epoch. Format it
+  // here, in the viewer's own time zone, as HH:MM:SS. The format is built by
+  // hand and not with toLocaleTimeString(), which gives "1:33:57 PM" in some
+  // locales and would change the width of the rail.
+  function formatTime(ms) {
+    if (typeof ms !== "number" || !isFinite(ms)) return "";
+    var d = new Date(ms);
+    function pad(n) {
+      return (n < 10 ? "0" : "") + n;
+    }
+    return pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" +
+      pad(d.getSeconds());
+  }
+
   function renderButtons() {
     var undos = document.querySelectorAll(".rewind-undo");
     var redos = document.querySelectorAll(".rewind-redo");
@@ -97,7 +111,7 @@
 
         var time = document.createElement("span");
         time.className = "rewind-step-time";
-        time.textContent = e.time;
+        time.textContent = formatTime(e.time);
 
         li.appendChild(label);
         li.appendChild(time);
