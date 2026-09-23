@@ -1,4 +1,4 @@
-# rewind
+# rewind <img src="man/figures/logo.png" align="right" height="139" alt="rewind logo" />
 
 <!-- badges: start -->
 [![CRAN status](https://www.r-pkg.org/badges/version/rewind)](https://CRAN.R-project.org/package=rewind)

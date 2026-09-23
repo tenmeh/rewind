@@ -1,0 +1,11 @@
+{
+  "name": "rewind",
+  "short_name": "rewind",
+  "icons": [
+    { "src": "web-app-manifest-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "web-app-manifest-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ],
+  "theme_color": "#1F1D1B",
+  "background_color": "#1F1D1B",
+  "display": "standalone"
+}
