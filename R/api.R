@@ -192,11 +192,24 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
     }
   }, domain = session)
 
-  obs_undo <- shiny::observeEvent(session$input$rewind_undo, ctrl$undo(),
+  # The buttons, the shortcuts and the rail. Read these inputs from the root
+  # session, and not from `session`.
+  #
+  # rewind.js sends them under the global ids rewind_undo, rewind_redo and
+  # rewind_jump. rewind_buttons() has no id, so the ids stay global wherever
+  # the buttons are placed. Inside a module, session$input$rewind_undo reads
+  # the namespaced id "mymod-rewind_undo", which nothing ever sets. Capture
+  # still worked, so the rail filled up, but no undo ever reached the
+  # controller. A session has only one history (refer to the Modules
+  # section above), so one set of global ids is correct.
+  root <- session$rootScope()
+
+  obs_undo <- shiny::observeEvent(root$input$rewind_undo, ctrl$undo(),
                                   ignoreInit = TRUE, domain = session)
-  obs_redo <- shiny::observeEvent(session$input$rewind_redo, ctrl$redo(),
+  obs_redo <- shiny::observeEvent(root$input$rewind_redo, ctrl$redo(),
                                   ignoreInit = TRUE, domain = session)
-  obs_jump <- shiny::observeEvent(session$input$rewind_jump, ctrl$jump(session$input$rewind_jump$index),
+  obs_jump <- shiny::observeEvent(root$input$rewind_jump,
+                                  ctrl$jump(root$input$rewind_jump$index),
                                   ignoreInit = TRUE, domain = session)
 
   ctrl$set_observers(list(obs_capture, obs_coalesce, obs_undo, obs_redo, obs_jump))
