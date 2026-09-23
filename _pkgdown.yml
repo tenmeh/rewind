@@ -5,7 +5,15 @@ template:
   light-switch: true
   default-theme: light
   bslib:
-    primary: "#3b6ea5"
+    # A dark amber, to match the logo. It is NOT the amber of the logo
+    # itself (#F0A830). As a link colour on white that one has a contrast of
+    # 2.0:1, and a link must have 4.5:1 to pass WCAG AA.
+    #
+    # #96600C gives 5.3:1 on white. In the dark mode Bootstrap lightens the
+    # link colour by 40%, which gives 6.2:1 on the dark background. It is
+    # the lightest amber that passes in both modes. #A66A0F looks almost the
+    # same and fails, at 4.48:1.
+    primary: "#96600C"
     # Set as plain Sass variables rather than through bslib's font helpers:
     # Poppins is served from pkgdown/assets/fonts by @font-face in extra.css,
     # so there is nothing for bslib to fetch or bundle.

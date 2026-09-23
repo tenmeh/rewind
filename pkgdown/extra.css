@@ -3,8 +3,13 @@
  * This file comes from the stylesheet of the tanmai site. The site holds
  * the Poppins font itself. It does not use the CDN of Google. The site thus
  * makes no request to another server, and it operates offline after it
- * loads. The accent colour is the blue of rewind, and not the green of
- * tanmai. The colours must identify this package.
+ * loads. The accent colour is the amber of the rewind logo, and not the
+ * green of tanmai. The colours must identify this package.
+ *
+ * The logo is amber #F0A830 on charcoal #1F1D1B (pkgdown/logo/). That amber
+ * is too light to use as text on white, so the light theme uses a darker
+ * amber. The dark theme can use the logo amber itself. Each value below
+ * was measured against WCAG AA, which needs 4.5:1 for text.
  */
 
 /* ---- Poppins, Latin subset, SIL OFL 1.1 (see fonts/OFL.txt) ------------- */
@@ -48,14 +53,18 @@
 /* ---- tokens ------------------------------------------------------------ */
 
 :root {
-  --rw-accent: #3b6ea5;
-  --rw-accent-soft: rgba(59, 110, 165, 0.12);
+  --rw-accent: #96600c;          /* 5.3:1 on white. Same as primary in _pkgdown.yml. */
+  --rw-accent-soft: rgba(150, 96, 12, 0.12);
+  --rw-on-accent: #ffffff;       /* text on a solid accent fill: 5.3:1 */
   --rw-line: rgba(16, 22, 32, 0.09);
   --rw-ink-2: #495260;
 }
 [data-bs-theme="dark"] {
-  --rw-accent: #74a9d8;
-  --rw-accent-soft: rgba(116, 169, 216, 0.16);
+  --rw-accent: #f0a830;          /* the logo amber. 7.6:1 on the dark background. */
+  --rw-accent-soft: rgba(240, 168, 48, 0.16);
+  /* White on this amber is only 2.0:1, so a solid accent fill takes the
+     charcoal of the logo instead, at 8.3:1. */
+  --rw-on-accent: #1f1d1b;
   --rw-line: rgba(255, 255, 255, 0.1);
   --rw-ink-2: #a3adba;
 }
@@ -142,7 +151,7 @@ kbd {
 .dropdown-item.active,
 .dropdown-item:active {
   background-color: var(--rw-accent);
-  color: #fff;
+  color: var(--rw-on-accent);
 }
 [data-bs-theme="dark"] .dropdown-menu {
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
@@ -196,6 +205,12 @@ main img {
 /* But not the badges in the text. They are images also. */
 main p > img[src*="badge"],
 main p > a > img {
+  border: 0;
+  border-radius: 0;
+}
+/* And not the logo. It is a hexagon with transparent corners, so a
+   rectangular border draws a box around it. */
+main img.logo {
   border: 0;
   border-radius: 0;
 }

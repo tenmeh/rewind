@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!--
+    The bare mark, for the favicons. It has no wordmark on purpose.
+
+    pkgdown can make favicons from logo.png, but it would shrink the whole
+    hexagon, text and all, into 16 pixels, and the result is unreadable.
+    This square version keeps only the two chevrons, which stay sharp at
+    that size. build-logo.R makes every favicon from this file.
+  -->
+  <rect width="100" height="100" rx="18" fill="#1F1D1B"/>
+  <path d="M50 26 L25 50 L50 74 Z" fill="#F0A830"/>
+  <path d="M78 26 L53 50 L78 74 Z" fill="#F0A830"/>
+</svg>
