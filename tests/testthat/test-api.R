@@ -135,3 +135,57 @@ test_that("the html dependency points at installed assets", {
   expect_true(file.exists(file.path(dep$src$file, "rewind.js")))
   expect_true(file.exists(file.path(dep$src$file, "rewind.css")))
 })
+
+
+# --- Argument checks ------------------------------------------------------
+#
+# A plain `x < 0` test lets NA through to `if (NA)`, which stops with
+# "missing value where TRUE/FALSE needed" and does not name the argument.
+# It also lets Inf through, which then does harm with no message: an
+# infinite coalesce_ms means no change is ever written to the history.
+
+enable_with <- function(...) {
+  args <- list(...)
+  function(input, output, session) do.call(rewind_enable, args)
+}
+
+test_that("rewind_enable() refuses a bad coalesce_ms and names it", {
+  for (v in list(NA_real_, NaN, Inf, -1, c(1, 2), "400")) {
+    expect_error(
+      shiny::testServer(enable_with(coalesce_ms = v), {}),
+      "`coalesce_ms` must be a single finite number of 0 or more",
+      info = paste("coalesce_ms =", deparse(v))
+    )
+  }
+  # 0 is allowed: it turns grouping off.
+  expect_no_error(shiny::testServer(enable_with(coalesce_ms = 0), {}))
+})
+
+test_that("rewind_enable() refuses a bad restore_timeout and names it", {
+  for (v in list(NA_real_, NaN, Inf, 0, -1)) {
+    expect_error(
+      shiny::testServer(enable_with(restore_timeout = v), {}),
+      "`restore_timeout` must be a single finite number greater than 0",
+      info = paste("restore_timeout =", deparse(v))
+    )
+  }
+  expect_no_error(shiny::testServer(enable_with(restore_timeout = 0.5), {}))
+})
+
+test_that("rewind_step() refuses a bad hold_ms at the call, not later", {
+  step_with <- function(hold) {
+    function(input, output, session) {
+      rewind_enable()
+      rewind_step(NULL, hold_ms = hold)
+    }
+  }
+  for (v in list(NA_real_, Inf, -5)) {
+    expect_error(
+      shiny::testServer(step_with(v), {}),
+      "`hold_ms` must be a single finite number of 0 or more",
+      info = paste("hold_ms =", deparse(v))
+    )
+  }
+  expect_no_error(shiny::testServer(step_with(NULL), {}))
+  expect_no_error(shiny::testServer(step_with(0), {}))
+})

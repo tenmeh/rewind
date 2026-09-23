@@ -270,9 +270,12 @@ truncate_text <- function(x, max_width) {
 #' @keywords internal
 #' @noRd
 check_index <- function(x, arg) {
-  x <- suppressWarnings(as.integer(x))
-  if (length(x) != 1L || is.na(x)) {
+  # Convert to a double first and test that. as.integer() alone truncates,
+  # so 2.7 became 2 with no message, although the message below promises a
+  # whole number.
+  num <- suppressWarnings(as.numeric(x))
+  if (length(num) != 1L || !is.finite(num) || num != round(num)) {
     stop(sprintf("`%s` must be a single whole number.", arg), call. = FALSE)
   }
-  x
+  as.integer(num)
 }

@@ -113,13 +113,9 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
   if (!is.null(exclude) && !is.character(exclude)) {
     stop("`exclude` must be a character vector or NULL.", call. = FALSE)
   }
-  if (!is.numeric(coalesce_ms) || length(coalesce_ms) != 1L || coalesce_ms < 0) {
-    stop("`coalesce_ms` must be a single non-negative number.", call. = FALSE)
-  }
-  if (!is.numeric(restore_timeout) || length(restore_timeout) != 1L ||
-        restore_timeout <= 0) {
-    stop("`restore_timeout` must be a single positive number.", call. = FALSE)
-  }
+  # check_number() rejects NA and Inf as well. Refer to R/utils.R.
+  check_number(coalesce_ms, "coalesce_ms", min = 0, inclusive = TRUE)
+  check_number(restore_timeout, "restore_timeout", min = 0, inclusive = FALSE)
 
   if (!is.null(session$userData$.rewind)) {
     warning("rewind is already enabled for this session; ignoring.",
@@ -318,6 +314,10 @@ rewind_step <- function(expr,
                         hold_ms = NULL,
                         session = shiny::getDefaultReactiveDomain()) {
   ctrl <- get_controller(session)
+  # Check this before the controller, so a bad value fails the same way
+  # whether rewind is enabled or not. An NA here used to be accepted, and
+  # then failed later inside the capture observer.
+  if (!is.null(hold_ms)) check_number(hold_ms, "hold_ms", min = 0, inclusive = TRUE)
   if (!is.null(ctrl)) ctrl$open_step(label = label, hold_ms = hold_ms)
   invisible(expr)
 }
