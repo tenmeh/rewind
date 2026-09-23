@@ -104,9 +104,29 @@
         rail.appendChild(li);
       }
 
+      // Keep the current step in view, but move the rail and nothing else.
+      //
+      // Do not use scrollIntoView() here. It scrolls every scrollable
+      // ancestor of the element, and not only the nearest one. When the
+      // rail sits in a sidebar, that also scrolls the sidebar and the
+      // page. The application then appears to scroll by itself each time
+      // the history changes, which reads as a fault. The option
+      // block: "nearest" limits how far each ancestor moves. It does not
+      // stop them moving.
       var current = rail.querySelector(".is-current");
-      if (current && current.scrollIntoView) {
-        current.scrollIntoView({ block: "nearest" });
+      if (current) {
+        // Measure with getBoundingClientRect and not offsetTop. The rail
+        // is not a positioned element, so it is not the offsetParent of
+        // the step, and offsetTop would be relative to something else.
+        var top = current.getBoundingClientRect().top -
+          rail.getBoundingClientRect().top + rail.scrollTop;
+        var bottom = top + current.offsetHeight;
+
+        if (top < rail.scrollTop) {
+          rail.scrollTop = top;
+        } else if (bottom > rail.scrollTop + rail.clientHeight) {
+          rail.scrollTop = bottom - rail.clientHeight;
+        }
       }
     }
   }

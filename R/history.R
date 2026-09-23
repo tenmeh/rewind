@@ -106,6 +106,20 @@ History <- R6::R6Class(
       private$.entries[[private$.index]]$state
     },
 
+    # @description
+    # The state at a given position. This method does NOT move the
+    # position, which is what makes it different from `jump()`. Use it to
+    # read a step and leave the application where it is.
+    # @param index The position. The first position is 1.
+    # @return The state, or `NULL` when there is no such position.
+    state_at = function(index) {
+      index <- as.integer(index)
+      if (is.na(index) || index < 1L || index > length(private$.entries)) {
+        return(NULL)
+      }
+      private$.entries[[index]]$state
+    },
+
     # @description Is there an entry before the current position?
     can_undo = function() private$.index > 1L,
 
