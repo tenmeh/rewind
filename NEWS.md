@@ -19,6 +19,24 @@
   a layout that puts `rewind_ui()` in a sidebar, every change to the history
   scrolled that sidebar, so the application appeared to scroll by itself.
   The rail now sets its own `scrollTop`, and moves nothing else.
+* Fixed: undo, redo and the rail did nothing when `rewind_enable()` was
+  called inside a `moduleServer()`. The browser sends the global input ids
+  `rewind_undo`, `rewind_redo` and `rewind_jump`, but inside a module
+  `rewind_enable()` watched the namespaced ids. Capture still worked, so the
+  rail filled up, but no button, shortcut or rail click reached the history.
+  `rewind_enable()` now reads these inputs from the root session.
+* Fixed: the rail showed each time in UTC, and not in the viewer's time
+  zone. The server now sends the moment, and the browser formats it with
+  its own clock. The format is still `HH:MM:SS`. The `time` column of
+  `rewind_history()` is unchanged.
+* `rewind_enable()` and `rewind_step()` now refuse `NA`, `NaN` and `Inf`
+  in `coalesce_ms`, `restore_timeout` and `hold_ms`, with a message that
+  names the argument. `NA` gave "missing value where TRUE/FALSE needed".
+  `Inf` was accepted and then did harm with no message: in `coalesce_ms` it
+  stopped the history from recording anything. `hold_ms` was not checked
+  at all before.
+* `rewind_diff()` now refuses a position that is not a whole number, such as
+  `2.7`. It truncated it to `2` before.
 
 # rewind 0.2.1
 

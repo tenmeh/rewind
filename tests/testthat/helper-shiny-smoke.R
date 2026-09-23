@@ -85,6 +85,15 @@ expect_no_shiny_errors <- function(app) {
 #' Start an AppDriver for `app_dir`. Skip the test, and do not fail it, when
 #' this computer has no headless Chrome.
 #'
+#' READ THIS BEFORE A LOCAL RUN. The application runs in a separate R
+#' process. A test that passes a shinyApp() object builds the UI in the test
+#' process, from the source. But the server function calls rewind functions
+#' through the package namespace, and the separate process loads those from
+#' the INSTALLED copy of rewind. With testthat::test_local() the two can
+#' differ. A stale install then makes a real fix look broken, or a real bug
+#' look fixed. Install the package before a local run of the browser tests.
+#' R CMD check has no such problem, because it installs the package first.
+#'
 #' Chrome writes its own work files while it runs. On Linux these are lock
 #' files with names such as `com.google.Chrome.*`. On each system Chrome
 #' also writes its user-data directory. Chrome puts these files in

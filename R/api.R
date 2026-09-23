@@ -113,13 +113,9 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
   if (!is.null(exclude) && !is.character(exclude)) {
     stop("`exclude` must be a character vector or NULL.", call. = FALSE)
   }
-  if (!is.numeric(coalesce_ms) || length(coalesce_ms) != 1L || coalesce_ms < 0) {
-    stop("`coalesce_ms` must be a single non-negative number.", call. = FALSE)
-  }
-  if (!is.numeric(restore_timeout) || length(restore_timeout) != 1L ||
-        restore_timeout <= 0) {
-    stop("`restore_timeout` must be a single positive number.", call. = FALSE)
-  }
+  # check_number() rejects NA and Inf as well. Refer to R/utils.R.
+  check_number(coalesce_ms, "coalesce_ms", min = 0, inclusive = TRUE)
+  check_number(restore_timeout, "restore_timeout", min = 0, inclusive = FALSE)
 
   if (!is.null(session$userData$.rewind)) {
     warning("rewind is already enabled for this session; ignoring.",
@@ -192,11 +188,24 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
     }
   }, domain = session)
 
-  obs_undo <- shiny::observeEvent(session$input$rewind_undo, ctrl$undo(),
+  # The buttons, the shortcuts and the rail. Read these inputs from the root
+  # session, and not from `session`.
+  #
+  # rewind.js sends them under the global ids rewind_undo, rewind_redo and
+  # rewind_jump. rewind_buttons() has no id, so the ids stay global wherever
+  # the buttons are placed. Inside a module, session$input$rewind_undo reads
+  # the namespaced id "mymod-rewind_undo", which nothing ever sets. Capture
+  # still worked, so the rail filled up, but no undo ever reached the
+  # controller. A session has only one history (refer to the Modules
+  # section above), so one set of global ids is correct.
+  root <- session$rootScope()
+
+  obs_undo <- shiny::observeEvent(root$input$rewind_undo, ctrl$undo(),
                                   ignoreInit = TRUE, domain = session)
-  obs_redo <- shiny::observeEvent(session$input$rewind_redo, ctrl$redo(),
+  obs_redo <- shiny::observeEvent(root$input$rewind_redo, ctrl$redo(),
                                   ignoreInit = TRUE, domain = session)
-  obs_jump <- shiny::observeEvent(session$input$rewind_jump, ctrl$jump(session$input$rewind_jump$index),
+  obs_jump <- shiny::observeEvent(root$input$rewind_jump,
+                                  ctrl$jump(root$input$rewind_jump$index),
                                   ignoreInit = TRUE, domain = session)
 
   ctrl$set_observers(list(obs_capture, obs_coalesce, obs_undo, obs_redo, obs_jump))
@@ -305,6 +314,10 @@ rewind_step <- function(expr,
                         hold_ms = NULL,
                         session = shiny::getDefaultReactiveDomain()) {
   ctrl <- get_controller(session)
+  # Check this before the controller, so a bad value fails the same way
+  # whether rewind is enabled or not. An NA here used to be accepted, and
+  # then failed later inside the capture observer.
+  if (!is.null(hold_ms)) check_number(hold_ms, "hold_ms", min = 0, inclusive = TRUE)
   if (!is.null(ctrl)) ctrl$open_step(label = label, hold_ms = hold_ms)
   invisible(expr)
 }

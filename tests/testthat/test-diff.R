@@ -248,3 +248,16 @@ test_that("rewind_diff needs rewind to be enabled", {
     expect_error(rewind_diff(), "rewind_enable")
   })
 })
+
+
+# --- check_index ---------------------------------------------------------
+
+test_that("check_index refuses a number that is not whole, rather than truncating it", {
+  # as.integer(2.7) is 2, so this used to pass quietly as position 2.
+  expect_error(check_index(2.7, "to"), "`to` must be a single whole number")
+  expect_error(check_index(Inf, "to"), "single whole number")
+  expect_error(check_index(NA, "to"), "single whole number")
+  expect_error(check_index(c(1, 2), "to"), "single whole number")
+  expect_identical(check_index(3, "to"), 3L)
+  expect_identical(check_index(3L, "to"), 3L)
+})

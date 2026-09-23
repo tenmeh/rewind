@@ -40,3 +40,31 @@ require_controller <- function(session = shiny::getDefaultReactiveDomain()) {
   }
   ctrl
 }
+
+
+#' Check that an argument is one finite number within a limit
+#'
+#' `NA`, `NaN` and `Inf` all fail. A plain `x < 0` test does not catch them:
+#' `NA < 0` is `NA`, and `if (NA)` stops with "missing value where TRUE/FALSE
+#' needed", a message that does not name the argument. `Inf` is worse. It
+#' passes such a test, and then does harm with no message at all: an
+#' infinite `coalesce_ms` means that no change is ever written to the
+#' history.
+#'
+#' @param x The value.
+#' @param arg The name of the argument, for the message.
+#' @param min The lower limit.
+#' @param inclusive `TRUE` accepts `min` itself. `FALSE` needs a value
+#'   greater than `min`.
+#' @return `x`, invisibly.
+#' @keywords internal
+#' @noRd
+check_number <- function(x, arg, min = 0, inclusive = TRUE) {
+  ok <- is.numeric(x) && length(x) == 1L && is.finite(x) &&
+    (if (inclusive) x >= min else x > min)
+  if (!ok) {
+    limit <- if (inclusive) sprintf("of %s or more", min) else sprintf("greater than %s", min)
+    stop(sprintf("`%s` must be a single finite number %s.", arg, limit), call. = FALSE)
+  }
+  invisible(x)
+}

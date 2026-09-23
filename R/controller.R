@@ -206,7 +206,11 @@ RewindController <- R6::R6Class(
           list(
             index   = entries$index[i],
             label   = entries$label[i],
-            time    = format(entries$time[i], "%H:%M:%S"),
+            # Send the moment, as milliseconds since the epoch, and not a
+            # formatted time. The browser formats it in the viewer's own
+            # time zone. Text made here would be in the time zone of the
+            # server, which is usually UTC for a deployed application.
+            time    = as.numeric(entries$time[i]) * 1000,
             current = entries$current[i]
           )
         })),
