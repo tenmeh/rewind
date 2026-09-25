@@ -34,11 +34,13 @@ Fixed:
   tarball, with `_R_CHECK_CRAN_INCOMING_=TRUE`,
   `_R_CHECK_CRAN_INCOMING_REMOTE_=TRUE`, the PDF manual, and pandoc. Run once
   without `NOT_CRAN` and once with it.
+* win-builder: Windows Server 2022, R-devel (2026-09-21 r90579 ucrt),
+  Status OK
 * GitHub Actions with `--as-cran`: macOS (release), Windows (release),
   Ubuntu (devel, release, oldrel-1)
 
-R-devel is covered by the Ubuntu (devel) job, which runs
-`R CMD check --as-cran`. This machine has the release version of R only.
+R-devel was checked on win-builder (Windows) and in the Ubuntu (devel) job
+(Linux). The local machine has the release version of R only.
 
 ## R CMD check results
 
