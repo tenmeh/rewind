@@ -1,4 +1,7 @@
-# rewind 0.2.2
+# rewind 0.3.0
+
+This release goes to CRAN. Version 0.2.1 was released on GitHub only, so
+an update from 0.2.0 on CRAN brings the changes of 0.2.1 below as well.
 
 * New `rewind_diff()`. It shows what changed between two steps, and not only
   which names changed. [rewind_history()] gives a label such as
