@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 132 132" width="132" height="132" role="img">
+<title>The rewind hex logo, alive: the arrows nudge backwards and the hex spins back once.</title>
+<!--
+  The animated hex of the documentation site, for the home page.
+
+  It comes from the hero of the post "Undo for Shiny" on the blog, with the
+  slider, the dots and the other doodles taken away, so that only the logo
+  is left. The logo has no wordmark here: a picture that the page loads as a
+  background cannot load a font, and the name is written on the page.
+
+  The square is 132 units wide. That is wider than the hex, 96 by 112, on
+  purpose. When the hex spins, its corners go around a circle of radius 56,
+  and the sway lifts it a little more. Anything tighter would cut a corner.
+
+  The paths and the colours are those of pkgdown/logo/rewind-hex.svg. There
+  is no background, so the hex sits on the paper in the light mode and on
+  the charcoal in the dark mode. The picture cannot know which mode the
+  visitor chose, because the site has its own switch, so it has one look
+  that works on both.
+
+  It is self-contained: the animation is CSS in this file. No script, no
+  font, no link to another file.
+-->
+<style>
+svg{display:block}
+.sway,.spin,.chev{transform-box:view-box;transform-origin:0 0}
+.shadow{transform-box:fill-box;transform-origin:center}
+.sway{animation:sway 5.6s ease-in-out infinite}
+.spin{animation:spin 5.6s infinite}
+.shadow{opacity:.28;animation:shadow 5.6s ease-in-out infinite}
+.chev{animation:nudge 1.4s cubic-bezier(.3,0,.2,1) infinite}
+.chev.b{animation-name:nudgeb;animation-delay:-.2s}
+@keyframes sway{0%{transform:translateY(0) rotate(-4deg)}25%{transform:translateY(-3.4px) rotate(0deg)}50%{transform:translateY(0) rotate(4deg)}75%{transform:translateY(-3.4px) rotate(0deg)}100%{transform:translateY(0) rotate(-4deg)}}
+@keyframes spin{0%,36%{transform:rotate(0)}39%{transform:rotate(9deg);animation-timing-function:cubic-bezier(.55,0,.2,1)}53%{transform:rotate(-370deg);animation-timing-function:cubic-bezier(.3,0,.3,1)}58%,100%{transform:rotate(-360deg)}}
+@keyframes shadow{0%,50%,100%{transform:scaleX(1);opacity:.28}25%,75%{transform:scaleX(.86);opacity:.18}}
+@keyframes nudge{0%,100%{transform:translateX(0)}40%{transform:translateX(-3px)}}
+@keyframes nudgeb{0%,100%{transform:translateX(0)}40%{transform:translateX(-7px)}}
+/* Still under reduced motion. Every moving group has no transform of its own,
+   so with the animation off, the hex stands upright with the arrows in place.
+   extra.css also swaps this picture for the still hex under the same
+   setting, because a browser does not always pass the setting on to a picture
+   that a page draws as a background. */
+@media (prefers-reduced-motion:reduce){*{animation:none !important}}
+</style>
+<ellipse class="shadow" cx="66" cy="126.5" rx="38" ry="3" fill="#F0A830"/>
+<g transform="translate(66 64)"><g class="sway"><g class="spin"><g transform="translate(-50 -58)">
+<path d="M50 2 L98 30 L98 86 L50 114 L2 86 L2 30 Z" fill="#1F1D1B"/>
+<path d="M50 2 L98 30 L98 86 L50 114 L2 86 L2 30 Z" fill="none" stroke="#F0A830" stroke-width="3" stroke-linejoin="round"/>
+<g transform="translate(50 58) scale(1.25) translate(-50 -51)" fill="#F0A830">
+<path class="chev b" d="M48 32L27 51L48 70Z"/><path class="chev" d="M73 32L52 51L73 70Z"/>
+</g></g></g></g></g>
+</svg>
