@@ -93,7 +93,7 @@
 /* Bootstrap draws from its own variables. These few make it read the tokens,
    so that what Bootstrap paints with them, such as the muted text, the
    accent of the focus ring and the border of a table, is in the same colours.
-   Bootstrap keeps the light primary in the dark mode, and dark amber is hard
+   Bootstrap keeps the light primary in the dark mode, and a dark accent is hard
    to see on charcoal, so the dark mode takes the accent instead. */
 :root,
 [data-bs-theme="dark"] {
