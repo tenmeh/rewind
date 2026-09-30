@@ -5,23 +5,52 @@ template:
   light-switch: true
   default-theme: light
   bslib:
+    # The ground and the ink come from the blog of the author, so that the
+    # documentation and the blog are one family: warm bone paper, and a
+    # blue-black ink. In the dark mode they are the charcoal of the logo and
+    # a warm cream. Bootstrap makes its own tints and shades from these
+    # values, so they are set here and not only in extra.css, which holds
+    # the same values in its tokens. Change both places together.
+    bg: "#f4efe4"
+    fg: "#17202a"
+    body-bg-dark: "#1f1d1b"
+    body-color-dark: "#ece5d6"
+    border-color: "#cfc5b1"
+    border-color-dark: "#3d3833"
     # A dark amber, to match the logo. It is NOT the amber of the logo
-    # itself (#F0A830). As a link colour on white that one has a contrast of
-    # 2.0:1, and a link must have 4.5:1 to pass WCAG AA.
+    # itself (#F0A830). As a link colour on the paper that one has a contrast
+    # of 1.8:1, and a link must have 4.5:1 to pass WCAG AA.
     #
-    # #96600C gives 5.3:1 on white. In the dark mode Bootstrap lightens the
-    # link colour by 40%, which gives 6.2:1 on the dark background. It is
-    # the lightest amber that passes in both modes. #A66A0F looks almost the
-    # same and fails, at 4.48:1.
-    primary: "#96600C"
+    # The paper is darker than white, so the amber of the first version of
+    # this site, #96600C, fell to 4.6:1 on it. That still passes, but the
+    # pills and the active tab put this amber on a 12% tint of itself, and
+    # there it was only 4.0:1. #87560B gives 5.4:1 on the paper (#F4EFE4),
+    # 5.9:1 on the cards and the code blocks (#FBF8F1), and 4.6:1 on the
+    # tint of the pills. It is the lightest amber of this hue that passes on
+    # the tint, which is the hardest of the three grounds.
+    #
+    # The dark mode does not derive its link colour from this one any more.
+    # Bootstrap would lighten it by 40%, which gives a tan (#C0A06D) that
+    # looks little like the logo. The logo amber itself gives 8.3:1 on the
+    # charcoal (#1F1D1B), 7.5:1 on the cards (#282523) and 6.1:1 on its 16%
+    # tint, so the dark mode uses it as it is.
+    primary: "#87560B"
+    link-color-dark: "#F0A830"
     # Set as plain Sass variables rather than through bslib's font helpers:
-    # Poppins is served from pkgdown/assets/fonts by @font-face in extra.css,
-    # so there is nothing for bslib to fetch or bundle.
-    font-family-base: "Poppins, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-    headings-font-family: "Poppins, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-    font-family-monospace: "'JetBrains Mono', 'SF Mono', 'Cascadia Mono', Consolas, monospace"
-    headings-font-weight: 600
-    border-radius: "0.6rem"
+    # Recursive is served from pkgdown/assets/fonts by @font-face in
+    # extra.css, so there is nothing for bslib to fetch or bundle. One family
+    # does all the work, as on the blog: the plain style for text and
+    # headings, and the mono axis of the same file for code (extra.css turns
+    # it on). The mono stack after it is for the moment before the font
+    # loads, and for a browser that blocks it.
+    font-family-base: "Recursive, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
+    headings-font-family: "Recursive, system-ui, -apple-system, 'Segoe UI', sans-serif"
+    font-family-monospace: "Recursive, 'SF Mono', 'Cascadia Mono', Consolas, monospace"
+    headings-font-weight: 650
+    line-height-base: 1.66
+    # The cards, the code blocks and the sidebar have round corners of 14px,
+    # the same as the cards of the blog.
+    border-radius: "14px"
 
 home:
   title: Undo and redo for Shiny

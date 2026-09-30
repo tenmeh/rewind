@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 116" width="100" height="116">
+  <!--
+    The hex of the logo without the wordmark, for the navigation bar, where
+    it is drawn at about 30 pixels high. It is still, on purpose. The bar is
+    on every page, and a picture that moves there would take the eye from
+    the text. The paths and the colours are those of rewind-hex.svg in
+    pkgdown/logo/. The chevrons are centred in the hex, and the border is
+    one unit thicker, so that it holds at this size.
+  -->
+  <path d="M50 2 L98 30 L98 86 L50 114 L2 86 L2 30 Z" fill="#1F1D1B" stroke="#F0A830" stroke-width="4" stroke-linejoin="round"/>
+  <g transform="translate(50 58) scale(1.25) translate(-50 -51)" fill="#F0A830">
+    <path d="M48 32L27 51L48 70Z"/><path d="M73 32L52 51L73 70Z"/>
+  </g>
+</svg>
