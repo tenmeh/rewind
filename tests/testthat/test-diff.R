@@ -261,3 +261,14 @@ test_that("check_index refuses a number that is not whole, rather than truncatin
   expect_identical(check_index(3, "to"), 3L)
   expect_identical(check_index(3L, "to"), 3L)
 })
+
+
+# --- empty text ------------------------------------------------------------
+
+test_that("an empty text box shows as an empty string, not as nothing", {
+  # The commonest old value of a text input. It used to give " -> hello".
+  expect_equal(format_value(""), '""')
+  expect_equal(format_change("", "hello"), '"" -> hello')
+  expect_equal(format_change("hello", ""), 'hello -> ""')
+  expect_equal(format_value(c("a", "")), 'a, ""')
+})

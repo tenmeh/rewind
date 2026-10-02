@@ -239,6 +239,10 @@ format_value <- function(x, max_items = 3L, max_width = 40L) {
   # result for both forms.
   txt <- if (inherits(x, c("Date", "POSIXt"))) format(x) else as.character(x)
   txt[is.na(txt)] <- "NA"
+  # An empty text box is the commonest value a text input has, so it must
+  # show. Without this, a change read " -> hello", with nothing before the
+  # arrow.
+  txt[txt == ""] <- '""'
 
   if (length(txt) == 1L) return(truncate_text(txt, max_width))
 
