@@ -1,3 +1,23 @@
+# rewind (development version)
+
+* Password fields are never kept in the history. A `passwordInput()` sends a
+  plain string, so `rewind` captured it like any text box: the password was
+  kept in the history, put back in the field by an undo, and shown in plain
+  text by `rewind_diff()`. The browser now reports which fields are
+  passwords, including fields that `renderUI()` adds later, and `rewind`
+  leaves them out, even when `inputs` names them. A value captured before
+  the report arrives is removed from the history.
+* `rewind_diff()` shows an empty text box as `""`. A change from an empty
+  box read ` -> hello`, with nothing before the arrow.
+* The help page of `rewind_enable()` has a new section on text inputs:
+  slow typing can give several steps, `textInput(updateOn = "blur")` gives
+  one step for each edit, and `Ctrl` + `Z` inside a text box is the
+  browser's own undo, which `rewind` then records as a new step.
+* The fallback in `rewind.js` that waits for Shiny to connect used
+  `addEventListener()`, which never receives the jQuery event that Shiny
+  triggers. It now uses jQuery. The fallback is not used when Shiny loads
+  first, which is the usual order.
+
 # rewind 0.3.0
 
 This release goes to CRAN. Version 0.2.1 was released on GitHub only, so

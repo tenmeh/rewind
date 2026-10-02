@@ -158,6 +158,47 @@ History <- R6::R6Class(
       )
     },
 
+    # @description
+    # Remove some inputs from every entry. rewind uses this for a password
+    # field: the browser reports it only after it has connected, and by
+    # then the first snapshot can hold its value.
+    #
+    # Removing an input can make an entry the same as the one before it, if
+    # that input was the only difference. Such an entry is a step that does
+    # nothing, so it is removed too, and the position moves with it.
+    # @param ids Character vector of input names.
+    scrub_inputs = function(ids) {
+      n <- length(private$.entries)
+      if (n == 0L || length(ids) == 0L) return(invisible(self))
+
+      for (i in seq_len(n)) {
+        st <- private$.entries[[i]]$state
+        drop <- intersect(names(st$inputs), ids)
+        if (length(drop)) {
+          st$inputs[drop] <- NULL
+          private$.entries[[i]]$state <- st
+        }
+      }
+
+      keep <- rep(TRUE, n)
+      last <- 1L
+      for (i in seq_len(n)[-1]) {
+        if (states_equal(private$.entries[[i]]$state, private$.entries[[last]]$state)) {
+          keep[i] <- FALSE
+        } else {
+          last <- i
+        }
+      }
+      if (!all(keep)) {
+        # The new position counts the entries kept up to the old one. If the
+        # current entry itself was removed, that is the entry before it,
+        # which holds the same state.
+        private$.index <- sum(keep[seq_len(private$.index)])
+        private$.entries <- private$.entries[keep]
+      }
+      invisible(self)
+    },
+
     # @description Remove each entry but the current one.
     clear = function() {
       keep <- self$current()
