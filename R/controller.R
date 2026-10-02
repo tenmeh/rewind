@@ -194,6 +194,46 @@ RewindController <- R6::R6Class(
 
     is_paused = function() private$.paused,
 
+    # ---- secrets ---------------------------------------------------------
+
+    # Never keep these inputs in the history. The browser sends the ids of
+    # its password fields (refer to reportSecrets() in rewind.js), because
+    # the server cannot tell a password from any other string.
+    #
+    # The ids from the browser are the full ids in the page. Inside a module
+    # the snapshot uses the names local to the module, so keep only the ids
+    # under this session's namespace, and take the prefix off.
+    #
+    # The list only grows. A field that was a password once stays out, even
+    # after it leaves the page.
+    set_secret = function(ids) {
+      ids <- as.character(unlist(ids))
+      # Only a module has a namespace to take off. Do not test ns("") for
+      # that: at the top level a real session gives "", but the session of
+      # shiny::testServer() gives "mock-session-", which would drop every id.
+      root <- private$.session$rootScope()
+      prefix <- if (identical(private$.session, root)) "" else private$.session$ns("")
+      if (nzchar(prefix)) {
+        ids <- ids[startsWith(ids, prefix)]
+        ids <- substring(ids, nchar(prefix) + 1L)
+      }
+
+      new <- setdiff(ids, private$.secret)
+      if (length(new) == 0L) return(invisible(FALSE))
+      private$.secret <- union(private$.secret, new)
+
+      # The first snapshot can be taken before the browser reports, so the
+      # value may be stored already. Remove it from everything that holds a
+      # state.
+      self$history$scrub_inputs(new)
+      if (!is.null(private$.pending)) private$.pending$inputs[new] <- NULL
+      if (!is.null(private$.expecting)) private$.expecting$inputs[new] <- NULL
+      self$sync_client()
+      invisible(TRUE)
+    },
+
+    secret = function() private$.secret,
+
     # ---- client ----------------------------------------------------------
 
     # Send the current history to the browser. The rail and the buttons thus
@@ -237,6 +277,7 @@ RewindController <- R6::R6Class(
     .expecting_since = NULL,
     .expect_timeout = 2,
     .paused         = FALSE,
+    .secret         = character(0),
     .tick           = NULL,
     .version        = NULL,
     .observers      = list(),
@@ -270,6 +311,10 @@ RewindController <- R6::R6Class(
 
       if (!is.null(private$.inputs)) keep <- intersect(keep, private$.inputs)
       if (!is.null(private$.exclude)) keep <- setdiff(keep, private$.exclude)
+
+      # A password field is never kept, even if `inputs` names it. Refer to
+      # set_secret().
+      keep <- setdiff(keep, private$.secret)
 
       out <- all[sort(keep)]
       out[!vapply(out, is.null, logical(1))]

@@ -67,17 +67,37 @@ the reactive values that you register with \code{\link[=rewind_track]{rewind_tra
 then move backwards and forwards through that history.
 }
 \section{What gets captured}{
-By default \code{rewind} captures every input in the session. There are four
-exclusions. It is never useful to restore these:
+By default \code{rewind} captures every input in the session. There are five
+exclusions:
 \itemize{
 \item action buttons and links. Their value is a click counter.
 \item \code{\link[shiny:fileInput]{shiny::fileInput()}}. Its value points to a temporary file on the
 server. Shiny deletes that file at the next upload. An old snapshot
 would thus point to a file that does not exist.
+\item password fields, such as \code{\link[shiny:passwordInput]{shiny::passwordInput()}}. A password must not
+be kept in the history, put back in a field by an undo, or shown by
+\code{\link[=rewind_diff]{rewind_diff()}}. The server cannot tell a password from other text, so
+the browser reports which fields are passwords, including fields that
+\code{renderUI()} adds later. This exclusion applies even when \code{inputs}
+names the field. In \code{\link[shiny:testServer]{shiny::testServer()}} there is no browser, so a
+password field there is captured like any other input.
 \item inputs with names that start with \code{rewind_}. These belong to this
 package.
 \item inputs with names that start with \code{.}. These are internal to Shiny.
 }
+}
+
+\section{Text inputs}{
+A word typed at a normal speed is one step. A pause longer than
+\code{coalesce_ms} starts a new step, so slow typing can give several. For a
+text box, \code{textInput(updateOn = "blur")} gives exactly one step for each
+edit, when the user leaves the box.
+
+While the cursor is in a text box, \code{Ctrl} + \code{Z} is the browser's own text
+undo, and \code{rewind} does nothing (refer to \code{shortcuts} below). The
+browser's undo still changes the box, so \code{rewind} records the change as
+a new step. To step back through the history, leave the box first, or
+use the buttons.
 
 Use \code{inputs} to give a list of the inputs to capture. This is usually
 better in a large application. Undo must move the controls that the user

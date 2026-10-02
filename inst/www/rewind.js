@@ -229,6 +229,35 @@
     }
   });
 
+  // -------------------------------------------------------------- secrets
+
+  // Tell the server which inputs are password fields, so that it never
+  // keeps their values in the history. The server cannot find this out by
+  // itself: a passwordInput() sends a plain string, the same as a
+  // textInput(). Only the page knows the type of the field.
+  //
+  // This runs when the connection opens, and again each time Shiny binds
+  // an input, so a password field that renderUI() adds later is reported
+  // too. It sends only when the list changes, so an application with no
+  // password field sends nothing at all.
+  var lastSecrets = "";
+
+  function reportSecrets() {
+    if (!window.Shiny || !Shiny.setInputValue || !Shiny.shinyapp ||
+        !Shiny.shinyapp.isConnected || !Shiny.shinyapp.isConnected()) {
+      return;
+    }
+    var ids = [];
+    var fields = document.querySelectorAll("input[type='password'][id]");
+    for (var i = 0; i < fields.length; i++) ids.push(fields[i].id);
+    ids.sort();
+
+    var key = ids.join("\n");
+    if (key === lastSecrets) return;
+    lastSecrets = key;
+    Shiny.setInputValue("rewind_secret_ids", ids);
+  }
+
   // ----------------------------------------------------------------- wire
 
   function install() {
@@ -249,11 +278,28 @@
       renderButtons();
       renderRail();
     });
+
+    // Shiny triggers these events with jQuery. A plain addEventListener()
+    // does not receive an event that jQuery triggers, so use jQuery here.
+    var $doc = window.jQuery(document);
+    $doc.on("shiny:connected", function () {
+      setTimeout(reportSecrets, 0);
+    });
+    $doc.on("shiny:bound", function (ev) {
+      if (ev.bindingType === "input") reportSecrets();
+    });
+
+    // The connection can be open already, when this file arrives after the
+    // page has loaded (rewind_enable() inserts it if the page did not).
+    reportSecrets();
   }
 
   if (window.Shiny && Shiny.addCustomMessageHandler) {
     install();
   } else {
-    document.addEventListener("shiny:connected", install, { once: true });
+    // Use jQuery, not addEventListener(): Shiny triggers shiny:connected
+    // with jQuery, and a native listener never receives it. This branch
+    // was written with addEventListener() before, so it could never run.
+    window.jQuery(document).one("shiny:connected", install);
   }
 })();

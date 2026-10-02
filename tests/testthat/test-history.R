@@ -146,3 +146,63 @@ test_that("depth is validated", {
   expect_error(rewind:::History$new(depth = 1L), "depth")
   expect_error(rewind:::History$new(depth = NA), "depth")
 })
+
+
+# --- scrub_inputs ----------------------------------------------------------
+#
+# rewind removes a password field from the history when the browser reports
+# it. The first snapshot can hold the field already, so every stored state
+# must lose it, and a step whose only change was that field must go.
+
+test_that("scrub_inputs removes the inputs from every entry", {
+  h <- rewind:::History$new()
+  h$push(st(a = 1, pw = ""))
+  h$push(st(a = 2, pw = ""))
+
+  h$scrub_inputs("pw")
+
+  expect_equal(h$size(), 2L)
+  expect_false("pw" %in% names(h$current()$inputs))
+  h$undo()
+  expect_false("pw" %in% names(h$current()$inputs))
+  expect_equal(h$current()$inputs$a, 1)
+})
+
+test_that("scrub_inputs removes a step that only changed the scrubbed input", {
+  h <- rewind:::History$new()
+  h$push(st(a = 1, pw = ""))
+  h$push(st(a = 1, pw = "s3cret"))   # only the password changed
+  h$push(st(a = 2, pw = "s3cret"))
+  expect_equal(h$index(), 3L)
+
+  h$scrub_inputs("pw")
+
+  # The middle step is now the same as the first, so it is a step that does
+  # nothing. It goes, and the position moves down with it.
+  expect_equal(h$size(), 2L)
+  expect_equal(h$index(), 2L)
+  expect_equal(h$current()$inputs$a, 2)
+})
+
+test_that("scrub_inputs moves the position back when the current step goes", {
+  h <- rewind:::History$new()
+  h$push(st(a = 1, pw = ""))
+  h$push(st(a = 1, pw = "s3cret"))
+  expect_equal(h$index(), 2L)
+
+  h$scrub_inputs("pw")
+
+  expect_equal(h$size(), 1L)
+  expect_equal(h$index(), 1L)
+  expect_false(h$can_undo())
+})
+
+test_that("scrub_inputs does nothing to an empty stack or with no ids", {
+  h <- rewind:::History$new()
+  expect_silent(h$scrub_inputs("pw"))
+  expect_equal(h$size(), 0L)
+
+  h$push(st(a = 1))
+  h$scrub_inputs(character(0))
+  expect_equal(h$size(), 1L)
+})
