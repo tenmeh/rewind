@@ -52,6 +52,37 @@ template:
     # the same as the cards of the blog.
     border-radius: "14px"
 
+  # The picture that Slack, LinkedIn, X and WhatsApp show when the address of
+  # the site is shared. Without it pkgdown uses the logo, which is a small
+  # hex and looks lost in a wide preview. The files are in pkgdown/assets, so
+  # they are copied to the root of the site, and a relative src is made
+  # absolute with the url above. pkgdown allows one image only, and it is the
+  # GIF: Slack and Discord play it, so the hex moves in the preview. Frame 0
+  # of the GIF is the still card.png, so LinkedIn, X, WhatsApp and iMessage,
+  # which do not animate, show that. card.png is kept in the repository as the
+  # still, and as the source of truth if the GIF is made again. Both are made
+  # by scripts/site-card in the repository of the blog (tenmeh.github.io).
+  # Make them again there if the tagline below, or the look of the site,
+  # changes.
+  opengraph:
+    image:
+      src: card.gif
+      alt: "The word rewind in large letters with the tagline Undo and redo for Shiny, beside the amber rewind hex logo, which spins back, with a slider, a dropdown and an undo arrow around it."
+
+  # X shows the large picture only when the page says so with twitter:card.
+  # pkgdown can write that tag from "opengraph: twitter:", but it then
+  # refuses to build unless the block also names a "creator" or a "site", and
+  # that is an account on X, which this package does not have. So the tag is
+  # written here by hand. If an account is added later, move this into
+  # "opengraph: twitter: card:" with the "creator". The description is
+  # written here also, the same text as home: description below, so that a
+  # preview has a line of text under the title on every page.
+  includes:
+    in_header: |
+      <meta name="twitter:card" content="summary_large_image">
+      <meta property="og:description" content="Adds a user-facing undo and redo history to Shiny applications, with coalescing so a slider drag is one step rather than forty.">
+      <meta name="twitter:description" content="Adds a user-facing undo and redo history to Shiny applications, with coalescing so a slider drag is one step rather than forty.">
+
 home:
   title: Undo and redo for Shiny
   description: >
