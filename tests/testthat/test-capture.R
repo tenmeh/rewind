@@ -11,6 +11,15 @@ settle_capture <- function(session, ..., wait = 0.15) {
   session$elapse(round(wait * 1000) + 100)
 }
 
+# Fire a hover input every 0.05 s, with no pause, as a mouse over a plot does.
+hover_for <- function(session, values) {
+  for (i in values) {
+    Sys.sleep(0.05)
+    session$setInputs(plot_hover = i)
+    session$elapse(50)
+  }
+}
+
 
 # --- A busy input must not hold a step back -------------------------------
 #
@@ -30,11 +39,7 @@ test_that("an input that changes all the time does not hold back a step", {
 
     session$setInputs(region = "b")
     # Hover for twice the grouping period, without a pause.
-    for (i in 1:8) {
-      Sys.sleep(0.05)
-      session$setInputs(plot_hover = i)
-      session$elapse(50)
-    }
+    hover_for(session, 1:8)
 
     # The step for "b" must be written by now, while the hover goes on.
     expect_equal(ctrl$history$size(), 2L)
@@ -50,9 +55,9 @@ test_that("a change between two others is kept while a busy input fires", {
     settle_capture(session, region = "a", wait = 0.35)
 
     session$setInputs(region = "b")
-    for (i in 1:6) { Sys.sleep(0.05); session$setInputs(plot_hover = i); session$elapse(50) }
+    hover_for(session, 1:6)
     session$setInputs(region = "c")
-    for (i in 7:12) { Sys.sleep(0.05); session$setInputs(plot_hover = i); session$elapse(50) }
+    hover_for(session, 7:12)
 
     # a, b and c are three steps. Before the fix, b was merged away.
     regions <- vapply(seq_len(ctrl$history$size()),

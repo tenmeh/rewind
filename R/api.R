@@ -174,6 +174,13 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
   )
   session$userData$.rewind <- ctrl
 
+  # rewind_exclude() can run before this, for example in a module that is
+  # called first. It keeps the names in userData until now.
+  if (length(session$userData$.rewind_exclude)) {
+    ctrl$add_exclude(session$userData$.rewind_exclude)
+    session$userData$.rewind_exclude <- NULL
+  }
+
   # Add the assets here. The user thus does not have to change the UI.
   shiny::insertUI(
     selector  = "head",

@@ -282,10 +282,9 @@ RewindController <- R6::R6Class(
     },
 
     # Why each input is, or is not, captured. Refer to classify_inputs().
+    # Not isolated: inside render*() the result follows the inputs.
     input_reasons = function() {
-      private$classify_inputs(shiny::isolate(
-        shiny::reactiveValuesToList(private$.session$input)
-      ))
+      private$classify_inputs(shiny::reactiveValuesToList(private$.session$input))
     },
 
     # ---- client ----------------------------------------------------------
@@ -381,7 +380,7 @@ RewindController <- R6::R6Class(
       set(nms %in% private$.exclude, "excluded")
 
       if (!is.null(private$.inputs)) {
-        set(!nms %in% private$.inputs, "not in `inputs`")
+        set(!nms %in% private$.inputs, "not in inputs")
       } else if (!is.null(private$.bound)) {
         # Refer to set_bound().
         set(!nms %in% private$.bound, "cannot be restored by the page")
