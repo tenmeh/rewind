@@ -189,3 +189,23 @@ test_that("rewind_step() refuses a bad hold_ms at the call, not later", {
   expect_no_error(shiny::testServer(step_with(NULL), {}))
   expect_no_error(shiny::testServer(step_with(0), {}))
 })
+
+
+# --- A vector where the session should be --------------------------------
+
+test_that("rewind_enable() says what went wrong when the inputs land in `session`", {
+  # `session` is the first argument, so this gives the input names to it.
+  # It used to fail with "$ operator is invalid for atomic vectors".
+  expect_error(
+    shiny::testServer(function(input, output, session) {
+      rewind_enable(c("region", "year"))
+    }, {}),
+    "`session` must be a Shiny session, not a character vector. To name the inputs to capture, use `inputs = c(...)`.",
+    fixed = TRUE
+  )
+})
+
+test_that("other functions name the problem without the hint about inputs", {
+  expect_error(rewind_undo("x"), "`session` must be a Shiny session, not a character vector.", fixed = TRUE)
+  expect_error(rewind_undo(TRUE), "not a logical vector", fixed = TRUE)
+})

@@ -4,11 +4,23 @@
 #' Get the session argument. Show a clear error if there is no session.
 #' @keywords internal
 #' @noRd
-require_session <- function(session) {
+require_session <- function(session, hint = NULL) {
   if (is.null(session)) {
     stop(
       "No Shiny session found. Call this from inside a server function, ",
       "or pass `session` explicitly.",
+      call. = FALSE
+    )
+  }
+  # A session is an environment, or a list in some tests. A plain vector
+  # is always a mistake, and usually a positional argument in the wrong
+  # place: rewind_enable(c("region", "year")) gives the input names to
+  # `session`, which is the first argument. Without this check the error
+  # is "$ operator is invalid for atomic vectors", which hides the cause.
+  if (is.atomic(session)) {
+    stop(
+      "`session` must be a Shiny session, not a ", class(session)[1],
+      " vector.", if (!is.null(hint)) paste0(" ", hint),
       call. = FALSE
     )
   }

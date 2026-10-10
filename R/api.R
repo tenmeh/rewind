@@ -142,7 +142,10 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
                           restore_timeout = 2,
                           shortcuts = TRUE,
                           verbose = FALSE) {
-  session <- require_session(session)
+  session <- require_session(
+    session,
+    hint = "To name the inputs to capture, use `inputs = c(...)`."
+  )
 
   if (!is.null(inputs) && !is.character(inputs)) {
     stop("`inputs` must be a character vector or NULL.", call. = FALSE)
