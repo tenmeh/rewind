@@ -103,6 +103,16 @@ RewindController <- R6::R6Class(
         private$.expecting <- NULL
       }
 
+      # Nothing that is captured has changed. Do not start the grouping
+      # period again. The capture observer reads every input, so it also
+      # runs when an input that is not captured changes. A plot hover fires
+      # every 0.1 s, and moving the deadline each time held every step back
+      # until the mouse stopped, and merged the changes in between.
+      same_as <- if (!is.null(private$.pending)) private$.pending else self$history$current()
+      if (!is.null(same_as) && states_equal(state, same_as)) {
+        return(invisible(FALSE))
+      }
+
       private$.pending <- state
       deadline <- Sys.time() + private$.coalesce_ms / 1000
       if (!is.null(private$.hold_until) && private$.hold_until > deadline) {
