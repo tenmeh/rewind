@@ -1,13 +1,13 @@
 Package: rewind
 Type: Package
-Title: Undo and Redo for 'Shiny' Applications
+Title: Undo and Redo for 'shiny' Applications
 Version: 0.3.0.9000
 Authors@R: person(
     given = "Tanmay",
     family = "Chanda",
     email = "tanmaychanda96@gmail.com",
     role = c("aut", "cre", "cph"))
-Description: Adds a user-facing undo and redo history to 'Shiny'
+Description: Adds a user-facing undo and redo history to 'shiny'
     applications. Application state, comprising registered inputs and
     optionally server-side reactive values, is captured as the user
     interacts with the application. Users may then step backwards and
