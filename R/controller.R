@@ -217,32 +217,76 @@ RewindController <- R6::R6Class(
     # The list only grows. A field that was a password once stays out, even
     # after it leaves the page.
     set_secret = function(ids) {
-      ids <- as.character(unlist(ids))
-      # Only a module has a namespace to take off. Do not test ns("") for
-      # that: at the top level a real session gives "", but the session of
-      # shiny::testServer() gives "mock-session-", which would drop every id.
-      root <- private$.session$rootScope()
-      prefix <- if (identical(private$.session, root)) "" else private$.session$ns("")
-      if (nzchar(prefix)) {
-        ids <- ids[startsWith(ids, prefix)]
-        ids <- substring(ids, nchar(prefix) + 1L)
-      }
-
+      ids <- private$local_ids(ids)
       new <- setdiff(ids, private$.secret)
       if (length(new) == 0L) return(invisible(FALSE))
       private$.secret <- union(private$.secret, new)
 
       # The first snapshot can be taken before the browser reports, so the
-      # value may be stored already. Remove it from everything that holds a
-      # state.
-      self$history$scrub_inputs(new)
-      if (!is.null(private$.pending)) private$.pending$inputs[new] <- NULL
-      if (!is.null(private$.expecting)) private$.expecting$inputs[new] <- NULL
-      self$sync_client()
+      # value may be stored already.
+      private$drop_inputs(new)
       invisible(TRUE)
     },
 
     secret = function() private$.secret,
+
+    # ---- restorable inputs -----------------------------------------------
+
+    # The ids of the inputs that this page can put back. The browser sends
+    # them (refer to reportBound() in rewind.js): the inputs whose element
+    # has a Shiny binding. A plot's hover and the values that DT keeps have
+    # no such element, so an undo cannot restore them. By default rewind
+    # records only the inputs in this list.
+    #
+    # The list only grows, like the list of secrets, so an input that
+    # leaves the page does not change the history. Until the first report
+    # arrives, and in shiny::testServer(), which has no browser, there is
+    # no list, and rewind records every input as it did before 0.4.0.
+    set_bound = function(ids) {
+      ids <- private$local_ids(ids)
+      first <- is.null(private$.bound)
+      new <- setdiff(ids, private$.bound)
+      if (!first && length(new) == 0L) return(invisible(FALSE))
+      private$.bound <- union(private$.bound, ids)
+
+      # Only the default capture uses the list. An app that names its
+      # inputs gets those inputs, whether the page can restore them or not.
+      if (is.null(private$.inputs)) {
+        private$drop_inputs(setdiff(private$held_inputs(), private$.bound))
+      }
+      invisible(TRUE)
+    },
+
+    bound = function() private$.bound,
+
+    # ---- exclusions --------------------------------------------------------
+
+    # Add inputs to `exclude`, from rewind_exclude(). The ids are the full
+    # ids in the page, so they go through the same mapping as the reports
+    # from the browser. A value captured before the call is removed, so the
+    # history stays the same with or without it.
+    add_exclude = function(ids) {
+      ids <- private$local_ids(ids)
+      new <- setdiff(ids, private$.exclude)
+      if (length(new) == 0L) return(invisible(FALSE))
+      private$.exclude <- union(private$.exclude, new)
+      private$drop_inputs(new)
+      invisible(TRUE)
+    },
+
+    # The settings that decide what is captured, for rewind_status().
+    capture_settings = function() {
+      list(inputs = private$.inputs, exclude = private$.exclude,
+           secret = private$.secret, bound = private$.bound,
+           tracked = lapply(private$.tracked, function(spec) spec$fields))
+    },
+
+    # Why each input is, or is not, captured. Refer to classify_inputs().
+    input_reasons = function() {
+      private$classify_inputs(shiny::isolate(
+        shiny::reactiveValuesToList(private$.session$input)
+      ))
+    },
 
     # ---- client ----------------------------------------------------------
 
@@ -288,6 +332,7 @@ RewindController <- R6::R6Class(
     .expect_timeout = 2,
     .paused         = FALSE,
     .secret         = character(0),
+    .bound          = NULL,
     .tick           = NULL,
     .version        = NULL,
     .observers      = list(),
@@ -299,35 +344,91 @@ RewindController <- R6::R6Class(
 
     snapshot_inputs = function() {
       all <- shiny::reactiveValuesToList(private$.session$input)
+      reasons <- private$classify_inputs(all)
+      keep <- names(reasons)[is.na(reasons)]
+      all[sort(keep)]
+    },
 
-      keep <- names(all)
-      keep <- keep[!startsWith(keep, "rewind_")]
-      keep <- keep[!startsWith(keep, ".")]
+    # Give each input a reason why it is not captured, or NA when it is.
+    # snapshot_inputs() keeps the NAs. rewind_status() shows the reasons, so
+    # a user can find out why an undo skips an input. The first reason that
+    # applies wins, and the order is from the most fixed to the most
+    # changeable.
+    classify_inputs = function(all) {
+      nms <- names(all)
+      reason <- rep(NA_character_, length(nms))
+      names(reason) <- nms
+      set <- function(hit, why) reason[is.na(reason) & hit] <<- why
+
+      set(startsWith(nms, "."), "internal to Shiny")
+      set(startsWith(nms, "rewind_"), "part of rewind")
 
       # The value of an action button is a click counter. The counter only
       # increases. A restore of that value does nothing, or it starts the
-      # observers again by mistake. The state thus never holds these values.
-      keep <- keep[!vapply(
-        all[keep],
-        function(v) inherits(v, "shinyActionButtonValue"),
-        logical(1)
-      )]
+      # observers again by mistake.
+      set(vapply(all, function(v) inherits(v, "shinyActionButtonValue"), logical(1)),
+          "action button")
 
       # The value of a fileInput() is a data frame. It points to a temporary
       # file on the server (refer to ?shiny::fileInput). Shiny deletes that
-      # file at the next upload. An old snapshot would thus set input$file to
-      # a path that does not exist.
-      keep <- keep[!vapply(all[keep], is_file_input_value, logical(1))]
-
-      if (!is.null(private$.inputs)) keep <- intersect(keep, private$.inputs)
-      if (!is.null(private$.exclude)) keep <- setdiff(keep, private$.exclude)
+      # file at the next upload. An old snapshot would thus set input$file
+      # to a path that does not exist.
+      set(vapply(all, is_file_input_value, logical(1)), "file upload")
 
       # A password field is never kept, even if `inputs` names it. Refer to
       # set_secret().
-      keep <- setdiff(keep, private$.secret)
+      set(nms %in% private$.secret, "password field")
+      set(nms %in% private$.exclude, "excluded")
 
-      out <- all[sort(keep)]
-      out[!vapply(out, is.null, logical(1))]
+      if (!is.null(private$.inputs)) {
+        set(!nms %in% private$.inputs, "not in `inputs`")
+      } else if (!is.null(private$.bound)) {
+        # Refer to set_bound().
+        set(!nms %in% private$.bound, "cannot be restored by the page")
+      }
+
+      # A NULL value is not kept, so an undo to it does not clear the input.
+      set(vapply(all, is.null, logical(1)), "NULL value")
+      reason
+    },
+
+    # The ids from the browser are the full ids in the page. Inside a module
+    # the snapshot uses the names local to the module, so keep only the ids
+    # under this session's namespace, and take the prefix off.
+    #
+    # Only a module has a namespace to take off. Do not test ns("") for
+    # that: at the top level a real session gives "", but the session of
+    # shiny::testServer() gives "mock-session-", which would drop every id.
+    local_ids = function(ids) {
+      ids <- as.character(unlist(ids))
+      root <- private$.session$rootScope()
+      prefix <- if (identical(private$.session, root)) "" else private$.session$ns("")
+      if (nzchar(prefix)) {
+        ids <- ids[startsWith(ids, prefix)]
+        ids <- substring(ids, nchar(prefix) + 1L)
+      }
+      unique(ids)
+    },
+
+    # Every input name that a stored state holds.
+    held_inputs = function() {
+      states <- c(
+        lapply(seq_len(self$history$size()), self$history$state_at),
+        list(private$.pending, private$.expecting)
+      )
+      unique(unlist(lapply(states, function(s) names(s$inputs))))
+    },
+
+    # Remove inputs from everything that holds a state, then tell the
+    # browser. The history removes a step whose only change was one of
+    # these inputs (refer to History$scrub_inputs()).
+    drop_inputs = function(ids) {
+      if (length(ids) == 0L) return(invisible(FALSE))
+      self$history$scrub_inputs(ids)
+      if (!is.null(private$.pending)) private$.pending$inputs[ids] <- NULL
+      if (!is.null(private$.expecting)) private$.expecting$inputs[ids] <- NULL
+      self$sync_client()
+      invisible(TRUE)
     },
 
     snapshot_values = function() {
