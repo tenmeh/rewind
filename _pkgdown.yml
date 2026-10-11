@@ -104,6 +104,7 @@ home:
         title: Status
         text: |
           [![CRAN status](https://www.r-pkg.org/badges/version/rewind)](https://CRAN.R-project.org/package=rewind)
+          [![CRAN downloads](https://cranlogs.r-pkg.org/badges/grand-total/rewind)](https://CRAN.R-project.org/package=rewind)
           [![R-CMD-check](https://github.com/tenmeh/rewind/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/tenmeh/rewind/actions/workflows/R-CMD-check.yaml)
 
 navbar:
