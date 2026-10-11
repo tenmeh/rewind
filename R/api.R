@@ -109,6 +109,14 @@
 #'   text undo of the browser thus continues to work.
 #' @param verbose Set to `TRUE` to show messages about what `rewind`
 #'   captures and restores. This is useful during development.
+#' @param labels A named character vector of the names a person reads,
+#'   such as `c(region = "Region", year = "Year range")`. The names are the
+#'   input ids. A value that [rewind_track()] records is named `id$field`.
+#'   The labels appear in the history rail, where a step reads
+#'   `"Region, Year range"` and not `"region, year"`, and in the `label`
+#'   column of [rewind_diff()]. Shiny does not give the server the label of
+#'   a widget, so `rewind` cannot find these by itself. An input with no
+#'   label keeps its id.
 #'
 #' @return The controller, invisibly. Most applications can ignore it.
 #'
@@ -141,7 +149,8 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
                           coalesce_ms = 400L,
                           restore_timeout = 2,
                           shortcuts = TRUE,
-                          verbose = FALSE) {
+                          verbose = FALSE,
+                          labels = NULL) {
   session <- require_session(
     session,
     hint = "To name the inputs to capture, use `inputs = c(...)`."
@@ -156,6 +165,7 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
   check_number(restore_timeout, "restore_timeout", min = 0, inclusive = FALSE)
   check_flag(shortcuts, "shortcuts")
   check_flag(verbose, "verbose")
+  check_labels(labels)
 
   if (!is.null(session$userData$.rewind)) {
     warning("rewind is already enabled for this session; ignoring.",
@@ -170,7 +180,8 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
     depth           = depth,
     coalesce_ms     = coalesce_ms,
     restore_timeout = restore_timeout,
-    verbose         = verbose
+    verbose         = verbose,
+    labels          = labels
   )
   session$userData$.rewind <- ctrl
 

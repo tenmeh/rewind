@@ -18,13 +18,15 @@ RewindController <- R6::R6Class(
                           depth = 50L,
                           coalesce_ms = 400L,
                           restore_timeout = 2,
-                          verbose = FALSE) {
+                          verbose = FALSE,
+                          labels = NULL) {
       private$.session     <- session
       private$.inputs      <- inputs
       private$.exclude     <- exclude
       private$.coalesce_ms <- as.numeric(coalesce_ms)
       private$.expect_timeout <- as.numeric(restore_timeout)
       private$.verbose     <- isTRUE(verbose)
+      private$.labels      <- labels
       private$.tracked     <- list()
       private$.tick        <- shiny::reactiveVal(0L)
       private$.version     <- shiny::reactiveVal(0L)
@@ -143,7 +145,7 @@ RewindController <- R6::R6Class(
       label <- private$.pending_label
       if (is.null(label)) {
         label <- diff_label(flatten_state(self$history$current()),
-                            flatten_state(state))
+                            flatten_state(state), labels = private$.labels)
       }
       private$.pending_label <- NULL
       private$.hold_until <- NULL
@@ -229,6 +231,9 @@ RewindController <- R6::R6Class(
     },
 
     secret = function() private$.secret,
+
+    # The names a person reads, from rewind_enable(labels = ).
+    labels = function() private$.labels,
 
     # ---- restorable inputs -----------------------------------------------
 
@@ -339,6 +344,7 @@ RewindController <- R6::R6Class(
     .exclude        = NULL,
     .coalesce_ms    = 400,
     .verbose        = FALSE,
+    .labels         = NULL,
     .tracked        = NULL,
     .pending        = NULL,
     .pending_label  = NULL,

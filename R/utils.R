@@ -150,3 +150,37 @@ check_character <- function(x, arg) {
   }
   invisible(x)
 }
+
+
+#' Check the `labels` argument of rewind_enable()
+#'
+#' @param x The value.
+#' @return `x`, invisibly.
+#' @keywords internal
+#' @noRd
+check_labels <- function(x) {
+  if (is.null(x)) return(invisible(x))
+  nms <- names(x)
+  ok <- is.character(x) && !anyNA(x) && !is.null(nms) && !anyNA(nms) &&
+    all(nzchar(nms)) && !anyDuplicated(nms)
+  if (!ok) {
+    stop("`labels` must be a character vector with a unique name for each element, ",
+         "such as c(region = \"Region\").", call. = FALSE)
+  }
+  invisible(x)
+}
+
+
+#' The label of each name, or the name itself when it has none
+#'
+#' @param names Character vector of input names, or id$field names.
+#' @param labels Named character vector from rewind_enable(), or NULL.
+#' @return A character vector as long as `names`, with no names.
+#' @keywords internal
+#' @noRd
+label_for <- function(names, labels) {
+  out <- unname(labels[names])
+  out[is.na(out)] <- names[is.na(out)]
+  if (is.null(labels)) out <- names
+  as.character(out)
+}

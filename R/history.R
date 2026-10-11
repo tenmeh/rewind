@@ -302,15 +302,19 @@ describe_state <- function(state) {
 #'
 #' @param old,new Snapshots.
 #' @param max_names The number of names to show before the text is cut.
+#' @param labels Named character vector of the names a person reads, from
+#'   rewind_enable(labels = ), or NULL.
 #' @keywords internal
 #' @noRd
-diff_label <- function(old, new, max_names = 3L) {
+diff_label <- function(old, new, max_names = 3L, labels = NULL) {
   if (is.null(old)) return("Initial state")
   nms <- union(names(old), names(new))
   changed <- nms[!vapply(nms, function(nm) values_equal(old[[nm]], new[[nm]]),
                          logical(1))]
 
   if (length(changed) == 0L) return("No change")
+  # The names a person reads, from rewind_enable(labels = ).
+  changed <- label_for(changed, labels)
   if (length(changed) <= max_names) return(paste(changed, collapse = ", "))
   sprintf("%s and %d more",
           paste(changed[seq_len(max_names)], collapse = ", "),
