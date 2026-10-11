@@ -105,6 +105,21 @@ RewindController <- R6::R6Class(
         private$.expecting <- NULL
       }
 
+      # Inside rewind_unrecorded(): the change becomes part of the current
+      # state, not a step. The window stays open after the block of code,
+      # because a change made with update*Input() comes back from the
+      # browser later. Refer to open_unrecorded().
+      if (!is.null(private$.absorb_until)) {
+        if (Sys.time() < private$.absorb_until) {
+          self$history$replace_current(state)
+          private$.pending <- NULL
+          private$log("unrecorded change absorbed into the current state")
+          self$sync_client()
+          return(invisible(FALSE))
+        }
+        private$.absorb_until <- NULL
+      }
+
       # Nothing that is captured has changed. Do not start the grouping
       # period again. The capture observer reads every input, so it also
       # runs when an input that is not captured changes. A plot hover fires
@@ -184,6 +199,19 @@ RewindController <- R6::R6Class(
         private$.deadline <- private$.hold_until
         private$.tick(shiny::isolate(private$.tick()) + 1L)
       }
+      invisible(TRUE)
+    },
+
+    # Start a window in which changes become part of the current state, not
+    # a step. rewind_unrecorded() calls this before its block of code runs.
+    #
+    # A change from the user that still waits is written first, as its own
+    # step. Without that, it would merge into the code's change and an undo
+    # could not reach it.
+    open_unrecorded = function(hold_ms = NULL) {
+      if (is.null(hold_ms)) hold_ms <- private$.coalesce_ms * 2
+      if (!is.null(private$.pending)) self$flush()
+      private$.absorb_until <- Sys.time() + hold_ms / 1000
       invisible(TRUE)
     },
 
@@ -345,6 +373,7 @@ RewindController <- R6::R6Class(
     .coalesce_ms    = 400,
     .verbose        = FALSE,
     .labels         = NULL,
+    .absorb_until   = NULL,
     .tracked        = NULL,
     .pending        = NULL,
     .pending_label  = NULL,

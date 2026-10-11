@@ -411,6 +411,72 @@ rewind_step <- function(expr,
 }
 
 
+#' Make changes that are not a step
+#'
+#' This function holds a block of code. The changes that the block makes
+#' do not become a step. They become part of the current state instead, so
+#' an undo never goes back across them. Use it for code that sets up a
+#' view: a saved view that you restore, a bookmark that you apply, or
+#' defaults that you load when the user logs in.
+#'
+#' It is the other side of [rewind_step()]. That function makes the changes
+#' of a block into one step with a label. This one makes them into no step
+#' at all.
+#'
+#' # Why not rewind_pause() and rewind_resume()
+#'
+#' A pause and a resume in one observer have no effect. `rewind` captures
+#' in its own observer, which runs after the one that made the change, so
+#' capture has resumed by then. This function keeps a window open after
+#' the block instead, so that the changes that come back from the browser
+#' later are covered too.
+#'
+#' # What happens around it
+#'
+#' * A change from the user that still waits to be written becomes its own
+#'   step first, so the block does not swallow it.
+#' * The steps in front of the position go, as they do for any change.
+#' * A change that the user makes inside the window is part of the current
+#'   state too. Keep `hold_ms` short.
+#'
+#' @param expr The code to run. This is usually a set of `update*Input()`
+#'   calls, or assignments to tracked reactive values.
+#' @param hold_ms The time in milliseconds to keep the window open after
+#'   the block. The default is two times the `coalesce_ms` of the session.
+#'   Increase it if a slow browser lets a change through as a step.
+#' @param session The Shiny session. The default is the current session.
+#'
+#' @return The value of `expr`, invisibly.
+#'
+#' @examples
+#' if (interactive()) {
+#'   library(shiny)
+#'
+#'   server <- function(input, output, session) {
+#'     rewind_enable()
+#'
+#'     # A saved view. Loading it is not something to undo.
+#'     observeEvent(input$load_view, {
+#'       rewind_unrecorded({
+#'         updateSelectInput(session, "region", selected = "South")
+#'         updateSliderInput(session, "year", value = c(2020, 2024))
+#'       })
+#'     })
+#'   }
+#' }
+#' @export
+rewind_unrecorded <- function(expr,
+                              hold_ms = NULL,
+                              session = shiny::getDefaultReactiveDomain()) {
+  if (!is.null(hold_ms)) check_number(hold_ms, "hold_ms", min = 0, inclusive = TRUE)
+  ctrl <- get_controller(session)
+  # Open the window before the block runs. `expr` is evaluated lazily, at
+  # the return below.
+  if (!is.null(ctrl)) ctrl$open_unrecorded(hold_ms = hold_ms)
+  invisible(expr)
+}
+
+
 #' Move through the history programmatically
 #'
 #' The keyboard shortcuts and [rewind_buttons()] are sufficient for most
@@ -513,9 +579,20 @@ rewind_can_redo <- function(session = shiny::getDefaultReactiveDomain()) {
 #' Suspend and resume history capture
 #'
 #' While capture is paused, the application applies changes as usual. But
-#' `rewind` does not record them. Use this around changes that your code
-#' makes, and that the user must not step back into. Examples are a saved
-#' session that you restore, or a URL bookmark that you apply.
+#' `rewind` does not record them. Use this to stop capture for a period
+#' that spans more than one reactive flush, such as while the user works
+#' in a part of the application that undo must not cover.
+#'
+#' # Not for a block of code
+#'
+#' A pause and a resume in the same observer, or the same `observeEvent()`,
+#' have no effect. `rewind` captures in its own observer, which runs after
+#' the one that made the change. By then capture has resumed, so the change
+#' is recorded as usual. A change made with `update*Input()` also comes
+#' back from the browser later.
+#'
+#' For code that changes the application and must not make a step, such as
+#' code that restores a saved view, use [rewind_unrecorded()].
 #'
 #' @param session The Shiny session. The default is the current session.
 #'
@@ -527,9 +604,10 @@ rewind_can_redo <- function(session = shiny::getDefaultReactiveDomain()) {
 #'
 #'   server <- function(input, output, session) {
 #'     rewind_enable()
-#'     rewind_pause()
-#'     # ... apply a saved bookmark here ...
-#'     rewind_resume()
+#'     # Stop capture while an "expert mode" switch is on.
+#'     observeEvent(input$expert_mode, {
+#'       if (input$expert_mode) rewind_pause() else rewind_resume()
+#'     })
 #'   }
 #' }
 #' @export

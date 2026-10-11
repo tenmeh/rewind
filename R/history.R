@@ -199,6 +199,27 @@ History <- R6::R6Class(
       invisible(self)
     },
 
+    # @description
+    # Put `state` in place of the state at the current position, without a
+    # new step. rewind_unrecorded() uses this: code changes the application,
+    # and the change becomes part of where the user is now.
+    #
+    # The steps in front of the position go, as they do for any new change.
+    # They were made from the old state, so a redo to them would undo the
+    # change that the code just made.
+    # @param state A snapshot. This is a named list.
+    replace_current = function(state) {
+      if (private$.index == 0L) {
+        self$reset(state)
+        return(invisible(self))
+      }
+      private$.entries[[private$.index]]$state <- state
+      if (private$.index < length(private$.entries)) {
+        private$.entries <- private$.entries[seq_len(private$.index)]
+      }
+      invisible(self)
+    },
+
     # @description Remove each entry but the current one.
     clear = function() {
       keep <- self$current()
