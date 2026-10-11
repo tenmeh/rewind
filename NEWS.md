@@ -1,5 +1,38 @@
 # rewind (development version)
 
+## A change to what is captured
+
+* **By default, `rewind` now captures only inputs that the page can put
+  back.** A plot's `hover`, `click`, `dblclick` and `brush`, and the values
+  that DT keeps, such as `_rows_current` and `_state`, have no element in the
+  page to restore them. `rewind` recorded them anyway, so each move of the
+  mouse over a plot was a step, and an undo of it seemed to do nothing. The
+  browser now reports which inputs have a Shiny binding, and only those are
+  captured. A list in `inputs` is used as it is, so name an input there to
+  capture it anyway. Until the report arrives, and in `testServer()`, every
+  input is captured as before.
+
+## New
+
+* `rewind_status()` lists what `rewind` captures, and gives each other input
+  the reason it is left out: excluded, a password field, not in `inputs`,
+  cannot be restored by the page, and so on. It answers "why does an undo
+  skip this input?" in one call.
+* `rewind_exclude()` leaves inputs out of the history from anywhere in the
+  server, a module included, and at any time. It works like
+  `shiny::setBookmarkExclude()`: inside a module, give the module's own
+  names. A second call adds to the list.
+
+## Fixed
+
+* An input that changes all the time no longer holds back every step. The
+  grouping period started again whenever any input changed, also one that
+  is not captured, so a plot hover held every step back until the mouse
+  stopped, and merged the changes in between.
+* `rewind_enable(c("region", "year"))` gave the names to `session`, the
+  first argument, and failed with "$ operator is invalid for atomic
+  vectors". It now says that `session` must be a Shiny session, and points
+  to `inputs = c(...)`.
 * Password fields are never kept in the history. A `passwordInput()` sends a
   plain string, so `rewind` captured it like any text box: the password was
   kept in the history, put back in the field by an undo, and shown in plain

@@ -54,10 +54,20 @@ shinyApp(ui, server)
 ```
 
 `Ctrl+Z` now moves backwards through the filter choices of the user.
-`Ctrl+Shift+Z` moves forwards. `rewind` captures every input in the session
-automatically. There is a short list of exclusions: action buttons,
-`fileInput()`, and the inputs of this package. `?rewind_enable` gives the
-full list.
+`Ctrl+Shift+Z` moves forwards. `rewind` captures every input that the page
+can put back, automatically. It leaves out inputs that an undo could not
+restore, such as a plot's hover or the values that DT keeps, and also
+action buttons, `fileInput()` and password fields. `?rewind_enable` gives
+the full list.
+
+To see what is captured, and why an input is not, call `rewind_status()`.
+To leave an input out, from anywhere, a module included, call
+`rewind_exclude()`:
+
+```r
+rewind_exclude("search")      # the search box is not part of the history
+rewind_status()$skipped       # each input left out, with the reason
+```
 
 ## Keyboard shortcuts
 

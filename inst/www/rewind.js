@@ -258,6 +258,45 @@
     Shiny.setInputValue("rewind_secret_ids", ids);
   }
 
+  // -------------------------------------------------------- restorable
+
+  // Tell the server which inputs this page can put back. applyValue() above
+  // restores an input through the binding of an element with that id. Some
+  // inputs have no such element: a plot's hover, click and brush, and the
+  // values that DT keeps, are sent with Shiny.setInputValue() alone. An
+  // undo cannot restore them, so the server leaves them out of the history.
+  //
+  // The ids are those of elements that Shiny has bound as inputs. Shiny
+  // binds many at once when the page loads, so the report waits for the
+  // burst to end and goes as one message. It is sent only when the list
+  // changes.
+  var lastBound = "";
+  var boundTimer = null;
+
+  function reportBound() {
+    if (boundTimer !== null) return;
+    boundTimer = setTimeout(function () {
+      boundTimer = null;
+      if (!window.Shiny || !Shiny.setInputValue || !Shiny.shinyapp ||
+          !Shiny.shinyapp.isConnected || !Shiny.shinyapp.isConnected()) {
+        return;
+      }
+      var ids = [];
+      var els = document.querySelectorAll(".shiny-bound-input[id]");
+      for (var i = 0; i < els.length; i++) {
+        if (els[i].id && window.jQuery(els[i]).data("shiny-input-binding")) {
+          ids.push(els[i].id);
+        }
+      }
+      ids.sort();
+
+      var key = ids.join("\n");
+      if (key === lastBound) return;
+      lastBound = key;
+      Shiny.setInputValue("rewind_bound_ids", ids);
+    }, 0);
+  }
+
   // ----------------------------------------------------------------- wire
 
   function install() {
@@ -284,14 +323,19 @@
     var $doc = window.jQuery(document);
     $doc.on("shiny:connected", function () {
       setTimeout(reportSecrets, 0);
+      reportBound();
     });
     $doc.on("shiny:bound", function (ev) {
-      if (ev.bindingType === "input") reportSecrets();
+      if (ev.bindingType === "input") {
+        reportSecrets();
+        reportBound();
+      }
     });
 
     // The connection can be open already, when this file arrives after the
     // page has loaded (rewind_enable() inserts it if the page did not).
     reportSecrets();
+    reportBound();
   }
 
   if (window.Shiny && Shiny.addCustomMessageHandler) {
