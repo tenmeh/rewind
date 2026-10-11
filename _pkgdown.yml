@@ -135,6 +135,15 @@ reference:
       - rewind_enable
       - rewind_track
 
+  - title: Choosing what is captured
+    desc: >
+      By default rewind captures every input the page can put back. Leave
+      inputs out from anywhere, a module included, and see what is captured
+      and why an input is not.
+    contents:
+      - rewind_exclude
+      - rewind_status
+
   - title: Controlling what becomes a step
     desc: >
       Time-based coalescing handles the common case. These are for when the

@@ -67,8 +67,24 @@ the reactive values that you register with \code{\link[=rewind_track]{rewind_tra
 then move backwards and forwards through that history.
 }
 \section{What gets captured}{
-By default \code{rewind} captures every input in the session. There are five
-exclusions:
+By default \code{rewind} captures every input that the page can put back: an
+input whose element has a Shiny input binding. That covers the inputs of
+Shiny, and those of other packages that give their widgets a binding.
+
+It leaves out inputs that have no such element. A plot's \code{hover},
+\code{click}, \code{dblclick} and \code{brush}, and the values that DT keeps, such as
+\verb{_rows_current}, \verb{_rows_all} and \verb{_state}, are sent to the server with
+\code{Shiny.setInputValue()} alone. An undo cannot restore them, so recording
+them made steps that seemed to do nothing. The browser reports which
+inputs have a binding, including those that \code{renderUI()} adds later.
+Until that report arrives, and in \code{\link[shiny:testServer]{shiny::testServer()}}, which has no
+browser, every input is captured.
+
+To capture an input the page cannot restore, such as the selected rows
+of a DT table, name it in \code{inputs}. A list in \code{inputs} is used as it is.
+Use \code{\link[=rewind_status]{rewind_status()}} to see what is captured, and why an input is not.
+
+Five more kinds of input are never captured:
 \itemize{
 \item action buttons and links. Their value is a click counter.
 \item \code{\link[shiny:fileInput]{shiny::fileInput()}}. Its value points to a temporary file on the
@@ -99,8 +115,9 @@ browser's undo still changes the box, so \code{rewind} records the change as
 a new step. To step back through the history, leave the box first, or
 use the buttons.
 
-Use \code{inputs} to give a list of the inputs to capture. This is usually
-better in a large application. Undo must move the controls that the user
+Use \code{inputs} to give a list of the inputs to capture, and \code{exclude} or
+\code{\link[=rewind_exclude]{rewind_exclude()}} to leave some out. A list is usually better in a large
+application. Undo must move the controls that the user
 thinks of as filters. It must not move every other input on the page.
 }
 

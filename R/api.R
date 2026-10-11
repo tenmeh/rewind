@@ -7,8 +7,24 @@
 #'
 #' # What gets captured
 #'
-#' By default `rewind` captures every input in the session. There are five
-#' exclusions:
+#' By default `rewind` captures every input that the page can put back: an
+#' input whose element has a Shiny input binding. That covers the inputs of
+#' Shiny, and those of other packages that give their widgets a binding.
+#'
+#' It leaves out inputs that have no such element. A plot's `hover`,
+#' `click`, `dblclick` and `brush`, and the values that DT keeps, such as
+#' `_rows_current`, `_rows_all` and `_state`, are sent to the server with
+#' `Shiny.setInputValue()` alone. An undo cannot restore them, so recording
+#' them made steps that seemed to do nothing. The browser reports which
+#' inputs have a binding, including those that `renderUI()` adds later.
+#' Until that report arrives, and in [shiny::testServer()], which has no
+#' browser, every input is captured.
+#'
+#' To capture an input the page cannot restore, such as the selected rows
+#' of a DT table, name it in `inputs`. A list in `inputs` is used as it is.
+#' Use [rewind_status()] to see what is captured, and why an input is not.
+#'
+#' Five more kinds of input are never captured:
 #'
 #' * action buttons and links. Their value is a click counter.
 #' * [shiny::fileInput()]. Its value points to a temporary file on the
@@ -38,8 +54,9 @@
 #' a new step. To step back through the history, leave the box first, or
 #' use the buttons.
 #'
-#' Use `inputs` to give a list of the inputs to capture. This is usually
-#' better in a large application. Undo must move the controls that the user
+#' Use `inputs` to give a list of the inputs to capture, and `exclude` or
+#' [rewind_exclude()] to leave some out. A list is usually better in a large
+#' application. Undo must move the controls that the user
 #' thinks of as filters. It must not move every other input on the page.
 #'
 #' # Grouping
@@ -125,7 +142,10 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
                           restore_timeout = 2,
                           shortcuts = TRUE,
                           verbose = FALSE) {
-  session <- require_session(session)
+  session <- require_session(
+    session,
+    hint = "To name the inputs to capture, use `inputs = c(...)`."
+  )
 
   if (!is.null(inputs) && !is.character(inputs)) {
     stop("`inputs` must be a character vector or NULL.", call. = FALSE)
@@ -153,6 +173,13 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
     verbose         = verbose
   )
   session$userData$.rewind <- ctrl
+
+  # rewind_exclude() can run before this, for example in a module that is
+  # called first. It keeps the names in userData until now.
+  if (length(session$userData$.rewind_exclude)) {
+    ctrl$add_exclude(session$userData$.rewind_exclude)
+    session$userData$.rewind_exclude <- NULL
+  }
 
   # Add the assets here. The user thus does not have to change the UI.
   shiny::insertUI(
@@ -235,8 +262,14 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
                                     ctrl$set_secret(root$input$rewind_secret_ids),
                                     ignoreInit = FALSE, domain = session)
 
+  # The inputs that the page can restore, reported by rewind.js. By default
+  # only these are captured. Not ignoreInit, for the same reason as above.
+  obs_bound <- shiny::observeEvent(root$input$rewind_bound_ids,
+                                   ctrl$set_bound(root$input$rewind_bound_ids),
+                                   ignoreInit = FALSE, domain = session)
+
   ctrl$set_observers(list(obs_capture, obs_coalesce, obs_undo, obs_redo,
-                          obs_jump, obs_secret))
+                          obs_jump, obs_secret, obs_bound))
 
   invisible(ctrl)
 }
