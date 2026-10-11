@@ -131,7 +131,8 @@ test_that("an empty result has the same shape as a full one", {
   empty <- empty_diff()
 
   expect_equal(names(empty), names(full))
-  expect_equal(names(empty), c("from", "to", "name", "change", "old", "new"))
+  # `label` is last, so the first six keep the positions they had in 0.3.0.
+  expect_equal(names(empty), c("from", "to", "name", "change", "old", "new", "label"))
   expect_equal(
     vapply(empty, class, character(1)),
     vapply(full, class, character(1))

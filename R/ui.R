@@ -60,6 +60,11 @@ rewind_buttons <- function(undo_label = "Undo",
                            redo_label = "Redo",
                            class = NULL,
                            button_class = NULL) {
+  check_string(undo_label, "undo_label")
+  check_string(redo_label, "redo_label")
+  check_character(class, "class")
+  check_character(button_class, "button_class")
+
   btn_class <- function(direction) {
     paste(c("btn", "btn-default", button_class, direction), collapse = " ")
   }
@@ -114,6 +119,13 @@ rewind_buttons <- function(undo_label = "Undo",
 rewind_ui <- function(label = "History",
                       max_height = "20rem",
                       class = NULL) {
+  check_string(label, "label")
+  check_character(class, "class")
+  # A number is a size in pixels, as in shiny and bslib. A bare 300 used to
+  # write "max-height: 300;", which browsers ignore, and a word that is not
+  # a size now fails here rather than in the browser.
+  max_height <- htmltools::validateCssUnit(max_height)
+
   htmltools::attachDependencies(
     htmltools::tags$div(
       class = paste(c("rewind-rail-wrap", class), collapse = " "),

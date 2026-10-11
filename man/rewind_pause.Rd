@@ -17,19 +17,31 @@ rewind_resume(session = shiny::getDefaultReactiveDomain())
 }
 \description{
 While capture is paused, the application applies changes as usual. But
-\code{rewind} does not record them. Use this around changes that your code
-makes, and that the user must not step back into. Examples are a saved
-session that you restore, or a URL bookmark that you apply.
+\code{rewind} does not record them. Use this to stop capture for a period
+that spans more than one reactive flush, such as while the user works
+in a part of the application that undo must not cover.
 }
+\section{Not for a block of code}{
+A pause and a resume in the same observer, or the same \code{observeEvent()},
+have no effect. \code{rewind} captures in its own observer, which runs after
+the one that made the change. By then capture has resumed, so the change
+is recorded as usual. A change made with \code{update*Input()} also comes
+back from the browser later.
+
+For code that changes the application and must not make a step, such as
+code that restores a saved view, use \code{\link[=rewind_unrecorded]{rewind_unrecorded()}}.
+}
+
 \examples{
 if (interactive()) {
   library(shiny)
 
   server <- function(input, output, session) {
     rewind_enable()
-    rewind_pause()
-    # ... apply a saved bookmark here ...
-    rewind_resume()
+    # Stop capture while an "expert mode" switch is on.
+    observeEvent(input$expert_mode, {
+      if (input$expert_mode) rewind_pause() else rewind_resume()
+    })
   }
 }
 }

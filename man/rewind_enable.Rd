@@ -12,7 +12,8 @@ rewind_enable(
   coalesce_ms = 400L,
   restore_timeout = 2,
   shortcuts = TRUE,
-  verbose = FALSE
+  verbose = FALSE,
+  labels = NULL
 )
 }
 \arguments{
@@ -56,6 +57,15 @@ text undo of the browser thus continues to work.}
 
 \item{verbose}{Set to \code{TRUE} to show messages about what \code{rewind}
 captures and restores. This is useful during development.}
+
+\item{labels}{A named character vector of the names a person reads,
+such as \code{c(region = "Region", year = "Year range")}. The names are the
+input ids. A value that \code{\link[=rewind_track]{rewind_track()}} records is named \code{id$field}.
+The labels appear in the history rail, where a step reads
+\code{"Region, Year range"} and not \code{"region, year"}, and in the \code{label}
+column of \code{\link[=rewind_diff]{rewind_diff()}}. Shiny does not give the server the label of
+a widget, so \code{rewind} cannot find these by itself. An input with no
+label keeps its id.}
 }
 \value{
 The controller, invisibly. Most applications can ignore it.

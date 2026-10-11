@@ -109,6 +109,14 @@
 #'   text undo of the browser thus continues to work.
 #' @param verbose Set to `TRUE` to show messages about what `rewind`
 #'   captures and restores. This is useful during development.
+#' @param labels A named character vector of the names a person reads,
+#'   such as `c(region = "Region", year = "Year range")`. The names are the
+#'   input ids. A value that [rewind_track()] records is named `id$field`.
+#'   The labels appear in the history rail, where a step reads
+#'   `"Region, Year range"` and not `"region, year"`, and in the `label`
+#'   column of [rewind_diff()]. Shiny does not give the server the label of
+#'   a widget, so `rewind` cannot find these by itself. An input with no
+#'   label keeps its id.
 #'
 #' @return The controller, invisibly. Most applications can ignore it.
 #'
@@ -141,21 +149,23 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
                           coalesce_ms = 400L,
                           restore_timeout = 2,
                           shortcuts = TRUE,
-                          verbose = FALSE) {
+                          verbose = FALSE,
+                          labels = NULL) {
   session <- require_session(
     session,
     hint = "To name the inputs to capture, use `inputs = c(...)`."
   )
 
-  if (!is.null(inputs) && !is.character(inputs)) {
-    stop("`inputs` must be a character vector or NULL.", call. = FALSE)
-  }
-  if (!is.null(exclude) && !is.character(exclude)) {
-    stop("`exclude` must be a character vector or NULL.", call. = FALSE)
-  }
-  # check_number() rejects NA and Inf as well. Refer to R/utils.R.
+  # Every argument is checked here, so a wrong value fails at the call and
+  # names the argument. The checks are in R/utils.R.
+  check_character(inputs, "inputs")
+  check_character(exclude, "exclude")
+  depth <- check_count(depth, "depth", min = 2L)
   check_number(coalesce_ms, "coalesce_ms", min = 0, inclusive = TRUE)
   check_number(restore_timeout, "restore_timeout", min = 0, inclusive = FALSE)
+  check_flag(shortcuts, "shortcuts")
+  check_flag(verbose, "verbose")
+  check_labels(labels)
 
   if (!is.null(session$userData$.rewind)) {
     warning("rewind is already enabled for this session; ignoring.",
@@ -170,7 +180,8 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
     depth           = depth,
     coalesce_ms     = coalesce_ms,
     restore_timeout = restore_timeout,
-    verbose         = verbose
+    verbose         = verbose,
+    labels          = labels
   )
   session$userData$.rewind <- ctrl
 
@@ -317,8 +328,25 @@ rewind_track <- function(values,
   if (!shiny::is.reactivevalues(values)) {
     stop("`values` must be a reactiveValues object.", call. = FALSE)
   }
-  if (!is.null(fields) && !is.character(fields)) {
-    stop("`fields` must be a character vector or NULL.", call. = FALSE)
+  check_character(fields, "fields")
+  check_string(id, "id")
+
+  # A field that `values` does not have is captured as nothing, so a typo
+  # used to give no message. A field can be added later, so warn and do not
+  # stop.
+  if (!is.null(fields)) {
+    have <- names(shiny::isolate(shiny::reactiveValuesToList(values)))
+    missing <- setdiff(fields, have)
+    if (length(missing)) {
+      warning(sprintf(
+        paste(
+          "`fields` names %s that `values` does not have: %s.",
+          "Check the spelling, or ignore this if the field is added later."
+        ),
+        if (length(missing) == 1L) "a field" else "fields",
+        paste0('"', missing, '"', collapse = ", ")
+      ), call. = FALSE)
+    }
   }
 
   if (is.null(id)) {
@@ -379,7 +407,75 @@ rewind_step <- function(expr,
   # whether rewind is enabled or not. An NA here used to be accepted, and
   # then failed later inside the capture observer.
   if (!is.null(hold_ms)) check_number(hold_ms, "hold_ms", min = 0, inclusive = TRUE)
+  # 1:2 used to give the label "1".
+  check_string(label, "label")
   if (!is.null(ctrl)) ctrl$open_step(label = label, hold_ms = hold_ms)
+  invisible(expr)
+}
+
+
+#' Make changes that are not a step
+#'
+#' This function holds a block of code. The changes that the block makes
+#' do not become a step. They become part of the current state instead, so
+#' an undo never goes back across them. Use it for code that sets up a
+#' view: a saved view that you restore, a bookmark that you apply, or
+#' defaults that you load when the user logs in.
+#'
+#' It is the other side of [rewind_step()]. That function makes the changes
+#' of a block into one step with a label. This one makes them into no step
+#' at all.
+#'
+#' # Why not rewind_pause() and rewind_resume()
+#'
+#' A pause and a resume in one observer have no effect. `rewind` captures
+#' in its own observer, which runs after the one that made the change, so
+#' capture has resumed by then. This function keeps a window open after
+#' the block instead, so that the changes that come back from the browser
+#' later are covered too.
+#'
+#' # What happens around it
+#'
+#' * A change from the user that still waits to be written becomes its own
+#'   step first, so the block does not swallow it.
+#' * The steps in front of the position go, as they do for any change.
+#' * A change that the user makes inside the window is part of the current
+#'   state too. Keep `hold_ms` short.
+#'
+#' @param expr The code to run. This is usually a set of `update*Input()`
+#'   calls, or assignments to tracked reactive values.
+#' @param hold_ms The time in milliseconds to keep the window open after
+#'   the block. The default is two times the `coalesce_ms` of the session.
+#'   Increase it if a slow browser lets a change through as a step.
+#' @param session The Shiny session. The default is the current session.
+#'
+#' @return The value of `expr`, invisibly.
+#'
+#' @examples
+#' if (interactive()) {
+#'   library(shiny)
+#'
+#'   server <- function(input, output, session) {
+#'     rewind_enable()
+#'
+#'     # A saved view. Loading it is not something to undo.
+#'     observeEvent(input$load_view, {
+#'       rewind_unrecorded({
+#'         updateSelectInput(session, "region", selected = "South")
+#'         updateSliderInput(session, "year", value = c(2020, 2024))
+#'       })
+#'     })
+#'   }
+#' }
+#' @export
+rewind_unrecorded <- function(expr,
+                              hold_ms = NULL,
+                              session = shiny::getDefaultReactiveDomain()) {
+  if (!is.null(hold_ms)) check_number(hold_ms, "hold_ms", min = 0, inclusive = TRUE)
+  ctrl <- get_controller(session)
+  # Open the window before the block runs. `expr` is evaluated lazily, at
+  # the return below.
+  if (!is.null(ctrl)) ctrl$open_unrecorded(hold_ms = hold_ms)
   invisible(expr)
 }
 
@@ -423,7 +519,9 @@ rewind_redo <- function(session = shiny::getDefaultReactiveDomain()) {
 #' @export
 rewind_jump <- function(index, session = shiny::getDefaultReactiveDomain()) {
   ctrl <- require_controller(session)
-  ctrl$jump(index)
+  # 1.9 used to move to position 1, as as.integer() truncates. A whole
+  # number out of range still returns FALSE, as an undo at the start does.
+  ctrl$jump(check_index(index, "index"))
 }
 
 #' @rdname rewind_undo
@@ -484,9 +582,20 @@ rewind_can_redo <- function(session = shiny::getDefaultReactiveDomain()) {
 #' Suspend and resume history capture
 #'
 #' While capture is paused, the application applies changes as usual. But
-#' `rewind` does not record them. Use this around changes that your code
-#' makes, and that the user must not step back into. Examples are a saved
-#' session that you restore, or a URL bookmark that you apply.
+#' `rewind` does not record them. Use this to stop capture for a period
+#' that spans more than one reactive flush, such as while the user works
+#' in a part of the application that undo must not cover.
+#'
+#' # Not for a block of code
+#'
+#' A pause and a resume in the same observer, or the same `observeEvent()`,
+#' have no effect. `rewind` captures in its own observer, which runs after
+#' the one that made the change. By then capture has resumed, so the change
+#' is recorded as usual. A change made with `update*Input()` also comes
+#' back from the browser later.
+#'
+#' For code that changes the application and must not make a step, such as
+#' code that restores a saved view, use [rewind_unrecorded()].
 #'
 #' @param session The Shiny session. The default is the current session.
 #'
@@ -498,9 +607,10 @@ rewind_can_redo <- function(session = shiny::getDefaultReactiveDomain()) {
 #'
 #'   server <- function(input, output, session) {
 #'     rewind_enable()
-#'     rewind_pause()
-#'     # ... apply a saved bookmark here ...
-#'     rewind_resume()
+#'     # Stop capture while an "expert mode" switch is on.
+#'     observeEvent(input$expert_mode, {
+#'       if (input$expert_mode) rewind_pause() else rewind_resume()
+#'     })
 #'   }
 #' }
 #' @export

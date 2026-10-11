@@ -18,13 +18,15 @@ RewindController <- R6::R6Class(
                           depth = 50L,
                           coalesce_ms = 400L,
                           restore_timeout = 2,
-                          verbose = FALSE) {
+                          verbose = FALSE,
+                          labels = NULL) {
       private$.session     <- session
       private$.inputs      <- inputs
       private$.exclude     <- exclude
       private$.coalesce_ms <- as.numeric(coalesce_ms)
       private$.expect_timeout <- as.numeric(restore_timeout)
       private$.verbose     <- isTRUE(verbose)
+      private$.labels      <- labels
       private$.tracked     <- list()
       private$.tick        <- shiny::reactiveVal(0L)
       private$.version     <- shiny::reactiveVal(0L)
@@ -103,6 +105,21 @@ RewindController <- R6::R6Class(
         private$.expecting <- NULL
       }
 
+      # Inside rewind_unrecorded(): the change becomes part of the current
+      # state, not a step. The window stays open after the block of code,
+      # because a change made with update*Input() comes back from the
+      # browser later. Refer to open_unrecorded().
+      if (!is.null(private$.absorb_until)) {
+        if (Sys.time() < private$.absorb_until) {
+          self$history$replace_current(state)
+          private$.pending <- NULL
+          private$log("unrecorded change absorbed into the current state")
+          self$sync_client()
+          return(invisible(FALSE))
+        }
+        private$.absorb_until <- NULL
+      }
+
       # Nothing that is captured has changed. Do not start the grouping
       # period again. The capture observer reads every input, so it also
       # runs when an input that is not captured changes. A plot hover fires
@@ -143,7 +160,7 @@ RewindController <- R6::R6Class(
       label <- private$.pending_label
       if (is.null(label)) {
         label <- diff_label(flatten_state(self$history$current()),
-                            flatten_state(state))
+                            flatten_state(state), labels = private$.labels)
       }
       private$.pending_label <- NULL
       private$.hold_until <- NULL
@@ -182,6 +199,19 @@ RewindController <- R6::R6Class(
         private$.deadline <- private$.hold_until
         private$.tick(shiny::isolate(private$.tick()) + 1L)
       }
+      invisible(TRUE)
+    },
+
+    # Start a window in which changes become part of the current state, not
+    # a step. rewind_unrecorded() calls this before its block of code runs.
+    #
+    # A change from the user that still waits is written first, as its own
+    # step. Without that, it would merge into the code's change and an undo
+    # could not reach it.
+    open_unrecorded = function(hold_ms = NULL) {
+      if (is.null(hold_ms)) hold_ms <- private$.coalesce_ms * 2
+      if (!is.null(private$.pending)) self$flush()
+      private$.absorb_until <- Sys.time() + hold_ms / 1000
       invisible(TRUE)
     },
 
@@ -230,6 +260,9 @@ RewindController <- R6::R6Class(
 
     secret = function() private$.secret,
 
+    # The names a person reads, from rewind_enable(labels = ).
+    labels = function() private$.labels,
+
     # ---- restorable inputs -----------------------------------------------
 
     # The ids of the inputs that this page can put back. The browser sends
@@ -248,6 +281,27 @@ RewindController <- R6::R6Class(
       new <- setdiff(ids, private$.bound)
       if (!first && length(new) == 0L) return(invisible(FALSE))
       private$.bound <- union(private$.bound, ids)
+
+      # The first report is the first moment the inputs of the page are
+      # known, so check `inputs` for names that are in neither the page nor
+      # the session. A typo used to capture nothing, with no message. An
+      # input can be added later by renderUI(), so warn and do not stop.
+      if (first && !is.null(private$.inputs)) {
+        present <- union(private$.bound, names(shiny::isolate(
+          shiny::reactiveValuesToList(private$.session$input)
+        )))
+        missing <- setdiff(private$.inputs, present)
+        if (length(missing)) {
+          warning(sprintf(
+            paste(
+              "`inputs` names %s that the page does not have: %s.",
+              "Check the spelling, or ignore this if the input is added later."
+            ),
+            if (length(missing) == 1L) "an input" else "inputs",
+            paste0('"', missing, '"', collapse = ", ")
+          ), call. = FALSE)
+        }
+      }
 
       # Only the default capture uses the list. An app that names its
       # inputs gets those inputs, whether the page can restore them or not.
@@ -321,6 +375,8 @@ RewindController <- R6::R6Class(
     .exclude        = NULL,
     .coalesce_ms    = 400,
     .verbose        = FALSE,
+    .labels         = NULL,
+    .absorb_until   = NULL,
     .tracked        = NULL,
     .pending        = NULL,
     .pending_label  = NULL,

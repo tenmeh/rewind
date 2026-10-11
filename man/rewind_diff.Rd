@@ -19,12 +19,15 @@ one before it. Give both to compare any two positions.}
 }
 \value{
 A data frame with one row for each value that differs, in the
-order of the names. It has six columns:
+order of the names. It has seven columns:
 \itemize{
 \item \code{from}, \code{to}: the two positions compared.
 \item \code{name}: the input ID, or \code{id$field} for a tracked value.
 \item \code{change}: a short description that a person can read.
 \item \code{old}, \code{new}: list columns that hold the values themselves.
+\item \code{label}: the name a person reads, from \code{rewind_enable(labels = )}.
+It is the same as \code{name} when there is no label. It is the last
+column because it was added in 0.4.0, after the other six.
 }
 
 The data frame has no rows when nothing differs, and when there is no

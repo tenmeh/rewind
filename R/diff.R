@@ -55,12 +55,15 @@
 #' @param session The Shiny session. The default is the current session.
 #'
 #' @return A data frame with one row for each value that differs, in the
-#'   order of the names. It has six columns:
+#'   order of the names. It has seven columns:
 #'
 #'   * `from`, `to`: the two positions compared.
 #'   * `name`: the input ID, or `id$field` for a tracked value.
 #'   * `change`: a short description that a person can read.
 #'   * `old`, `new`: list columns that hold the values themselves.
+#'   * `label`: the name a person reads, from `rewind_enable(labels = )`.
+#'     It is the same as `name` when there is no label. It is the last
+#'     column because it was added in 0.4.0, after the other six.
 #'
 #'   The data frame has no rows when nothing differs, and when there is no
 #'   earlier step to compare with. It depends on the history, so you can
@@ -123,7 +126,8 @@ rewind_diff <- function(from = NULL,
     flatten_state(ctrl$history$state_at(from)),
     flatten_state(ctrl$history$state_at(to)),
     from = from,
-    to = to
+    to = to,
+    labels = ctrl$labels()
   )
 }
 
@@ -134,12 +138,15 @@ rewind_diff <- function(from = NULL,
 #' holds no Shiny code.
 #'
 #' @param old,new Named lists, from `flatten_state()`. Either can be `NULL`.
+#' @param labels Named character vector of the names a person reads, or
+#'   NULL. Refer to `label_for()`.
 #' @param from,to The positions the two states came from. They go into the
 #'   result unchanged.
 #' @return A data frame. Refer to [rewind_diff()] for the columns.
 #' @keywords internal
 #' @noRd
-diff_states <- function(old, new, from = NA_integer_, to = NA_integer_) {
+diff_states <- function(old, new, from = NA_integer_, to = NA_integer_,
+                        labels = NULL) {
   old <- old %||% list()
   new <- new %||% list()
 
@@ -175,6 +182,11 @@ diff_states <- function(old, new, from = NA_integer_, to = NA_integer_) {
   out$old <- unname(lapply(changed, function(nm) old[[nm]]))
   out$new <- unname(lapply(changed, function(nm) new[[nm]]))
 
+  # The name a person reads. It is the last column, so code that indexes
+  # the columns by position, as it could before the column existed, still
+  # gets the same ones.
+  out$label <- label_for(changed, labels)
+
   rownames(out) <- NULL
   out
 }
@@ -198,6 +210,7 @@ empty_diff <- function() {
   )
   out$old <- list()
   out$new <- list()
+  out$label <- character(0)
   out
 }
 

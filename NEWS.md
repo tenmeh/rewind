@@ -22,9 +22,31 @@
   server, a module included, and at any time. It works like
   `shiny::setBookmarkExclude()`: inside a module, give the module's own
   names. A second call adds to the list.
+* `rewind_unrecorded()` runs a block of code whose changes are not a step.
+  They become part of the current state, so an undo never goes back across
+  them. Use it for code that restores a saved view or applies a bookmark.
+  It is the other side of `rewind_step()`.
+* `rewind_enable(labels = )` gives the names a person reads, such as
+  `c(region = "Region")`. The history rail shows them, and `rewind_diff()`
+  has a new `label` column. It is the last column, so code that picks the
+  six columns of 0.3.0 by position still gets the same ones.
 
 ## Fixed
 
+* A pause and a resume in the same observer had no effect, although the
+  help of `rewind_pause()` suggested exactly that, around code that applies
+  a bookmark. `rewind` captures in its own observer, which runs after the
+  one that made the change. The help now says so, and points to
+  `rewind_unrecorded()`.
+* Every argument is now checked, with a message that names it. These were
+  accepted before: `shortcuts = "yes"` (which switched the shortcuts off),
+  `depth = 2.5` (which became 2), `rewind_jump(1.9)` (which moved to
+  position 1), `rewind_step(label = 1:2)`, and `rewind_ui(max_height = 300)`,
+  which wrote CSS that browsers ignore. A number is now pixels there, as in
+  `shiny` and `bslib`.
+* A name in `inputs` that the page does not have, and a name in
+  `rewind_track(fields = )` that the reactive values do not have, now give
+  a warning. A typo used to capture nothing, with no message.
 * An input that changes all the time no longer holds back every step. The
   grouping period started again whenever any input changed, also one that
   is not captured, so a plot hover held every step back until the mouse

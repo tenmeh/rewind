@@ -151,6 +151,7 @@ reference:
       capture needs to stop altogether.
     contents:
       - rewind_step
+      - rewind_unrecorded
       - rewind_pause
       - rewind_disable
 
