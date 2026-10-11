@@ -147,15 +147,15 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
     hint = "To name the inputs to capture, use `inputs = c(...)`."
   )
 
-  if (!is.null(inputs) && !is.character(inputs)) {
-    stop("`inputs` must be a character vector or NULL.", call. = FALSE)
-  }
-  if (!is.null(exclude) && !is.character(exclude)) {
-    stop("`exclude` must be a character vector or NULL.", call. = FALSE)
-  }
-  # check_number() rejects NA and Inf as well. Refer to R/utils.R.
+  # Every argument is checked here, so a wrong value fails at the call and
+  # names the argument. The checks are in R/utils.R.
+  check_character(inputs, "inputs")
+  check_character(exclude, "exclude")
+  depth <- check_count(depth, "depth", min = 2L)
   check_number(coalesce_ms, "coalesce_ms", min = 0, inclusive = TRUE)
   check_number(restore_timeout, "restore_timeout", min = 0, inclusive = FALSE)
+  check_flag(shortcuts, "shortcuts")
+  check_flag(verbose, "verbose")
 
   if (!is.null(session$userData$.rewind)) {
     warning("rewind is already enabled for this session; ignoring.",
@@ -317,8 +317,22 @@ rewind_track <- function(values,
   if (!shiny::is.reactivevalues(values)) {
     stop("`values` must be a reactiveValues object.", call. = FALSE)
   }
-  if (!is.null(fields) && !is.character(fields)) {
-    stop("`fields` must be a character vector or NULL.", call. = FALSE)
+  check_character(fields, "fields")
+  check_string(id, "id")
+
+  # A field that `values` does not have is captured as nothing, so a typo
+  # used to give no message. A field can be added later, so warn and do not
+  # stop.
+  if (!is.null(fields)) {
+    have <- names(shiny::isolate(shiny::reactiveValuesToList(values)))
+    missing <- setdiff(fields, have)
+    if (length(missing)) {
+      warning(sprintf(
+        "`fields` names %s that `values` does not have: %s. Check the spelling, or ignore this if the field is added later.",
+        if (length(missing) == 1L) "a field" else "fields",
+        paste0('"', missing, '"', collapse = ", ")
+      ), call. = FALSE)
+    }
   }
 
   if (is.null(id)) {
@@ -379,6 +393,8 @@ rewind_step <- function(expr,
   # whether rewind is enabled or not. An NA here used to be accepted, and
   # then failed later inside the capture observer.
   if (!is.null(hold_ms)) check_number(hold_ms, "hold_ms", min = 0, inclusive = TRUE)
+  # 1:2 used to give the label "1".
+  check_string(label, "label")
   if (!is.null(ctrl)) ctrl$open_step(label = label, hold_ms = hold_ms)
   invisible(expr)
 }
@@ -423,7 +439,9 @@ rewind_redo <- function(session = shiny::getDefaultReactiveDomain()) {
 #' @export
 rewind_jump <- function(index, session = shiny::getDefaultReactiveDomain()) {
   ctrl <- require_controller(session)
-  ctrl$jump(index)
+  # 1.9 used to move to position 1, as as.integer() truncates. A whole
+  # number out of range still returns FALSE, as an undo at the start does.
+  ctrl$jump(check_index(index, "index"))
 }
 
 #' @rdname rewind_undo

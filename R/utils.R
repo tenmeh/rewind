@@ -80,3 +80,73 @@ check_number <- function(x, arg, min = 0, inclusive = TRUE) {
   }
   invisible(x)
 }
+
+
+#' Check that an argument is TRUE or FALSE
+#'
+#' `isTRUE()` alone turned `"yes"` and `NA` into `FALSE` with no message, so
+#' a typo switched a feature off.
+#'
+#' @param x The value.
+#' @param arg The name of the argument, for the message.
+#' @return `x`, invisibly.
+#' @keywords internal
+#' @noRd
+check_flag <- function(x, arg) {
+  if (!is.logical(x) || length(x) != 1L || is.na(x)) {
+    stop(sprintf("`%s` must be TRUE or FALSE.", arg), call. = FALSE)
+  }
+  invisible(x)
+}
+
+
+#' Check that an argument is one whole number, at least `min`
+#'
+#' `as.integer()` truncates, so `depth = 2.5` became 2 with no message.
+#'
+#' @param x The value.
+#' @param arg The name of the argument, for the message.
+#' @param min The lower limit.
+#' @return `x` as an integer.
+#' @keywords internal
+#' @noRd
+check_count <- function(x, arg, min = 0L) {
+  ok <- is.numeric(x) && length(x) == 1L && is.finite(x) && x == round(x) && x >= min
+  if (!ok) {
+    stop(sprintf("`%s` must be a single whole number of %d or more.", arg, min),
+         call. = FALSE)
+  }
+  as.integer(x)
+}
+
+
+#' Check that an argument is NULL or one string
+#'
+#' @param x The value.
+#' @param arg The name of the argument, for the message.
+#' @return `x`, invisibly.
+#' @keywords internal
+#' @noRd
+check_string <- function(x, arg, null_ok = TRUE) {
+  if (is.null(x) && null_ok) return(invisible(x))
+  if (!is.character(x) || length(x) != 1L || is.na(x)) {
+    stop(sprintf("`%s` must be a single string%s.", arg,
+                 if (null_ok) " or NULL" else ""), call. = FALSE)
+  }
+  invisible(x)
+}
+
+
+#' Check that an argument is NULL or a character vector
+#'
+#' @param x The value.
+#' @param arg The name of the argument, for the message.
+#' @return `x`, invisibly.
+#' @keywords internal
+#' @noRd
+check_character <- function(x, arg) {
+  if (!is.null(x) && (!is.character(x) || anyNA(x))) {
+    stop(sprintf("`%s` must be a character vector or NULL.", arg), call. = FALSE)
+  }
+  invisible(x)
+}

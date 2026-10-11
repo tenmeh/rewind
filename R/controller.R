@@ -249,6 +249,24 @@ RewindController <- R6::R6Class(
       if (!first && length(new) == 0L) return(invisible(FALSE))
       private$.bound <- union(private$.bound, ids)
 
+      # The first report is the first moment the inputs of the page are
+      # known, so check `inputs` for names that are in neither the page nor
+      # the session. A typo used to capture nothing, with no message. An
+      # input can be added later by renderUI(), so warn and do not stop.
+      if (first && !is.null(private$.inputs)) {
+        present <- union(private$.bound, names(shiny::isolate(
+          shiny::reactiveValuesToList(private$.session$input)
+        )))
+        missing <- setdiff(private$.inputs, present)
+        if (length(missing)) {
+          warning(sprintf(
+            "`inputs` names %s that the page does not have: %s. Check the spelling, or ignore this if the input is added later.",
+            if (length(missing) == 1L) "an input" else "inputs",
+            paste0('"', missing, '"', collapse = ", ")
+          ), call. = FALSE)
+        }
+      }
+
       # Only the default capture uses the list. An app that names its
       # inputs gets those inputs, whether the page can restore them or not.
       if (is.null(private$.inputs)) {
