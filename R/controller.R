@@ -293,7 +293,10 @@ RewindController <- R6::R6Class(
         missing <- setdiff(private$.inputs, present)
         if (length(missing)) {
           warning(sprintf(
-            "`inputs` names %s that the page does not have: %s. Check the spelling, or ignore this if the input is added later.",
+            paste(
+              "`inputs` names %s that the page does not have: %s.",
+              "Check the spelling, or ignore this if the input is added later."
+            ),
             if (length(missing) == 1L) "an input" else "inputs",
             paste0('"', missing, '"', collapse = ", ")
           ), call. = FALSE)

@@ -339,7 +339,10 @@ rewind_track <- function(values,
     missing <- setdiff(fields, have)
     if (length(missing)) {
       warning(sprintf(
-        "`fields` names %s that `values` does not have: %s. Check the spelling, or ignore this if the field is added later.",
+        paste(
+          "`fields` names %s that `values` does not have: %s.",
+          "Check the spelling, or ignore this if the field is added later."
+        ),
         if (length(missing) == 1L) "a field" else "fields",
         paste0('"', missing, '"', collapse = ", ")
       ), call. = FALSE)
