@@ -4,11 +4,11 @@
 \name{rewind-package}
 \alias{rewind}
 \alias{rewind-package}
-\title{rewind: Undo and Redo for 'Shiny' Applications}
+\title{rewind: Undo and Redo for 'shiny' Applications}
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-Adds a user-facing undo and redo history to 'Shiny' applications. Application state, comprising registered inputs and optionally server-side reactive values, is captured as the user interacts with the application. Users may then step backwards and forwards through that history with the keyboard, with buttons, or by scrubbing a visual history rail. Rapid successive changes, such as dragging a slider, are coalesced into a single history entry, and related changes may be grouped explicitly into semantic steps.
+Adds a user-facing undo and redo history to 'shiny' applications. Application state, comprising registered inputs and optionally server-side reactive values, is captured as the user interacts with the application. Users may then step backwards and forwards through that history with the keyboard, with buttons, or by scrubbing a visual history rail. Rapid successive changes, such as dragging a slider, are coalesced into a single history entry, and related changes may be grouped explicitly into semantic steps.
 }
 \seealso{
 Useful links:
