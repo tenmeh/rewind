@@ -1,93 +1,99 @@
 /* The documentation of rewind.
  *
- * This file is a member of one family with the stylesheet of the blog of the
- * author, tenmeh.github.io. It takes the shapes of the blog: dashed rules,
- * round cards of 14px, pills, wavy lines under the links, and one typeface,
- * Recursive, for everything. The blog names its colours --k-*, and so does
- * this file, so a value can be compared with the blog by name.
+ * This file takes the look of the blog of the author, tenmeh.github.io: a
+ * ground with soft glows that stays in place as the page scrolls, a navbar
+ * that the ground shows through, thin solid rules, code blocks with a bar
+ * that names the language, and Geist for everything. The blog names its
+ * colours --k-*, and so does this file, so a value can be compared with the
+ * blog by name.
+ *
+ * The colours are the two colours of the logo, and not those of the blog.
+ * The charcoal (#1F1D1B) is the ink of the light mode and the ground of the
+ * dark mode. The amber (#F0A830) is the accent, and it gives the glows. The
+ * cream of the light mode is a pale tint of the amber.
  *
  * The file has two parts. The first block below, "this package", holds the
- * few values that belong to rewind: the accent, the two syntax colours that
- * follow from it, and the two pictures of the logo. Everything after that
- * block is shared. It names no package, and it can be copied to the
- * stylesheet of another package as it is. Only the block changes there.
- * (The ground and the ink are in _pkgdown.yml also. Bootstrap makes its
- * tints from them, so the two files must have the same values.)
+ * values that belong to rewind: the accent, the glows, the two syntax
+ * colours that follow from the accent, and the two pictures of the logo.
+ * Everything after that block is shared. It names no package, and it can be
+ * copied to the stylesheet of another package as it is. (The ground and the
+ * ink are in _pkgdown.yml also. Bootstrap makes its tints from them, so the
+ * two files must have the same values.)
  *
- * The site holds the Recursive font itself. It does not use the CDN of
- * Google. The site thus makes no request to another server, and it operates
- * offline after it loads.
+ * Each colour that is used as text was measured against WCAG AA, which needs
+ * 4.5:1. The numbers in the comments are the contrast on the paper, and at
+ * the worst point of the glows: both glows at full strength over the paper.
+ * In the page each glow is centred above or below the screen, so the real
+ * ground is never as amber as that.
  *
- * The accent is the amber of the rewind logo, and not the terracotta of the
- * blog. The colours must identify this package. Each colour that is used as
- * text was measured against WCAG AA, which needs 4.5:1. The numbers are in
- * the comments next to the values. They are the contrast of the colour on the
- * ground it is used on, and the hardest ground is named where it is not the
- * page.
+ * The fonts are set in _pkgdown.yml. bslib downloads them when the site is
+ * built, and the site serves them itself.
  */
-
-/* ---- Recursive, Latin subset, SIL OFL 1.1 (see fonts/OFL.txt) ----------- */
-
-/* One variable file holds every weight from 300 to 1000 and the mono axis.
-   Plain text has MONO at 0. Code turns it to 1, below, and so the code has
-   the same letters as the text, only with a fixed width. The file has no
-   slant axis, so the italic is made by the browser. */
-@font-face {
-  font-family: "Recursive";
-  src: url("fonts/recursive-latin-mono.woff2") format("woff2");
-  font-weight: 300 1000;
-  font-style: normal;
-  font-display: swap;
-}
 
 /* ---- tokens: this package ---------------------------------------------- */
 
 :root {
-  --k-accent: #87560b;           /* 5.4:1 on the paper, 5.9:1 on a card. Same as primary in _pkgdown.yml. */
-  --k-accent-soft: rgba(135, 86, 11, 0.12); /* pills and the active tab. #87560b on it: 4.6:1. */
-  --k-on-accent: #ffffff;        /* text on a solid accent fill: 6.2:1 */
-  --k-syn-keyword: #87560b;      /* 5.9:1 on the code ground: the accent, as on the blog */
-  --k-syn-number: #0e6a72;       /* 6.0:1 on the code ground. Teal, so it does not merge with the amber. */
+  --k-accent: #7a4c06;           /* 6.8:1 on the paper, 5.0:1 at the worst glow. Same as primary in _pkgdown.yml. */
+  --k-accent-soft: rgba(240, 168, 48, 0.2); /* the logo amber, as a tint. The accent on it: 6.3:1 */
+  --k-on-accent: #fbf6ec;        /* text on a solid accent fill: 7.2:1 */
+  --k-glow-a: rgba(240, 168, 48, 0.3);   /* the logo amber */
+  --k-glow-b: rgba(199, 125, 18, 0.14);  /* a deeper shade of the same amber */
+  --k-syn-keyword: #7a4c06;      /* 6.5:1 on the code ground: the accent */
+  --k-syn-number: #0e6a72;       /* 5.6:1. Teal, so it does not merge with the amber. */
   --k-mark: url("rewind-hex-mark.svg");  /* the hex in the navigation bar: still */
   --k-hero: url("rewind-hero.svg");      /* the hex on the home page: it moves */
 }
 [data-bs-theme="dark"] {
-  --k-accent: #f0a830;           /* the logo amber. 8.3:1 on the charcoal, 7.5:1 on a card. */
-  --k-accent-soft: rgba(240, 168, 48, 0.16); /* the accent on it: 6.1:1 */
+  --k-accent: #f0a830;           /* the logo amber. 8.3:1 on the charcoal, 4.9:1 at the worst glow. */
+  --k-accent-soft: rgba(240, 168, 48, 0.14); /* the accent on it: 5.7:1 */
   /* White on this amber is only 2.0:1, so a solid accent fill takes the
      charcoal of the logo instead, at 8.3:1. */
   --k-on-accent: #1f1d1b;
-  --k-syn-keyword: #f0a830;      /* 9.0:1 on the code ground */
-  --k-syn-number: #7fd1d6;       /* 10.4:1 */
+  /* The amber is bright, so the glows are weaker than on the blog. Muted
+     text keeps 4.9:1 at the worst point. */
+  --k-glow-a: rgba(240, 168, 48, 0.18);
+  --k-glow-b: rgba(199, 125, 18, 0.12);
+  --k-syn-keyword: #f0a830;      /* 8.8:1 on the code ground */
+  --k-syn-number: #7fd1d6;       /* 10.2:1 */
 }
 
 /* ---- tokens: shared ---------------------------------------------------- */
 
 :root {
-  --k-paper: #f4efe4;            /* the page */
-  --k-surface: #fbf8f1;          /* cards, the sidebar, tables */
-  --k-code: #fbf8f1;             /* code blocks and inline code */
-  --k-ink: #17202a;              /* 14.3:1 on the paper, 15.5:1 on a card */
-  --k-muted: #555b66;            /* 6.0:1 on the paper, 6.4:1 on a card */
-  --k-rule: #cfc5b1;             /* the dashed lines and the edges of cards. Not text. */
-  --k-control: #8a8272;          /* the edge of the search field: 3.3:1 on the paper, as WCAG asks of a control */
-  --k-syn-comment: #6b6457;      /* 5.5:1 on the code ground */
-  --k-syn-string: #2f6b3b;       /* 6.0:1 */
-  --k-syn-function: #1f4f8a;     /* 7.8:1 */
-  --k-syn-arg: #6a3f86;          /* 7.4:1 */
+  --k-paper: #fbf6ec;            /* the page, at the top */
+  --k-paper-end: #f1e5cf;        /* the page, at the bottom of the screen */
+  --k-surface: #fffdf8;          /* cards and the sidebar */
+  --k-code: #f8f1e3;             /* code blocks and inline code */
+  --k-ink: #1f1d1b;              /* the logo charcoal. 15.6:1 on the paper, 11.5:1 at the worst glow */
+  --k-muted: #544c40;            /* 7.8:1 on the paper, 5.8:1 at the worst glow */
+  --k-muted-bg: #f3ead8;         /* the head row of a table, the version tag */
+  --k-hover: #f3e8d2;            /* the ground of an icon under the pointer */
+  --k-rule: #e6dcc8;             /* lines and the edges of cards. Not text. */
+  --k-control: #a39882;          /* the edge of the search field: 3.0:1 on the paper, as WCAG asks of a control */
+  --k-primary: #1f1d1b;          /* a solid button */
+  --k-on-primary: #fbf6ec;       /* 15.6:1 */
+  --k-syn-comment: #6b6457;      /* 5.2:1 on the code ground */
+  --k-syn-string: #2f6b3b;       /* 5.7:1 */
+  --k-syn-function: #1f4f8a;     /* 7.3:1 */
+  --k-syn-arg: #6a3f86;          /* 7.0:1 */
 }
 [data-bs-theme="dark"] {
-  --k-paper: #1f1d1b;
-  --k-surface: #282523;
-  --k-code: #171513;
-  --k-ink: #ece5d6;              /* 13.4:1 on the paper, 12.1:1 on a card */
-  --k-muted: #a89f8f;            /* 6.4:1 on the paper, 5.8:1 on a card */
-  --k-rule: #3d3833;
-  --k-control: #7a7264;          /* 3.5:1 on the paper */
-  --k-syn-comment: #9a917f;      /* 5.8:1 on the code ground */
-  --k-syn-string: #a9cf8f;       /* 10.4:1 */
-  --k-syn-function: #8fb9ee;     /* 9.0:1 */
-  --k-syn-arg: #d2b4f0;          /* 10.0:1 */
+  --k-paper: #1f1d1b;            /* the logo charcoal */
+  --k-paper-end: #141311;
+  --k-surface: #272421;
+  --k-code: #191715;
+  --k-ink: #f2ebdf;              /* 14.2:1 on the paper, 8.4:1 at the worst glow, 13.0:1 on a card */
+  --k-muted: #bfb5a4;            /* 8.3:1 on the paper, 4.9:1 at the worst glow, 7.6:1 on a card */
+  --k-muted-bg: #2c2925;
+  --k-hover: #332e29;
+  --k-rule: #36312b;
+  --k-control: #6f675b;          /* 3.1:1 on the paper */
+  --k-primary: #f2ebdf;
+  --k-on-primary: #1f1d1b;
+  --k-syn-comment: #9a917f;      /* 5.7:1 on the code ground */
+  --k-syn-string: #a9cf8f;       /* 10.2:1 */
+  --k-syn-function: #8fb9ee;     /* 8.8:1 */
+  --k-syn-arg: #d2b4f0;          /* 9.8:1 */
 }
 
 /* Bootstrap draws from its own variables. These few make it read the tokens,
@@ -105,8 +111,38 @@
 
 /* ---- base -------------------------------------------------------------- */
 
+/* The ground behind every page: a glow of amber at the top left, a deeper
+   amber at the top right and again at the bottom left, over a shade that
+   deepens down the screen. It sits on a layer fixed to the screen, so the
+   glows stay in view as the reader scrolls. A fixed layer, not
+   background-attachment: fixed, because iOS Safari ignores that. Cards and
+   code keep their own solid fill, so their text contrast does not change. */
+html {
+  background: var(--k-paper);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--k-paper);
+  background-image:
+    radial-gradient(56rem 30rem at 12% -6rem, var(--k-glow-a), transparent 70%),
+    radial-gradient(62rem 38rem at 94% -4rem, var(--k-glow-b), transparent 70%),
+    radial-gradient(58rem 34rem at 2% 106%, var(--k-glow-b), transparent 70%),
+    linear-gradient(to bottom, var(--k-paper), var(--k-paper-end));
+  background-repeat: no-repeat;
+}
+
 body {
-  font-variation-settings: "MONO" 0;
+  min-height: 100vh;
+  background: transparent; /* the ground is on body::before */
+  /* Geist draws "->" as an arrow through its ligatures. The text writes
+     "->" on purpose, so it stays as typed. */
+  font-feature-settings: "calt" 0, "liga" 0, "dlig" 0;
+  font-variant-ligatures: none;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -117,30 +153,42 @@ h4,
 h5,
 h6,
 .navbar-brand {
-  font-variation-settings: "MONO" 0;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
   color: var(--k-ink);
+  text-wrap: balance;
 }
 
 h1 {
-  font-size: 2.1rem;
+  font-size: clamp(2rem, 4.5vw, 2.6rem);
   font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.035em;
 }
 h2 {
-  font-size: 1.5rem;
-  margin-top: 2.2rem;
+  margin-top: 3rem;
+  font-size: 1.55rem;
+  line-height: 1.25;
 }
 h3 {
+  margin-top: 2.2rem;
   font-size: 1.2rem;
 }
 
-/* Recursive is wide, and the mono axis is wider. The code is a little
-   smaller than the text, so a line of code and a line of text look alike. */
+::selection {
+  background: var(--k-accent-soft);
+}
+
+:focus-visible {
+  outline: 2px solid var(--k-accent);
+  outline-offset: 2px;
+}
+
+/* The code is a little smaller than the text, so a line of code and a line
+   of text look alike. */
 code,
 pre,
 kbd,
 samp {
-  font-variation-settings: "MONO" 1;
   font-size: 0.86em;
   /* ligatures off, so that <- never turns into an arrow */
   font-variant-ligatures: none;
@@ -148,168 +196,207 @@ samp {
 
 /* ---- navbar ------------------------------------------------------------ */
 
+/* See-through, with a blur, so the glows show behind it. */
 nav.navbar {
-  background: var(--k-paper);
-  border-bottom: 1.5px dashed var(--k-rule);
+  background-color: color-mix(in srgb, var(--k-paper) 72%, transparent);
+  backdrop-filter: saturate(1.4) blur(12px);
+  -webkit-backdrop-filter: saturate(1.4) blur(12px);
+  border-bottom: 1px solid var(--k-rule);
   box-shadow: none;
-  --bs-navbar-color: var(--k-ink);
-  --bs-navbar-hover-color: var(--k-accent);
-  --bs-navbar-active-color: var(--k-accent);
+  --bs-navbar-color: var(--k-muted);
+  --bs-navbar-hover-color: var(--k-ink);
+  --bs-navbar-active-color: var(--k-ink);
   --bs-navbar-brand-color: var(--k-ink);
   --bs-navbar-brand-hover-color: var(--k-ink);
-  /* pkgdown puts the page 56px below the top, for a bar of that height. The
-     pills and the hex make a bar that is taller, so the bar has less padding
-     to stay near that height, and the content is not hidden under it. */
-  --bs-navbar-padding-y: 0.1rem;
+  /* pkgdown places the page and the sticky table of contents below a bar
+     of 56px. The icon boxes and the search field are taller than the text,
+     so the bar has less padding to stay at that height. */
+  --bs-navbar-padding-y: 0.2rem;
+  /* One size and one box for every icon on the right, so they line up
+     with equal gaps, as on the blog. */
+  --k-icon: 1rem;
+  --k-icon-box: 2.25rem;
 }
 
-/* The hex before the name. It is a sticker: turned a little, with a hard
-   shadow under it, and it straightens on hover. The picture is the still one,
-   without the wordmark. */
+/* Always in view, as on the blog. pkgdown slides the bar away as the reader
+   scrolls down: headroom.js adds this class, and Bootstrap moves the bar up
+   by its own height. */
+nav.navbar.headroom--unpinned {
+  transform: none;
+}
+
+/* The hex before the name. The picture is the still one, without the
+   wordmark. */
 .navbar-brand {
-  font-weight: 800;
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.55rem;
+  font-size: 1.05rem;
+  font-weight: 650;
 }
 .navbar-brand::before {
   content: "";
-  height: 1.9rem;
+  height: 1.75rem;
   aspect-ratio: 100 / 116;
   background: var(--k-mark) center / contain no-repeat;
-  transform: rotate(-6deg);
-  filter: drop-shadow(0 2px 0 var(--k-rule));
-  transition: transform 0.2s ease;
-}
-.navbar-brand:hover::before,
-.navbar-brand:focus-visible::before {
-  transform: rotate(0deg) scale(1.06);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.12));
 }
 
+/* The version after the name is a small tag. */
 .navbar .nav-text {
-  color: var(--k-muted) !important;
-}
-
-/* Each tab is a pill. The current page has the tint of the accent. */
-.navbar-nav .nav-link {
+  padding: 0.12rem 0.5rem;
   border-radius: 999px;
-  padding-left: 0.8rem;
-  padding-right: 0.8rem;
+  background: var(--k-muted-bg);
+  color: var(--k-muted) !important; /* beats the text-* utility class of pkgdown */
+  font-size: 0.7rem;
   font-weight: 500;
 }
-.navbar-nav .nav-link:hover,
-.navbar-nav .nav-link:focus-visible {
-  background: var(--k-accent-soft);
-  color: var(--k-accent);
+
+.navbar-nav .nav-link {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  font-size: 0.92rem;
 }
-.navbar-nav .nav-item.active > .nav-link,
+.navbar-nav .nav-item.active .nav-link,
 .navbar-nav .nav-link.active {
-  background: var(--k-accent-soft);
-  color: var(--k-accent);
-  font-weight: 650;
-}
-.navbar .nav-item {
-  margin-right: 0.2rem;
-}
-/* The icons take the accent. They are text-sized, so the 4.5:1 applies. */
-.navbar-nav .nav-link .fa,
-.navbar-nav .nav-link .fab {
-  color: var(--k-accent);
+  background-color: transparent; /* Bootstrap fills the current tab */
+  color: var(--k-ink);
+  font-weight: 600;
 }
 
-/* Dropdown menus. The default of pkgdown touches the navigation bar. It
-   looks like part of the page, and not like a menu. */
+/* The icons on the right: GitHub and the light switch. */
+.navbar-nav .nav-link:has(> .fa, > .fab, > .bi, > svg),
+.navbar-nav #dropdown-lightswitch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--k-icon-box);
+  height: var(--k-icon-box);
+  padding: 0 !important; /* beats the padding of Bootstrap's nav links */
+  border-radius: 0.5rem;
+  color: var(--k-muted);
+  font-size: var(--k-icon);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.navbar-nav .nav-link:has(> .fa, > .fab, > .bi, > svg):hover,
+.navbar-nav #dropdown-lightswitch:hover {
+  background: var(--k-hover);
+  color: var(--k-ink);
+}
+
+/* Dropdown menus: a card that floats under the bar. */
 .dropdown-menu {
   background: var(--k-surface);
   border: 1px solid var(--k-rule);
-  border-radius: 14px;
-  box-shadow: 0 10px 28px rgba(23, 32, 42, 0.14);
+  border-radius: 0.9rem;
+  box-shadow: 0 10px 28px rgba(31, 29, 27, 0.12);
   padding: 0.35rem;
   margin-top: 0.4rem;
-  min-width: 15rem;
 }
 .dropdown-item {
   color: var(--k-ink);
-  border-radius: 10px;
+  border-radius: 0.5rem;
   padding: 0.45rem 0.7rem;
-  white-space: normal;
 }
 .dropdown-item:hover,
 .dropdown-item:focus {
-  background-color: var(--k-accent-soft);
+  background-color: var(--k-hover);
   color: var(--k-ink);
 }
 .dropdown-item.active,
 .dropdown-item:active {
-  background-color: var(--k-accent);
-  color: var(--k-on-accent);
+  background-color: var(--k-accent-soft);
+  color: var(--k-ink);
 }
 [data-bs-theme="dark"] .dropdown-menu {
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
 }
 
-/* ---- content ----------------------------------------------------------- */
+/* ---- links ------------------------------------------------------------- */
 
-/* Links in running text get a wavy line, in the accent. Navigation, titles,
-   the names in the reference and the anchors opt out below. A link in code
-   has a plain thin line: a wave under a line of code is too much. */
-main a {
-  text-decoration: underline wavy;
-  text-decoration-thickness: 1.5px;
-  text-underline-offset: 0.28em;
-  text-decoration-skip-ink: none;
-}
-main a:hover {
-  color: var(--bs-link-hover-color);
+/* Links in running text: the text colour, with an amber underline that
+   darkens on hover. Navigation, titles, buttons and pictures opt out
+   below. */
+main a,
+aside a {
+  color: var(--k-ink);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--k-accent) 45%, transparent);
   text-decoration-thickness: 2px;
+  text-underline-offset: 0.25em;
+  transition: text-decoration-color 0.15s ease;
+}
+main a:hover,
+aside a:hover {
+  color: var(--k-ink);
+  text-decoration-color: var(--k-accent);
 }
 main a.anchor,
-main h1 a,
-main h2 a,
-main h3 a,
-main h4 a,
+main :is(h1, h2, h3, h4) a,
 main .btn,
-main a:has(> img) {
+main a:has(> img),
+aside a:has(> img) {
   text-decoration: none;
-}
-main pre a,
-main code a {
-  text-decoration: underline solid;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.18em;
-}
-/* The name of a function in the reference is a link, and it is the whole
-   of its line. It has no line until the pointer is on it. */
-main dt code a {
-  text-decoration: none;
-}
-main dt code a:hover {
-  text-decoration: underline wavy;
 }
 
-/* Inline code: the code ground, rounded. */
+/* A link in a code block, such as the name of a function that downlit
+   links to its help page, has no line until the pointer is on it. A line
+   under each name would make the code hard to read. */
+main pre a {
+  font-weight: inherit;
+  text-decoration: none;
+}
+main pre a:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+}
+
+/* Inline code that is a link, such as `rewind_enable()` in the text. A line
+   under the box looks heavy, so the box itself shows the link: an amber
+   edge, and an amber ground under the pointer. */
+main a:has(> code:only-child),
+aside a:has(> code:only-child) {
+  text-decoration: none;
+}
+main a > code:only-child,
+aside a > code:only-child {
+  border-color: color-mix(in srgb, var(--k-accent) 45%, transparent) !important; /* beats the inline code rule below */
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+main a:hover > code:only-child,
+aside a:hover > code:only-child {
+  border-color: var(--k-accent) !important;
+  background: var(--k-accent-soft);
+}
+
+/* ---- content ----------------------------------------------------------- */
+
+/* Inline code: the code ground, with a fine border. */
 main :not(pre) > code {
-  padding: 0.1em 0.4em;
-  border-radius: 6px;
+  padding: 0.12em 0.4em;
+  border: 1px solid var(--k-rule);
+  border-radius: 0.35rem;
   background: var(--k-code);
   color: var(--k-ink);
 }
 
-/* A code block is a card, with a small tab that names the language, as on
-   the blog. pkgdown puts the language in a class of the <pre>. A block with
-   no language, such as the output of an example, has no tab. The copy
-   button of pkgdown sits at the right, so it does not meet the tab. */
+/* A code block is a frame. A block with a known language has a bar that
+   names it. pkgdown puts the language in a class of the <pre>. The copy
+   button of pkgdown sits at the right of that bar. */
 main div.sourceCode {
-  margin: 1.5rem 0;
-  border: 0;
-  border-radius: 14px;
+  position: relative;
+  margin: 1.8rem 0;
+  overflow: hidden;
+  border: 1px solid var(--k-rule);
+  border-radius: 0.6rem;
   background: var(--k-code);
 }
 main div.sourceCode:has(> pre.r)::before {
   content: "R";
 }
 main div.sourceCode:has(> pre.js, > pre.javascript)::before {
-  content: "JavaScript";
+  content: "JS";
 }
 main div.sourceCode:has(> pre.css)::before {
   content: "CSS";
@@ -321,33 +408,55 @@ main div.sourceCode:has(> pre.bash, > pre.sh)::before {
   content: "Shell";
 }
 main div.sourceCode:has(> pre.r, > pre.js, > pre.javascript, > pre.css, > pre.html, > pre.bash, > pre.sh)::before {
-  display: block;
-  padding: 0.6rem 0 0 1.35rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  font-variation-settings: "MONO" 0;
+  display: flex;
+  align-items: center;
+  height: 2.5rem;
+  padding: 0 1rem;
+  border-bottom: 1px solid var(--k-rule);
+  font-family: var(--bs-font-monospace);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
   color: var(--k-muted);
 }
 
-/* Blocks that are not inside a div.sourceCode, such as the usage of a
-   function and the output of an example, are cards also. */
+/* Blocks that are not inside a div.sourceCode, such as the output of an
+   example, are frames also. */
 main pre {
-  margin: 1.5rem 0;
-  padding: 0.75rem 1.35rem 1.1rem;
-  border: 0;
-  border-radius: 14px;
+  margin: 1.8rem 0;
+  padding: 1rem 1.1rem 1.1rem;
+  border: 1px solid var(--k-rule);
+  border-radius: 0.6rem;
   background: var(--k-code);
   color: var(--k-ink);
-  line-height: 1.62;
+  font-size: 0.82rem;
+  line-height: 1.7;
 }
 main div.sourceCode > pre {
   margin: 0;
-  padding: 0.5rem 1.35rem 1.1rem;
+  border: 0;
+  border-radius: 0;
   background: transparent;
 }
 main pre code {
+  border: 0;
   background: transparent;
   color: inherit;
+  font-size: inherit;
+}
+
+/* pkgdown's copy button, moved into the bar. */
+main .btn-copy-ex {
+  top: 0.3rem;
+  right: 0.4rem;
+  border: 0;
+  border-radius: 0.4rem;
+  background: none;
+  color: var(--k-muted);
+}
+main .btn-copy-ex:hover {
+  background: var(--k-hover);
+  color: var(--k-ink);
 }
 
 /* Syntax colours. pkgdown writes its own for each mode, with the selector
@@ -400,65 +509,59 @@ main pre code {
   font-weight: inherit;
 }
 
+/* A quote reads as a note beside the text: an amber rule at the left and a
+   pale amber ground. */
 blockquote {
-  position: relative;
-  margin: 1.5rem 0;
-  padding: 1.1rem 1.35rem 1.1rem 3.6rem;
-  border: 1px solid var(--k-rule);
-  border-radius: 14px;
-  background: var(--k-surface);
+  margin: 2rem 0;
+  padding: 1rem 1.3rem;
+  border: 0;
+  border-left: 3px solid var(--k-accent);
+  border-radius: 0 0.6rem 0.6rem 0;
+  background: var(--k-accent-soft);
   color: var(--k-ink);
-}
-blockquote::before {
-  content: "\201C";
-  position: absolute;
-  left: 1.1rem;
-  top: 0.35rem;
-  font-size: 3.3rem;
-  font-weight: 800;
-  line-height: 1;
-  color: var(--k-accent);
 }
 blockquote p:last-child {
   margin-bottom: 0;
 }
 
-/* The API summary in the README is a table. The reference pages also put
-   the argument descriptions in a table. The tables must thus look correct,
-   and not like the default Bootstrap style. The rows are parted by dashed
-   lines, as in the post list of the blog. */
+/* Tables: a rounded frame, a tinted head row, and lines between rows. The
+   API summary in the README is a table. */
 main table {
-  --bs-table-bg: var(--k-surface);
+  --bs-table-bg: transparent;
   --bs-table-color: var(--k-ink);
+  width: 100%;
+  margin: 1.8rem 0;
   border: 1px solid var(--k-rule);
-  border-radius: 14px;
+  border-radius: 0.6rem;
   border-collapse: separate;
   border-spacing: 0;
   overflow: hidden;
-  font-size: 0.94em;
+  background: var(--k-surface);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+main table thead {
+  background: var(--k-muted-bg);
 }
 main table th {
-  background: var(--k-accent-soft);
-  color: var(--k-ink);
-  font-weight: 700;
-  border-bottom: 1px solid var(--k-rule) !important;
+  font-family: var(--bs-font-monospace);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--k-muted);
 }
-main table td {
-  border-top: 1.5px dashed var(--k-rule);
+main table :is(th, td) {
+  padding: 0.6rem 1rem;
+  border: 0;
+  border-bottom: 1px solid var(--k-rule);
+}
+main table tbody tr:last-child td {
   border-bottom: 0;
-}
-main table tbody tr:first-child td {
-  border-top: 0;
-}
-main table td,
-main table th {
-  padding: 0.5rem 0.75rem;
 }
 
 main img {
   max-width: 100%;
   border: 1px solid var(--k-rule);
-  border-radius: 14px;
+  border-radius: 0.9rem;
 }
 /* But not the badges in the text. They are images also. */
 main p > img[src*="badge"],
@@ -468,24 +571,18 @@ aside img {
   border-radius: 0;
 }
 
-/* ---- the top of a page, and the sections ------------------------------- */
+/* ---- the top of a page ------------------------------------------------- */
 
 .page-header {
-  border-bottom: 1.5px dashed var(--k-rule);
+  border-bottom: 0;
 }
 
-/* The logo on a page other than the home page: a sticker, turned a little,
-   with a hard shadow. It has transparent corners, so a rectangular border
-   would draw a box around it. It straightens on hover. */
+/* The logo on a page other than the home page. It has transparent corners,
+   so a rectangular border would draw a box around it. */
 main img.logo {
   border: 0;
   border-radius: 0;
-  transform: rotate(4deg);
-  filter: drop-shadow(0 3px 0 var(--k-rule));
-  transition: transform 0.2s ease;
-}
-main img.logo:hover {
-  transform: rotate(0deg) scale(1.04);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.14));
 }
 
 /* The home page has the hex that moves, in place of the still one. The
@@ -509,45 +606,22 @@ main img.logo:hover {
   }
 }
 
-/* A dashed line parts each section from the one before. */
-main .section.level2:has(> h2:first-child) {
-  margin-top: 2.4rem;
-  padding-top: 0.4rem;
-  border-top: 1.5px dashed var(--k-rule);
-}
-main .section.level2 > h2:first-child {
-  margin-top: 1.2rem;
-}
-/* The reference index puts the title of a group and its functions in two
-   boxes. Only the box with the title has a line above it. The page header
-   has its own line, so the first section has none. */
-main .page-header + .section.level2:has(> h2:first-child),
-.page-header + .section.level2 {
-  border-top: 0;
-  margin-top: 0.4rem;
-}
-
 /* ---- reference index --------------------------------------------------- */
 
-/* The title of each group is a pill. */
+/* The title of each group is a small label in capitals, as the line above
+   the title of the home page of the blog. */
 .template-reference-index main h2 {
-  display: inline-block;
-  margin: 0.4rem 0 0.9rem;
-  padding: 0.4rem 1rem;
-  border: 0;
-  border-radius: 999px;
-  background: var(--k-accent-soft);
+  margin: 2.6rem 0 0.8rem;
+  font-family: var(--bs-font-monospace);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  line-height: 1.4;
+  text-transform: uppercase;
   color: var(--k-accent);
-  font-size: 1.02rem;
-  font-weight: 650;
-  line-height: 1.2;
-  letter-spacing: 0;
-}
-.template-reference-index main .section.level2 > h2:first-child {
-  margin-top: 0.7rem;
 }
 /* The short description next to each function is the useful part of this
-   page. The default style makes it too small. */
+   page. */
 .template-reference-index dd {
   color: var(--k-muted);
 }
@@ -558,77 +632,116 @@ main .page-header + .section.level2:has(> h2:first-child),
   border: 0;
 }
 
-/* ---- sidebar / footer -------------------------------------------------- */
+/* ---- sidebar ----------------------------------------------------------- */
 
-/* The sidebar of the home page is one card, and its parts are parted by dashed
-   lines. On the other pages the sidebar is the table of contents, which
-   sticks to the top as you scroll. It is a card of the same look. */
-.template-home aside,
-#toc {
+/* The sidebar of the home page is one card, as the package cards of the
+   blog. Its parts are parted by thin lines. */
+.template-home aside {
+  align-self: flex-start;
+  /* pkgdown puts the sidebar 56px down, against the bar, which then hides
+     the top edge of the card. This lines it up with the title instead. */
+  margin-top: 5rem;
   padding: 0.3rem 1.2rem 1.1rem;
   background: var(--k-surface);
   border: 1px solid var(--k-rule);
-  border-radius: 14px;
-}
-.template-home aside {
-  align-self: flex-start;
-}
-#toc {
-  padding-top: 1rem;
-  font-size: 0.9rem;
-}
-aside h2 {
-  margin-top: 0;
-  margin-bottom: 0.5rem;
-  font-size: 0.95rem;
-  font-weight: 800;
+  border-radius: 0.9rem;
 }
 .template-home aside > div {
   padding-top: 1rem;
   margin-top: 1rem;
-  border-top: 1.5px dashed var(--k-rule);
+  border-top: 1px solid var(--k-rule);
 }
 .template-home aside > div:first-child {
   padding-top: 0.7rem;
   margin-top: 0;
   border-top: 0;
 }
+aside h2 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--k-muted);
+}
 aside .roles {
   color: var(--k-muted);
 }
-#toc .nav-link {
-  border-radius: 10px;
-  color: var(--k-ink);
-  text-decoration: none;
+
+/* The table of contents: a plain list with a line at the left. The current
+   section takes an amber mark on that line. Colour and the mark show the
+   current section. Bold would re-wrap the line and shift the list. The
+   selectors match the one of pkgdown, "#toc > .nav a.nav-link.active", or
+   its fill of the current section wins. */
+#toc {
+  font-size: 0.86rem;
+  line-height: 1.45;
 }
-#toc .nav-link:hover {
-  color: var(--k-accent);
-}
-#toc .nav-link.active {
-  background: var(--k-accent-soft);
-  color: var(--k-accent);
+#toc > h2 {
+  margin-bottom: 0.7rem;
+  font-size: 0.86rem;
   font-weight: 600;
+  color: var(--k-ink);
+}
+#toc > ul {
+  padding-left: 0;
+  border-left: 1px solid var(--k-rule);
+}
+#toc ul ul {
+  border-left: 0;
+}
+#toc > .nav a.nav-link {
+  margin-left: -1px;
+  padding: 0.25rem 0 0.25rem 1rem;
+  border-left: 2px solid transparent;
+  border-radius: 0;
+  background: none;
+  color: var(--k-muted);
+  font-weight: 400;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+#toc > .nav ul a.nav-link {
+  padding-left: 1.75rem;
+}
+#toc > .nav a.nav-link:hover {
+  color: var(--k-ink);
+}
+#toc > .nav a.nav-link.active {
+  border-left-color: var(--k-accent);
+  background: none;
+  color: var(--k-ink);
 }
 
+/* ---- footer ------------------------------------------------------------ */
+
 footer {
-  border-top: 1.5px dashed var(--k-rule);
-  margin-top: 3rem;
-  padding-top: 1.25rem;
-  font-size: 0.9em;
+  margin-top: 5rem;
+  padding-top: 1.6rem;
+  border-top: 1px solid var(--k-rule);
+  font-size: 0.85rem;
   color: var(--k-muted);
 }
 footer a {
-  color: var(--k-accent);
+  color: var(--k-ink);
+  font-weight: 500;
+  text-decoration: none;
+}
+footer a:hover {
+  color: var(--k-ink);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
 }
 
 /* ---- search ------------------------------------------------------------ */
 
 #search-input {
-  background: var(--k-surface);
+  background: color-mix(in srgb, var(--k-surface) 80%, transparent);
   color: var(--k-ink);
-  border-radius: 999px;
+  border-radius: 0.5rem;
   border: 1px solid var(--k-control);
-  padding-left: 1rem;
+  padding-left: 0.8rem;
+  font-size: 0.88rem;
 }
 #search-input::placeholder {
   color: var(--k-muted);
@@ -639,31 +752,40 @@ footer a {
   box-shadow: 0 0 0 3px var(--k-accent-soft);
 }
 
-/* Still under reduced motion: no turn, no growing. The tilt stays, and only
-   the change on hover is instant. The hex of the home page is swapped for the
-   still hex. The moving picture has the same rule inside it, but a picture
-   that is drawn as a background does not always see the setting of the
-   visitor, and the page always does. The hex is 85% of the height of the
-   moving picture, and the still one is sized to match, so the hex does not
-   change size. */
+/* ---- reduced motion and small screens ---------------------------------- */
+
+/* The hex of the home page is swapped for the still hex. The moving picture
+   has the same rule inside it, but a picture that is drawn as a background
+   does not always see the setting of the visitor, and the page always does.
+   The hex is 85% of the height of the moving picture, and the still one is
+   sized to match, so the hex does not change size. */
 @media (prefers-reduced-motion: reduce) {
-  .navbar-brand::before,
-  main img.logo {
-    transition: none;
-  }
   .template-home .page-header::before {
     background-image: var(--k-mark);
     background-size: auto 85%;
   }
+  .navbar-nav .nav-link,
+  main a,
+  aside a {
+    transition: none;
+  }
 }
 
 @media (max-width: 767.98px) {
-  h1 {
-    font-size: 1.7rem;
+  body {
+    font-size: 16.5px;
   }
+  nav.navbar {
+    --k-icon-box: 2rem;
+  }
+  /* A cell such as "2024 -> 2020" would break between "-" and ">". Keep
+     each cell on one line, and let a wide table scroll inside its frame. */
   main table {
     display: block;
     overflow-x: auto;
+  }
+  main table :is(th, td) {
+    white-space: nowrap;
   }
   .template-home .page-header::before {
     width: 6.5rem;
@@ -678,12 +800,8 @@ footer a {
     width: 100%;
     margin: 1.5rem 0 0;
   }
-  main div.sourceCode:has(> pre)::before {
-    padding-left: 1rem;
-  }
-  main pre,
-  main div.sourceCode > pre {
-    padding-left: 1rem;
-    padding-right: 1rem;
+  main pre {
+    font-size: 0.78rem;
+    padding: 0.9rem 1rem;
   }
 }
