@@ -12,3 +12,5 @@
 ^docs$
 ^pkgdown$
 ^vignettes$
+^air\.toml$
+^\.vscode$
