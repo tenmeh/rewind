@@ -71,7 +71,8 @@ test_that("rapid changes within the coalescing window collapse into one entry", 
 test_that("action buttons never enter a snapshot", {
   shiny::testServer(srv, {
     ctrl <- session$userData$.rewind
-    settle(session,
+    settle(
+      session,
       region = "North",
       go = structure(1L, class = c("shinyActionButtonValue", "integer"))
     )
@@ -85,11 +86,15 @@ test_that("action buttons never enter a snapshot", {
 test_that("fileInput values never enter a snapshot", {
   shiny::testServer(srv, {
     ctrl <- session$userData$.rewind
-    settle(session,
+    settle(
+      session,
       region = "North",
       upload = data.frame(
-        name = "a.csv", size = 12, type = "text/csv",
-        datapath = "/tmp/0x1.csv", stringsAsFactors = FALSE
+        name = "a.csv",
+        size = 12,
+        type = "text/csv",
+        datapath = "/tmp/0x1.csv",
+        stringsAsFactors = FALSE
       )
     )
 

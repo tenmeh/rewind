@@ -16,9 +16,15 @@ test_that("states_equal survives the JSON round trip", {
 })
 
 test_that("dates compare by their rendering", {
-  expect_true(rewind:::values_equal(as.Date("2026-01-01"), as.Date("2026-01-01")))
+  expect_true(rewind:::values_equal(
+    as.Date("2026-01-01"),
+    as.Date("2026-01-01")
+  ))
   expect_true(rewind:::values_equal(as.Date("2026-01-01"), "2026-01-01"))
-  expect_false(rewind:::values_equal(as.Date("2026-01-01"), as.Date("2026-01-02")))
+  expect_false(rewind:::values_equal(
+    as.Date("2026-01-01"),
+    as.Date("2026-01-02")
+  ))
 })
 
 test_that("NULL handling is not accidentally lossy", {
@@ -40,15 +46,20 @@ test_that("nested value groups compare recursively", {
 
 test_that("is_file_input_value matches fileInput()'s documented shape", {
   file_val <- data.frame(
-    name = "a.csv", size = 12, type = "text/csv",
-    datapath = "/tmp/0x1.csv", stringsAsFactors = FALSE
+    name = "a.csv",
+    size = 12,
+    type = "text/csv",
+    datapath = "/tmp/0x1.csv",
+    stringsAsFactors = FALSE
   )
   expect_true(rewind:::is_file_input_value(file_val))
 
   multi <- data.frame(
-    name = c("a.csv", "b.csv"), size = c(12, 34),
+    name = c("a.csv", "b.csv"),
+    size = c(12, 34),
     type = c("text/csv", "text/csv"),
-    datapath = c("/tmp/0x1.csv", "/tmp/0x2.csv"), stringsAsFactors = FALSE
+    datapath = c("/tmp/0x1.csv", "/tmp/0x2.csv"),
+    stringsAsFactors = FALSE
   )
   expect_true(rewind:::is_file_input_value(multi))
 
@@ -65,9 +76,9 @@ test_that("a data frame of the user with the same column names is kept", {
   # Without the type test, rewind would drop it and give no message, and an
   # undo would not restore it.
   looks_similar <- data.frame(
-    name     = c("Ann", "Bo"),
-    size     = c("large", "small"),   # character, not numeric
-    type     = c("cat", "dog"),
+    name = c("Ann", "Bo"),
+    size = c("large", "small"), # character, not numeric
+    type = c("cat", "dog"),
     datapath = c("north", "south"),
     stringsAsFactors = FALSE
   )
@@ -75,8 +86,11 @@ test_that("a data frame of the user with the same column names is kept", {
 
   # A numeric name column is also not a fileInput() value.
   numeric_name <- data.frame(
-    name = 1:2, size = c(1, 2), type = c("a", "b"),
-    datapath = c("x", "y"), stringsAsFactors = FALSE
+    name = 1:2,
+    size = c(1, 2),
+    type = c("a", "b"),
+    datapath = c("x", "y"),
+    stringsAsFactors = FALSE
   )
   expect_false(rewind:::is_file_input_value(numeric_name))
 })

@@ -92,16 +92,20 @@
 #'   shinyApp(ui, server)
 #' }
 #' @export
-rewind_diff <- function(from = NULL,
-                        to = NULL,
-                        session = shiny::getDefaultReactiveDomain()) {
+rewind_diff <- function(
+  from = NULL,
+  to = NULL,
+  session = shiny::getDefaultReactiveDomain()
+) {
   ctrl <- require_controller(session)
 
   # Depend on the history, so this function can run inside render*().
   ctrl$version_dep()
 
   size <- ctrl$history$size()
-  if (size == 0L) return(empty_diff())
+  if (size == 0L) {
+    return(empty_diff())
+  }
 
   # An index the caller gave is checked. An index that this function works
   # out for itself is not, because "there is no step before the first one"
@@ -145,30 +149,41 @@ rewind_diff <- function(from = NULL,
 #' @return A data frame. Refer to [rewind_diff()] for the columns.
 #' @keywords internal
 #' @noRd
-diff_states <- function(old, new, from = NA_integer_, to = NA_integer_,
-                        labels = NULL) {
+diff_states <- function(
+  old,
+  new,
+  from = NA_integer_,
+  to = NA_integer_,
+  labels = NULL
+) {
   old <- old %||% list()
   new <- new %||% list()
 
   names_all <- union(names(old), names(new))
-  if (length(names_all) == 0L) return(empty_diff())
+  if (length(names_all) == 0L) {
+    return(empty_diff())
+  }
 
   # values_equal() is the same comparison that the history uses to decide
   # that a state is new. The diff and the history thus never disagree about
   # what changed.
-  changed <- names_all[!vapply(
-    names_all,
-    function(nm) values_equal(old[[nm]], new[[nm]]),
-    logical(1)
-  )]
-  if (length(changed) == 0L) return(empty_diff())
+  changed <- names_all[
+    !vapply(
+      names_all,
+      function(nm) values_equal(old[[nm]], new[[nm]]),
+      logical(1)
+    )
+  ]
+  if (length(changed) == 0L) {
+    return(empty_diff())
+  }
 
   changed <- sort(changed)
 
   out <- data.frame(
-    from   = rep(as.integer(from), length(changed)),
-    to     = rep(as.integer(to), length(changed)),
-    name   = changed,
+    from = rep(as.integer(from), length(changed)),
+    to = rep(as.integer(to), length(changed)),
+    name = changed,
     change = vapply(
       changed,
       function(nm) format_change(old[[nm]], new[[nm]]),
@@ -202,9 +217,9 @@ diff_states <- function(old, new, from = NA_integer_, to = NA_integer_,
 #' @noRd
 empty_diff <- function() {
   out <- data.frame(
-    from   = integer(0),
-    to     = integer(0),
-    name   = character(0),
+    from = integer(0),
+    to = integer(0),
+    name = character(0),
     change = character(0),
     stringsAsFactors = FALSE
   )
@@ -221,9 +236,15 @@ empty_diff <- function() {
 #' @keywords internal
 #' @noRd
 format_change <- function(old, new) {
-  if (is.null(old) && is.null(new)) return("no change")
-  if (is.null(old)) return(paste("set to", format_value(new)))
-  if (is.null(new)) return("cleared")
+  if (is.null(old) && is.null(new)) {
+    return("no change")
+  }
+  if (is.null(old)) {
+    return(paste("set to", format_value(new)))
+  }
+  if (is.null(new)) {
+    return("cleared")
+  }
   paste(format_value(old), "->", format_value(new))
 }
 
@@ -241,12 +262,22 @@ format_change <- function(old, new) {
 #' @keywords internal
 #' @noRd
 format_value <- function(x, max_items = 3L, max_width = 40L) {
-  if (is.null(x)) return("(none)")
-  if (is.data.frame(x)) {
-    return(sprintf("a table of %d row%s", nrow(x), if (nrow(x) == 1L) "" else "s"))
+  if (is.null(x)) {
+    return("(none)")
   }
-  if (!is.atomic(x)) return(sprintf("a list of %d", length(x)))
-  if (length(x) == 0L) return("(empty)")
+  if (is.data.frame(x)) {
+    return(sprintf(
+      "a table of %d row%s",
+      nrow(x),
+      if (nrow(x) == 1L) "" else "s"
+    ))
+  }
+  if (!is.atomic(x)) {
+    return(sprintf("a list of %d", length(x)))
+  }
+  if (length(x) == 0L) {
+    return("(empty)")
+  }
 
   # A date comes back from the browser as text. format() gives the same
   # result for both forms.
@@ -257,7 +288,9 @@ format_value <- function(x, max_items = 3L, max_width = 40L) {
   # arrow.
   txt[txt == ""] <- '""'
 
-  if (length(txt) == 1L) return(truncate_text(txt, max_width))
+  if (length(txt) == 1L) {
+    return(truncate_text(txt, max_width))
+  }
 
   if (length(txt) <= max_items) {
     joined <- paste(txt, collapse = ", ")
@@ -275,7 +308,9 @@ format_value <- function(x, max_items = 3L, max_width = 40L) {
 #' @keywords internal
 #' @noRd
 truncate_text <- function(x, max_width) {
-  if (nchar(x) <= max_width) return(x)
+  if (nchar(x) <= max_width) {
+    return(x)
+  }
   paste0(substr(x, 1L, max_width - 3L), "...")
 }
 

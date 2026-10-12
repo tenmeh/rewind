@@ -38,8 +38,10 @@ collect_shiny_problems <- function(app) {
   if (has_logs) {
     # The stderr of the application. A render error reaches this place even
     # when it never reaches the browser console.
-    from_r <- logs$message[logs$location == "shiny" &
-                             grepl("Error", logs$message, fixed = TRUE)]
+    from_r <- logs$message[
+      logs$location == "shiny" &
+        grepl("Error", logs$message, fixed = TRUE)
+    ]
     if (length(from_r) > 0) {
       problems <- c(problems, paste("R stderr:", from_r))
     }
@@ -56,8 +58,9 @@ collect_shiny_problems <- function(app) {
 
   # The DOM. No output must have the `shiny-output-error` class.
   # get_html() gives NULL when it finds no such element.
-  in_dom <- tryCatch(app$get_html(".shiny-output-error"),
-                     error = function(e) NULL)
+  in_dom <- tryCatch(app$get_html(".shiny-output-error"), error = function(e) {
+    NULL
+  })
   if (!is.null(in_dom)) {
     problems <- c(problems, paste("Output element in an error state:", in_dom))
   }
@@ -75,9 +78,12 @@ collect_shiny_problems <- function(app) {
 expect_no_shiny_errors <- function(app) {
   problems <- collect_shiny_problems(app)
   testthat::expect_equal(
-    length(problems), 0L,
-    info = paste0("The application reported these problems:\n",
-                  paste(problems, collapse = "\n"))
+    length(problems),
+    0L,
+    info = paste0(
+      "The application reported these problems:\n",
+      paste(problems, collapse = "\n")
+    )
   )
   invisible(app)
 }
@@ -124,7 +130,11 @@ local_app_driver <- function(app_dir, ...) {
   testthat::skip_if_not_installed("shinytest2")
 
   runner_tmp <- Sys.getenv("RUNNER_TEMP", unset = "")
-  chrome_root <- if (nzchar(runner_tmp)) runner_tmp else tools::R_user_dir("rewind", "cache")
+  chrome_root <- if (nzchar(runner_tmp)) {
+    runner_tmp
+  } else {
+    tools::R_user_dir("rewind", "cache")
+  }
   chrome_tmp <- file.path(chrome_root, paste0("chromote-", Sys.getpid()))
   dir.create(chrome_tmp, showWarnings = FALSE, recursive = TRUE)
   withr::local_envvar(
@@ -136,7 +146,10 @@ local_app_driver <- function(app_dir, ...) {
     shinytest2::AppDriver$new(app_dir, ...),
     error = function(e) {
       unlink(chrome_tmp, recursive = TRUE)
-      testthat::skip(paste("Could not start a headless browser:", conditionMessage(e)))
+      testthat::skip(paste(
+        "Could not start a headless browser:",
+        conditionMessage(e)
+      ))
     }
   )
   withr::defer(

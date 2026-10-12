@@ -22,8 +22,11 @@ restorable_app <- function() {
       rewind_buttons(),
       rewind_ui(),
       shiny::selectInput("region", "Region", c("North", "South")),
-      shiny::plotOutput("p", height = "300px",
-                        hover = shiny::hoverOpts("hov", delay = 50))
+      shiny::plotOutput(
+        "p",
+        height = "300px",
+        hover = shiny::hoverOpts("hov", delay = 50)
+      )
     ),
     server = function(input, output, session) {
       rewind_enable()
@@ -41,7 +44,12 @@ settle_restorable <- function(app) {
 test_that("moving the mouse over a plot is not a step, so one undo undoes the real change", {
   testthat::skip_on_cran()
 
-  app <- local_app_driver(restorable_app(), name = "restorable", width = 1200, height = 900)
+  app <- local_app_driver(
+    restorable_app(),
+    name = "restorable",
+    width = 1200,
+    height = 900
+  )
   settle_restorable(app)
 
   app$set_inputs(region = "South")
@@ -54,8 +62,11 @@ test_that("moving the mouse over a plot is not a step, so one undo undoes the re
   )
   for (k in 1:3) {
     for (i in 1:6) {
-      b$Input$dispatchMouseEvent(type = "mouseMoved",
-                                 x = r[[1]] + 40 + 40 * i + 15 * k, y = r[[2]] + 80 + 20 * k)
+      b$Input$dispatchMouseEvent(
+        type = "mouseMoved",
+        x = r[[1]] + 40 + 40 * i + 15 * k,
+        y = r[[2]] + 80 + 20 * k
+      )
       Sys.sleep(0.08)
     }
     Sys.sleep(0.8)

@@ -19,8 +19,10 @@ require_session <- function(session, hint = NULL) {
   # is "$ operator is invalid for atomic vectors", which hides the cause.
   if (is.atomic(session)) {
     stop(
-      "`session` must be a Shiny session, not a ", class(session)[1],
-      " vector.", if (!is.null(hint)) paste0(" ", hint),
+      "`session` must be a Shiny session, not a ",
+      class(session)[1],
+      " vector.",
+      if (!is.null(hint)) paste0(" ", hint),
       call. = FALSE
     )
   }
@@ -32,7 +34,9 @@ require_session <- function(session, hint = NULL) {
 #' @keywords internal
 #' @noRd
 get_controller <- function(session = shiny::getDefaultReactiveDomain()) {
-  if (is.null(session)) return(NULL)
+  if (is.null(session)) {
+    return(NULL)
+  }
   session$userData$.rewind
 }
 
@@ -72,11 +76,20 @@ require_controller <- function(session = shiny::getDefaultReactiveDomain()) {
 #' @keywords internal
 #' @noRd
 check_number <- function(x, arg, min = 0, inclusive = TRUE) {
-  ok <- is.numeric(x) && length(x) == 1L && is.finite(x) &&
+  ok <- is.numeric(x) &&
+    length(x) == 1L &&
+    is.finite(x) &&
     (if (inclusive) x >= min else x > min)
   if (!ok) {
-    limit <- if (inclusive) sprintf("of %s or more", min) else sprintf("greater than %s", min)
-    stop(sprintf("`%s` must be a single finite number %s.", arg, limit), call. = FALSE)
+    limit <- if (inclusive) {
+      sprintf("of %s or more", min)
+    } else {
+      sprintf("greater than %s", min)
+    }
+    stop(
+      sprintf("`%s` must be a single finite number %s.", arg, limit),
+      call. = FALSE
+    )
   }
   invisible(x)
 }
@@ -111,10 +124,16 @@ check_flag <- function(x, arg) {
 #' @keywords internal
 #' @noRd
 check_count <- function(x, arg, min = 0L) {
-  ok <- is.numeric(x) && length(x) == 1L && is.finite(x) && x == round(x) && x >= min
+  ok <- is.numeric(x) &&
+    length(x) == 1L &&
+    is.finite(x) &&
+    x == round(x) &&
+    x >= min
   if (!ok) {
-    stop(sprintf("`%s` must be a single whole number of %d or more.", arg, min),
-         call. = FALSE)
+    stop(
+      sprintf("`%s` must be a single whole number of %d or more.", arg, min),
+      call. = FALSE
+    )
   }
   as.integer(x)
 }
@@ -128,10 +147,18 @@ check_count <- function(x, arg, min = 0L) {
 #' @keywords internal
 #' @noRd
 check_string <- function(x, arg, null_ok = TRUE) {
-  if (is.null(x) && null_ok) return(invisible(x))
+  if (is.null(x) && null_ok) {
+    return(invisible(x))
+  }
   if (!is.character(x) || length(x) != 1L || is.na(x)) {
-    stop(sprintf("`%s` must be a single string%s.", arg,
-                 if (null_ok) " or NULL" else ""), call. = FALSE)
+    stop(
+      sprintf(
+        "`%s` must be a single string%s.",
+        arg,
+        if (null_ok) " or NULL" else ""
+      ),
+      call. = FALSE
+    )
   }
   invisible(x)
 }
@@ -146,7 +173,10 @@ check_string <- function(x, arg, null_ok = TRUE) {
 #' @noRd
 check_character <- function(x, arg) {
   if (!is.null(x) && (!is.character(x) || anyNA(x))) {
-    stop(sprintf("`%s` must be a character vector or NULL.", arg), call. = FALSE)
+    stop(
+      sprintf("`%s` must be a character vector or NULL.", arg),
+      call. = FALSE
+    )
   }
   invisible(x)
 }
@@ -159,13 +189,22 @@ check_character <- function(x, arg) {
 #' @keywords internal
 #' @noRd
 check_labels <- function(x) {
-  if (is.null(x)) return(invisible(x))
+  if (is.null(x)) {
+    return(invisible(x))
+  }
   nms <- names(x)
-  ok <- is.character(x) && !anyNA(x) && !is.null(nms) && !anyNA(nms) &&
-    all(nzchar(nms)) && !anyDuplicated(nms)
+  ok <- is.character(x) &&
+    !anyNA(x) &&
+    !is.null(nms) &&
+    !anyNA(nms) &&
+    all(nzchar(nms)) &&
+    !anyDuplicated(nms)
   if (!ok) {
-    stop("`labels` must be a character vector with a unique name for each element, ",
-         "such as c(region = \"Region\").", call. = FALSE)
+    stop(
+      "`labels` must be a character vector with a unique name for each element, ",
+      "such as c(region = \"Region\").",
+      call. = FALSE
+    )
   }
   invisible(x)
 }
@@ -181,6 +220,8 @@ check_labels <- function(x) {
 label_for <- function(names, labels) {
   out <- unname(labels[names])
   out[is.na(out)] <- names[is.na(out)]
-  if (is.null(labels)) out <- names
+  if (is.null(labels)) {
+    out <- names
+  }
   as.character(out)
 }

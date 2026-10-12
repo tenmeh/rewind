@@ -49,15 +49,18 @@ test_that("a reported password field leaves the history, and stays out", {
 })
 
 test_that("a password field is left out even when `inputs` names it", {
-  shiny::testServer(function(input, output, session) {
-    rewind_enable(inputs = c("region", "pw"), coalesce_ms = 30)
-  }, {
-    ctrl <- session$userData$.rewind
-    settle_secret(session, region = "North", pw = "")
-    settle_secret(session, rewind_secret_ids = "pw")
-    settle_secret(session, pw = "s3cret", region = "South")
-    expect_false("pw" %in% names(ctrl$history$current()$inputs))
-  })
+  shiny::testServer(
+    function(input, output, session) {
+      rewind_enable(inputs = c("region", "pw"), coalesce_ms = 30)
+    },
+    {
+      ctrl <- session$userData$.rewind
+      settle_secret(session, region = "North", pw = "")
+      settle_secret(session, rewind_secret_ids = "pw")
+      settle_secret(session, pw = "s3cret", region = "South")
+      expect_false("pw" %in% names(ctrl$history$current()$inputs))
+    }
+  )
 })
 
 test_that("inside a module, the id from the page is matched to the local name", {
