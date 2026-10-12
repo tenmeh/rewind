@@ -11,7 +11,10 @@ test_that("the public API refuses to run before rewind_enable()", {
 
   expect_error(rewind_undo(session = fake), "not enabled")
   expect_error(rewind_history(session = fake), "not enabled")
-  expect_error(rewind_track(shiny::reactiveValues(), session = fake), "not enabled")
+  expect_error(
+    rewind_track(shiny::reactiveValues(), session = fake),
+    "not enabled"
+  )
 })
 
 test_that("rewind_disable requires a session but tolerates a missing controller", {
@@ -27,19 +30,34 @@ test_that("rewind_enable validates its arguments", {
   expect_error(rewind_enable(session = fake, inputs = 1), "`inputs`")
   expect_error(rewind_enable(session = fake, exclude = 1), "`exclude`")
   expect_error(rewind_enable(session = fake, coalesce_ms = -1), "`coalesce_ms`")
-  expect_error(rewind_enable(session = fake, coalesce_ms = c(1, 2)), "`coalesce_ms`")
+  expect_error(
+    rewind_enable(session = fake, coalesce_ms = c(1, 2)),
+    "`coalesce_ms`"
+  )
 
   # A restore timeout of zero would stop the guard against the echo of a
   # restore, so it is not permitted.
-  expect_error(rewind_enable(session = fake, restore_timeout = 0), "`restore_timeout`")
-  expect_error(rewind_enable(session = fake, restore_timeout = -1), "`restore_timeout`")
-  expect_error(rewind_enable(session = fake, restore_timeout = c(1, 2)), "`restore_timeout`")
-  expect_error(rewind_enable(session = fake, restore_timeout = "2"), "`restore_timeout`")
+  expect_error(
+    rewind_enable(session = fake, restore_timeout = 0),
+    "`restore_timeout`"
+  )
+  expect_error(
+    rewind_enable(session = fake, restore_timeout = -1),
+    "`restore_timeout`"
+  )
+  expect_error(
+    rewind_enable(session = fake, restore_timeout = c(1, 2)),
+    "`restore_timeout`"
+  )
+  expect_error(
+    rewind_enable(session = fake, restore_timeout = "2"),
+    "`restore_timeout`"
+  )
 })
 
 test_that("rewind_track rejects things that are not reactiveValues", {
   fake <- list(userData = new.env(parent = emptyenv()))
-  fake$userData$.rewind <- TRUE  # pretend rewind is enabled
+  fake$userData$.rewind <- TRUE # pretend rewind is enabled
 
   expect_error(rewind_track(list(a = 1), session = fake), "reactiveValues")
 })
@@ -72,7 +90,9 @@ test_that("labels are omitted when NULL", {
 })
 
 test_that("button_class reaches the buttons, not the container", {
-  html <- as.character(rewind_buttons(button_class = "btn-outline-primary btn-sm"))
+  html <- as.character(rewind_buttons(
+    button_class = "btn-outline-primary btn-sm"
+  ))
 
   # Both buttons take the classes.
   expect_match(html, "btn btn-default btn-outline-primary btn-sm rewind-undo")
@@ -111,7 +131,7 @@ test_that("the undo and redo arrows point in opposite directions", {
 
   # The redo arrow is the undo arrow mirrored: each x becomes 16 - x. A
   # copy-and-paste mistake would give two arrows that point the same way.
-  expect_match(html, "M5.5 3 2.5 6l3 3", fixed = TRUE)   # undo head, points left
+  expect_match(html, "M5.5 3 2.5 6l3 3", fixed = TRUE) # undo head, points left
   expect_match(html, "M10.5 3 13.5 6l-3 3", fixed = TRUE) # redo head, points right
 })
 
@@ -120,7 +140,10 @@ test_that("icon-only buttons still carry an accessible name", {
   expect_match(bare, 'aria-label="Undo"')
   expect_match(bare, 'aria-label="Redo"')
 
-  custom <- as.character(rewind_buttons(undo_label = "Back", redo_label = "Forward"))
+  custom <- as.character(rewind_buttons(
+    undo_label = "Back",
+    redo_label = "Forward"
+  ))
   expect_match(custom, 'aria-label="Back"')
   expect_match(custom, 'aria-label="Forward"')
 })
@@ -197,15 +220,22 @@ test_that("rewind_enable() says what went wrong when the inputs land in `session
   # `session` is the first argument, so this gives the input names to it.
   # It used to fail with "$ operator is invalid for atomic vectors".
   expect_error(
-    shiny::testServer(function(input, output, session) {
-      rewind_enable(c("region", "year"))
-    }, {}),
+    shiny::testServer(
+      function(input, output, session) {
+        rewind_enable(c("region", "year"))
+      },
+      {}
+    ),
     "`session` must be a Shiny session, not a character vector. To name the inputs to capture, use `inputs = c(...)`.",
     fixed = TRUE
   )
 })
 
 test_that("other functions name the problem without the hint about inputs", {
-  expect_error(rewind_undo("x"), "`session` must be a Shiny session, not a character vector.", fixed = TRUE)
+  expect_error(
+    rewind_undo("x"),
+    "`session` must be a Shiny session, not a character vector.",
+    fixed = TRUE
+  )
   expect_error(rewind_undo(TRUE), "not a logical vector", fixed = TRUE)
 })

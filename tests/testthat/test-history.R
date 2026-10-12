@@ -15,7 +15,7 @@ test_that("pushing advances the pointer and enables undo", {
   h <- rewind:::History$new()
 
   expect_true(h$push(st(a = 1)))
-  expect_false(h$can_undo())      # nothing behind the first entry
+  expect_false(h$can_undo()) # nothing behind the first entry
   expect_true(h$push(st(a = 2)))
   expect_true(h$can_undo())
   expect_false(h$can_redo())
@@ -80,7 +80,9 @@ test_that("this is how a restore echo gets absorbed", {
 
 test_that("depth is enforced by dropping the oldest entries", {
   h <- rewind:::History$new(depth = 3L)
-  for (i in 1:6) h$push(st(a = i))
+  for (i in 1:6) {
+    h$push(st(a = i))
+  }
 
   expect_equal(h$size(), 3L)
   expect_equal(h$current()$inputs$a, 6)
@@ -92,18 +94,22 @@ test_that("depth is enforced by dropping the oldest entries", {
 
 test_that("the pointer survives trimming", {
   h <- rewind:::History$new(depth = 3L)
-  for (i in 1:3) h$push(st(a = i))
+  for (i in 1:3) {
+    h$push(st(a = i))
+  }
   h$undo()
   expect_equal(h$index(), 2L)
 
-  h$push(st(a = 10))    # truncates entry 3, appends, still within depth
+  h$push(st(a = 10)) # truncates entry 3, appends, still within depth
   expect_equal(h$index(), 3L)
   expect_equal(h$size(), 3L)
 })
 
 test_that("jump moves to an absolute position and rejects bad input", {
   h <- rewind:::History$new()
-  for (i in 1:4) h$push(st(a = i))
+  for (i in 1:4) {
+    h$push(st(a = i))
+  }
 
   expect_equal(h$jump(2)$inputs$a, 2)
   expect_true(h$can_undo())
@@ -112,12 +118,14 @@ test_that("jump moves to an absolute position and rejects bad input", {
   expect_null(h$jump(0))
   expect_null(h$jump(99))
   expect_null(h$jump(NA))
-  expect_equal(h$current()$inputs$a, 2)   # unmoved
+  expect_equal(h$current()$inputs$a, 2) # unmoved
 })
 
 test_that("clear keeps the present and drops the rest", {
   h <- rewind:::History$new()
-  for (i in 1:4) h$push(st(a = i))
+  for (i in 1:4) {
+    h$push(st(a = i))
+  }
   h$undo()
 
   h$clear()
@@ -171,7 +179,7 @@ test_that("scrub_inputs removes the inputs from every entry", {
 test_that("scrub_inputs removes a step that only changed the scrubbed input", {
   h <- rewind:::History$new()
   h$push(st(a = 1, pw = ""))
-  h$push(st(a = 1, pw = "s3cret"))   # only the password changed
+  h$push(st(a = 1, pw = "s3cret")) # only the password changed
   h$push(st(a = 2, pw = "s3cret"))
   expect_equal(h$index(), 3L)
 

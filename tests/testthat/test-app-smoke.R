@@ -53,7 +53,9 @@ is_undo_disabled <- function(app) {
 }
 
 current_step_label <- function(app) {
-  app$get_js("document.querySelector('.rewind-step.is-current .rewind-step-label').textContent")
+  app$get_js(
+    "document.querySelector('.rewind-step.is-current .rewind-step-label').textContent"
+  )
 }
 
 # The position in the rail, as a number. Two steps can carry the same label,
@@ -69,10 +71,10 @@ test_that("the demo app: buttons, rail, coalescing, and tracked values all work 
 
   app <- local_app_driver(
     app_dir,
-    name         = "rewind-demo-smoke",
-    seed         = 42L,
+    name = "rewind-demo-smoke",
+    seed = 42L,
     load_timeout = 45000L,
-    timeout      = 15000L
+    timeout = 15000L
   )
   app$wait_for_idle(timeout = 10000L)
 
@@ -121,7 +123,8 @@ test_that("the demo app: buttons, rail, coalescing, and tracked values all work 
 
   # --- grouping: a fast, real movement of a slider, with real time -------
   before <- rail_size(app)
-  app$run_js("
+  app$run_js(
+    "
     (function () {
       var $el = window.jQuery(document.getElementById('year'));
       var vals = [[2019,2025],[2020,2025],[2021,2024],[2022,2023]];
@@ -136,7 +139,8 @@ test_that("the demo app: buttons, rail, coalescing, and tracked values all work 
       }
       step();
     })();
-  ")
+  "
+  )
   Sys.sleep(0.3)
   settle(app)
   # Several fast changes inside coalesce_ms must give one entry.
@@ -145,11 +149,13 @@ test_that("the demo app: buttons, rail, coalescing, and tracked values all work 
   # --- keyboard: Ctrl+Z does an undo from the page body ------------------
   before <- rail_size(app)
   start_index <- current_step_index(app)
-  app$run_js("
+  app$run_js(
+    "
     document.body.dispatchEvent(new KeyboardEvent(
       'keydown', {key: 'z', ctrlKey: true, bubbles: true, cancelable: true}
     ));
-  ")
+  "
+  )
   settle(app)
   expect_equal(rail_size(app), before)
   # An undo moves the position back by one.
@@ -160,36 +166,44 @@ test_that("the demo app: buttons, rail, coalescing, and tracked values all work 
   # Nothing tested it before, so a change to the key handler could have
   # stopped it and no test would have failed. The undo above makes a redo
   # possible.
-  app$run_js("
+  app$run_js(
+    "
     document.body.dispatchEvent(new KeyboardEvent(
       'keydown', {key: 'y', ctrlKey: true, bubbles: true, cancelable: true}
     ));
-  ")
+  "
+  )
   settle(app)
   expect_equal(current_step_index(app), start_index)
   expect_equal(rail_size(app), before)
 
   # Put the position back where the rest of this test expects it.
-  app$run_js("
+  app$run_js(
+    "
     document.body.dispatchEvent(new KeyboardEvent(
       'keydown', {key: 'z', ctrlKey: true, bubbles: true, cancelable: true}
     ));
-  ")
+  "
+  )
   settle(app)
   expect_equal(current_step_index(app), start_index - 1L)
 
   # --- keyboard: Ctrl+Z in the text box must NOT do an undo --------------
   before_label <- current_step_label(app)
-  app$run_js("
+  app$run_js(
+    "
     var box = document.getElementById('search');
     box.focus();
     box.dispatchEvent(new KeyboardEvent('keydown', {key: 'z', ctrlKey: true, bubbles: true, cancelable: true}));
-  ")
+  "
+  )
   settle(app)
   expect_equal(current_step_label(app), before_label)
 
   # --- rail: a click on a step moves to that step ------------------------
-  app$run_js("document.querySelector('.rewind-step[data-index=\"1\"]').click();")
+  app$run_js(
+    "document.querySelector('.rewind-step[data-index=\"1\"]').click();"
+  )
   settle(app)
   expect_equal(app$get_value(input = "region"), "All")
   expect_true(is_undo_disabled(app))

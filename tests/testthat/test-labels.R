@@ -11,8 +11,10 @@ settle_labels <- function(session, ...) {
 }
 
 labelled_server <- function(input, output, session) {
-  rewind_enable(coalesce_ms = 30,
-                labels = c(region = "Region", year = "Year", "st$zoom" = "Zoom"))
+  rewind_enable(
+    coalesce_ms = 30,
+    labels = c(region = "Region", year = "Year", "st$zoom" = "Zoom")
+  )
   st <- shiny::reactiveValues(zoom = 1)
   rewind_track(st, fields = "zoom")
 }
@@ -47,28 +49,43 @@ test_that("rewind_diff adds a label column at the end, and keeps name as the id"
     settle_labels(session, region = "North", other = 1)
     settle_labels(session, region = "South", other = 2)
     out <- rewind_diff()
-    expect_equal(names(out), c("from", "to", "name", "change", "old", "new", "label"))
+    expect_equal(
+      names(out),
+      c("from", "to", "name", "change", "old", "new", "label")
+    )
     expect_equal(out$name, c("other", "region"))
     expect_equal(out$label, c("other", "Region"))
   })
 })
 
 test_that("without labels, the label column repeats the id", {
-  shiny::testServer(function(input, output, session) rewind_enable(coalesce_ms = 30), {
-    settle_labels(session, region = "North")
-    settle_labels(session, region = "South")
-    expect_equal(rewind_diff()$label, "region")
-  })
+  shiny::testServer(
+    function(input, output, session) rewind_enable(coalesce_ms = 30),
+    {
+      settle_labels(session, region = "North")
+      settle_labels(session, region = "South")
+      expect_equal(rewind_diff()$label, "region")
+    }
+  )
 })
 
 test_that("labels must be a named character vector", {
-  bad <- list(c("Region"), c(region = 1), c(region = NA_character_),
-              stats::setNames("x", ""), c(a = "A", a = "B"))
+  bad <- list(
+    c("Region"),
+    c(region = 1),
+    c(region = NA_character_),
+    stats::setNames("x", ""),
+    c(a = "A", a = "B")
+  )
   for (v in bad) {
     expect_error(
-      shiny::testServer(function(input, output, session) rewind_enable(labels = v), {}),
+      shiny::testServer(
+        function(input, output, session) rewind_enable(labels = v),
+        {}
+      ),
       "`labels` must be a character vector with a unique name for each element",
-      fixed = TRUE, info = deparse(v)
+      fixed = TRUE,
+      info = deparse(v)
     )
   }
 })

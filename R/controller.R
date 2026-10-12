@@ -9,28 +9,29 @@
 RewindController <- R6::R6Class(
   "RewindController",
   public = list(
-
     history = NULL,
 
-    initialize = function(session,
-                          inputs = NULL,
-                          exclude = NULL,
-                          depth = 50L,
-                          coalesce_ms = 400L,
-                          restore_timeout = 2,
-                          verbose = FALSE,
-                          labels = NULL) {
-      private$.session     <- session
-      private$.inputs      <- inputs
-      private$.exclude     <- exclude
+    initialize = function(
+      session,
+      inputs = NULL,
+      exclude = NULL,
+      depth = 50L,
+      coalesce_ms = 400L,
+      restore_timeout = 2,
+      verbose = FALSE,
+      labels = NULL
+    ) {
+      private$.session <- session
+      private$.inputs <- inputs
+      private$.exclude <- exclude
       private$.coalesce_ms <- as.numeric(coalesce_ms)
       private$.expect_timeout <- as.numeric(restore_timeout)
-      private$.verbose     <- isTRUE(verbose)
-      private$.labels      <- labels
-      private$.tracked     <- list()
-      private$.tick        <- shiny::reactiveVal(0L)
-      private$.version     <- shiny::reactiveVal(0L)
-      self$history         <- History$new(depth = depth)
+      private$.verbose <- isTRUE(verbose)
+      private$.labels <- labels
+      private$.tracked <- list()
+      private$.tick <- shiny::reactiveVal(0L)
+      private$.version <- shiny::reactiveVal(0L)
+      self$history <- History$new(depth = depth)
       invisible(self)
     },
 
@@ -57,11 +58,19 @@ RewindController <- R6::R6Class(
     # history. The caller can thus read it after the method runs. The method
     # removes only the reactive connections and the data in the client.
     destroy = function() {
-      for (obs in private$.observers) obs$destroy()
+      for (obs in private$.observers) {
+        obs$destroy()
+      }
       private$.observers <- list()
-      private$.session$sendCustomMessage("rewind:history", list(
-        entries = list(), canUndo = FALSE, canRedo = FALSE, index = 0
-      ))
+      private$.session$sendCustomMessage(
+        "rewind:history",
+        list(
+          entries = list(),
+          canUndo = FALSE,
+          canRedo = FALSE,
+          index = 0
+        )
+      )
       invisible(self)
     },
 
@@ -78,7 +87,9 @@ RewindController <- R6::R6Class(
 
     # Keep a possible new state. Then start the grouping period again.
     note = function(state) {
-      if (private$.paused) return(invisible(FALSE))
+      if (private$.paused) {
+        return(invisible(FALSE))
+      }
 
       # Is this the echo of the restore that we just did?
       if (!is.null(private$.expecting)) {
@@ -96,8 +107,10 @@ RewindController <- R6::R6Class(
         # never made. Too long, and a restore that never echoes holds
         # capture off, so real changes from the user are lost until the
         # limit ends. rewind_enable(restore_timeout=) sets it.
-        if (difftime(Sys.time(), private$.expecting_since, units = "secs") <
-              private$.expect_timeout) {
+        if (
+          difftime(Sys.time(), private$.expecting_since, units = "secs") <
+            private$.expect_timeout
+        ) {
           private$log("ignoring intermediate state while restoring")
           return(invisible(FALSE))
         }
@@ -125,7 +138,11 @@ RewindController <- R6::R6Class(
       # runs when an input that is not captured changes. A plot hover fires
       # every 0.1 s, and moving the deadline each time held every step back
       # until the mouse stopped, and merged the changes in between.
-      same_as <- if (!is.null(private$.pending)) private$.pending else self$history$current()
+      same_as <- if (!is.null(private$.pending)) {
+        private$.pending
+      } else {
+        self$history$current()
+      }
       if (!is.null(same_as) && states_equal(state, same_as)) {
         return(invisible(FALSE))
       }
@@ -143,8 +160,15 @@ RewindController <- R6::R6Class(
     # The time in milliseconds until `rewind` must write the state that
     # waits. The result is `Inf` when no state waits.
     time_to_flush = function() {
-      if (is.null(private$.pending)) return(Inf)
-      ms <- as.numeric(difftime(private$.deadline, Sys.time(), units = "secs")) * 1000
+      if (is.null(private$.pending)) {
+        return(Inf)
+      }
+      ms <- as.numeric(difftime(
+        private$.deadline,
+        Sys.time(),
+        units = "secs"
+      )) *
+        1000
       max(ms, 0)
     },
 
@@ -155,19 +179,28 @@ RewindController <- R6::R6Class(
     flush = function() {
       state <- private$.pending
       private$.pending <- NULL
-      if (is.null(state)) return(invisible(FALSE))
+      if (is.null(state)) {
+        return(invisible(FALSE))
+      }
 
       label <- private$.pending_label
       if (is.null(label)) {
-        label <- diff_label(flatten_state(self$history$current()),
-                            flatten_state(state), labels = private$.labels)
+        label <- diff_label(
+          flatten_state(self$history$current()),
+          flatten_state(state),
+          labels = private$.labels
+        )
       }
       private$.pending_label <- NULL
       private$.hold_until <- NULL
 
       added <- self$history$push(state, label)
       if (isTRUE(added)) {
-        private$log(sprintf("pushed '%s' (%d entries)", label, self$history$size()))
+        private$log(sprintf(
+          "pushed '%s' (%d entries)",
+          label,
+          self$history$size()
+        ))
         self$sync_client()
       }
       invisible(added)
@@ -191,11 +224,15 @@ RewindController <- R6::R6Class(
     # Set the label for the next write, and increase the grouping period.
     # Each change from a block of code thus goes into one history entry.
     open_step = function(label = NULL, hold_ms = NULL) {
-      if (is.null(hold_ms)) hold_ms <- private$.coalesce_ms * 2
+      if (is.null(hold_ms)) {
+        hold_ms <- private$.coalesce_ms * 2
+      }
       private$.pending_label <- label
       private$.hold_until <- Sys.time() + hold_ms / 1000
       # If a state waits already, increase its time limit also.
-      if (!is.null(private$.pending) && private$.hold_until > private$.deadline) {
+      if (
+        !is.null(private$.pending) && private$.hold_until > private$.deadline
+      ) {
         private$.deadline <- private$.hold_until
         private$.tick(shiny::isolate(private$.tick()) + 1L)
       }
@@ -209,8 +246,12 @@ RewindController <- R6::R6Class(
     # step. Without that, it would merge into the code's change and an undo
     # could not reach it.
     open_unrecorded = function(hold_ms = NULL) {
-      if (is.null(hold_ms)) hold_ms <- private$.coalesce_ms * 2
-      if (!is.null(private$.pending)) self$flush()
+      if (is.null(hold_ms)) {
+        hold_ms <- private$.coalesce_ms * 2
+      }
+      if (!is.null(private$.pending)) {
+        self$flush()
+      }
       private$.absorb_until <- Sys.time() + hold_ms / 1000
       invisible(TRUE)
     },
@@ -249,7 +290,9 @@ RewindController <- R6::R6Class(
     set_secret = function(ids) {
       ids <- private$local_ids(ids)
       new <- setdiff(ids, private$.secret)
-      if (length(new) == 0L) return(invisible(FALSE))
+      if (length(new) == 0L) {
+        return(invisible(FALSE))
+      }
       private$.secret <- union(private$.secret, new)
 
       # The first snapshot can be taken before the browser reports, so the
@@ -279,7 +322,9 @@ RewindController <- R6::R6Class(
       ids <- private$local_ids(ids)
       first <- is.null(private$.bound)
       new <- setdiff(ids, private$.bound)
-      if (!first && length(new) == 0L) return(invisible(FALSE))
+      if (!first && length(new) == 0L) {
+        return(invisible(FALSE))
+      }
       private$.bound <- union(private$.bound, ids)
 
       # The first report is the first moment the inputs of the page are
@@ -287,19 +332,25 @@ RewindController <- R6::R6Class(
       # the session. A typo used to capture nothing, with no message. An
       # input can be added later by renderUI(), so warn and do not stop.
       if (first && !is.null(private$.inputs)) {
-        present <- union(private$.bound, names(shiny::isolate(
-          shiny::reactiveValuesToList(private$.session$input)
-        )))
+        present <- union(
+          private$.bound,
+          names(shiny::isolate(
+            shiny::reactiveValuesToList(private$.session$input)
+          ))
+        )
         missing <- setdiff(private$.inputs, present)
         if (length(missing)) {
-          warning(sprintf(
-            paste(
-              "`inputs` names %s that the page does not have: %s.",
-              "Check the spelling, or ignore this if the input is added later."
+          warning(
+            sprintf(
+              paste(
+                "`inputs` names %s that the page does not have: %s.",
+                "Check the spelling, or ignore this if the input is added later."
+              ),
+              if (length(missing) == 1L) "an input" else "inputs",
+              paste0('"', missing, '"', collapse = ", ")
             ),
-            if (length(missing) == 1L) "an input" else "inputs",
-            paste0('"', missing, '"', collapse = ", ")
-          ), call. = FALSE)
+            call. = FALSE
+          )
         }
       }
 
@@ -322,7 +373,9 @@ RewindController <- R6::R6Class(
     add_exclude = function(ids) {
       ids <- private$local_ids(ids)
       new <- setdiff(ids, private$.exclude)
-      if (length(new) == 0L) return(invisible(FALSE))
+      if (length(new) == 0L) {
+        return(invisible(FALSE))
+      }
       private$.exclude <- union(private$.exclude, new)
       private$drop_inputs(new)
       invisible(TRUE)
@@ -330,15 +383,21 @@ RewindController <- R6::R6Class(
 
     # The settings that decide what is captured, for rewind_status().
     capture_settings = function() {
-      list(inputs = private$.inputs, exclude = private$.exclude,
-           secret = private$.secret, bound = private$.bound,
-           tracked = lapply(private$.tracked, function(spec) spec$fields))
+      list(
+        inputs = private$.inputs,
+        exclude = private$.exclude,
+        secret = private$.secret,
+        bound = private$.bound,
+        tracked = lapply(private$.tracked, function(spec) spec$fields)
+      )
     },
 
     # Why each input is, or is not, captured. Refer to classify_inputs().
     # Not isolated: inside render*() the result follows the inputs.
     input_reasons = function() {
-      private$classify_inputs(shiny::reactiveValuesToList(private$.session$input))
+      private$classify_inputs(shiny::reactiveValuesToList(
+        private$.session$input
+      ))
     },
 
     # ---- client ----------------------------------------------------------
@@ -348,52 +407,57 @@ RewindController <- R6::R6Class(
     sync_client = function() {
       private$.version(shiny::isolate(private$.version()) + 1L)
       entries <- self$history$entries()
-      private$.session$sendCustomMessage("rewind:history", list(
-        entries = unname(lapply(seq_len(nrow(entries)), function(i) {
-          list(
-            index   = entries$index[i],
-            label   = entries$label[i],
-            # Send the moment, as milliseconds since the epoch, and not a
-            # formatted time. The browser formats it in the viewer's own
-            # time zone. Text made here would be in the time zone of the
-            # server, which is usually UTC for a deployed application.
-            time    = as.numeric(entries$time[i]) * 1000,
-            current = entries$current[i]
-          )
-        })),
-        canUndo = self$history$can_undo(),
-        canRedo = self$history$can_redo(),
-        index   = self$history$index()
-      ))
+      private$.session$sendCustomMessage(
+        "rewind:history",
+        list(
+          entries = unname(lapply(seq_len(nrow(entries)), function(i) {
+            list(
+              index = entries$index[i],
+              label = entries$label[i],
+              # Send the moment, as milliseconds since the epoch, and not a
+              # formatted time. The browser formats it in the viewer's own
+              # time zone. Text made here would be in the time zone of the
+              # server, which is usually UTC for a deployed application.
+              time = as.numeric(entries$time[i]) * 1000,
+              current = entries$current[i]
+            )
+          })),
+          canUndo = self$history$can_undo(),
+          canRedo = self$history$can_redo(),
+          index = self$history$index()
+        )
+      )
       invisible(TRUE)
     }
   ),
 
   private = list(
-    .session        = NULL,
-    .inputs         = NULL,
-    .exclude        = NULL,
-    .coalesce_ms    = 400,
-    .verbose        = FALSE,
-    .labels         = NULL,
-    .absorb_until   = NULL,
-    .tracked        = NULL,
-    .pending        = NULL,
-    .pending_label  = NULL,
-    .deadline       = NULL,
-    .hold_until     = NULL,
-    .expecting      = NULL,
+    .session = NULL,
+    .inputs = NULL,
+    .exclude = NULL,
+    .coalesce_ms = 400,
+    .verbose = FALSE,
+    .labels = NULL,
+    .absorb_until = NULL,
+    .tracked = NULL,
+    .pending = NULL,
+    .pending_label = NULL,
+    .deadline = NULL,
+    .hold_until = NULL,
+    .expecting = NULL,
     .expecting_since = NULL,
     .expect_timeout = 2,
-    .paused         = FALSE,
-    .secret         = character(0),
-    .bound          = NULL,
-    .tick           = NULL,
-    .version        = NULL,
-    .observers      = list(),
+    .paused = FALSE,
+    .secret = character(0),
+    .bound = NULL,
+    .tick = NULL,
+    .version = NULL,
+    .observers = list(),
 
     log = function(msg) {
-      if (private$.verbose) message("[rewind] ", msg)
+      if (private$.verbose) {
+        message("[rewind] ", msg)
+      }
       invisible(NULL)
     },
 
@@ -421,8 +485,14 @@ RewindController <- R6::R6Class(
       # The value of an action button is a click counter. The counter only
       # increases. A restore of that value does nothing, or it starts the
       # observers again by mistake.
-      set(vapply(all, function(v) inherits(v, "shinyActionButtonValue"), logical(1)),
-          "action button")
+      set(
+        vapply(
+          all,
+          function(v) inherits(v, "shinyActionButtonValue"),
+          logical(1)
+        ),
+        "action button"
+      )
 
       # The value of a fileInput() is a data frame. It points to a temporary
       # file on the server (refer to ?shiny::fileInput). Shiny deletes that
@@ -457,7 +527,11 @@ RewindController <- R6::R6Class(
     local_ids = function(ids) {
       ids <- as.character(unlist(ids))
       root <- private$.session$rootScope()
-      prefix <- if (identical(private$.session, root)) "" else private$.session$ns("")
+      prefix <- if (identical(private$.session, root)) {
+        ""
+      } else {
+        private$.session$ns("")
+      }
       if (nzchar(prefix)) {
         ids <- ids[startsWith(ids, prefix)]
         ids <- substring(ids, nchar(prefix) + 1L)
@@ -478,25 +552,37 @@ RewindController <- R6::R6Class(
     # browser. The history removes a step whose only change was one of
     # these inputs (refer to History$scrub_inputs()).
     drop_inputs = function(ids) {
-      if (length(ids) == 0L) return(invisible(FALSE))
+      if (length(ids) == 0L) {
+        return(invisible(FALSE))
+      }
       self$history$scrub_inputs(ids)
-      if (!is.null(private$.pending)) private$.pending$inputs[ids] <- NULL
-      if (!is.null(private$.expecting)) private$.expecting$inputs[ids] <- NULL
+      if (!is.null(private$.pending)) {
+        private$.pending$inputs[ids] <- NULL
+      }
+      if (!is.null(private$.expecting)) {
+        private$.expecting$inputs[ids] <- NULL
+      }
       self$sync_client()
       invisible(TRUE)
     },
 
     snapshot_values = function() {
-      if (length(private$.tracked) == 0L) return(list())
+      if (length(private$.tracked) == 0L) {
+        return(list())
+      }
       lapply(private$.tracked, function(spec) {
         vals <- shiny::reactiveValuesToList(spec$values)
-        if (!is.null(spec$fields)) vals <- vals[intersect(names(vals), spec$fields)]
+        if (!is.null(spec$fields)) {
+          vals <- vals[intersect(names(vals), spec$fields)]
+        }
         vals[order(names(vals))]
       })
     },
 
     navigate = function(state) {
-      if (is.null(state)) return(invisible(FALSE))
+      if (is.null(state)) {
+        return(invisible(FALSE))
+      }
       private$.pending <- NULL
       private$.pending_label <- NULL
       private$restore(state)
@@ -511,7 +597,9 @@ RewindController <- R6::R6Class(
       # You can set the reactive values on the server directly.
       for (id in names(state$values)) {
         spec <- private$.tracked[[id]]
-        if (is.null(spec)) next
+        if (is.null(spec)) {
+          next
+        }
         vals <- state$values[[id]]
         for (field in names(vals)) {
           spec$values[[field]] <- vals[[field]]
@@ -524,14 +612,24 @@ RewindController <- R6::R6Class(
       # packages.
       payload <- state$inputs
       if (length(payload)) {
-        names(payload) <- vapply(names(payload), private$.session$ns, character(1))
+        names(payload) <- vapply(
+          names(payload),
+          private$.session$ns,
+          character(1)
+        )
       }
-      private$.session$sendCustomMessage("rewind:restore", list(
-        inputs = payload
-      ))
+      private$.session$sendCustomMessage(
+        "rewind:restore",
+        list(
+          inputs = payload
+        )
+      )
 
-      private$log(sprintf("restored %d input(s), %d value group(s)",
-                          length(state$inputs), length(state$values)))
+      private$log(sprintf(
+        "restored %d input(s), %d value group(s)",
+        length(state$inputs),
+        length(state$values)
+      ))
       invisible(TRUE)
     }
   )
@@ -573,7 +671,9 @@ is_file_input_value <- function(x) {
 #' @keywords internal
 #' @noRd
 flatten_state <- function(state) {
-  if (is.null(state)) return(NULL)
+  if (is.null(state)) {
+    return(NULL)
+  }
   out <- state$inputs %||% list()
   for (id in names(state$values %||% list())) {
     vals <- state$values[[id]]

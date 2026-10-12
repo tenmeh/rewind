@@ -13,7 +13,6 @@
 History <- R6::R6Class(
   "RewindHistory",
   public = list(
-
     # @description Make a history stack.
     # @param depth The maximum number of entries to keep.
     initialize = function(depth = 50L) {
@@ -50,8 +49,10 @@ History <- R6::R6Class(
     # @return `TRUE` if the method added an entry. `FALSE` if it did
     #   nothing.
     push = function(state, label = NULL) {
-      if (private$.index > 0L &&
-            states_equal(state, private$.entries[[private$.index]]$state)) {
+      if (
+        private$.index > 0L &&
+          states_equal(state, private$.entries[[private$.index]]$state)
+      ) {
         return(invisible(FALSE))
       }
 
@@ -76,7 +77,9 @@ History <- R6::R6Class(
     # @description Move one step backwards. This method gives the new
     # current state, or `NULL`.
     undo = function() {
-      if (!self$can_undo()) return(NULL)
+      if (!self$can_undo()) {
+        return(NULL)
+      }
       private$.index <- private$.index - 1L
       self$current()
     },
@@ -84,7 +87,9 @@ History <- R6::R6Class(
     # @description Move one step forwards. This method gives the new
     # current state, or `NULL`.
     redo = function() {
-      if (!self$can_redo()) return(NULL)
+      if (!self$can_redo()) {
+        return(NULL)
+      }
       private$.index <- private$.index + 1L
       self$current()
     },
@@ -102,7 +107,9 @@ History <- R6::R6Class(
 
     # @description The state at the current position.
     current = function() {
-      if (private$.index == 0L) return(NULL)
+      if (private$.index == 0L) {
+        return(NULL)
+      }
       private$.entries[[private$.index]]$state
     },
 
@@ -139,19 +146,20 @@ History <- R6::R6Class(
       n <- length(private$.entries)
       if (n == 0L) {
         return(data.frame(
-          index   = integer(),
-          label   = character(),
-          time    = as.POSIXct(character()),
+          index = integer(),
+          label = character(),
+          time = as.POSIXct(character()),
           current = logical(),
           stringsAsFactors = FALSE
         ))
       }
       data.frame(
-        index   = seq_len(n),
-        label   = vapply(private$.entries, function(e) e$label, character(1)),
-        time    = as.POSIXct(
+        index = seq_len(n),
+        label = vapply(private$.entries, function(e) e$label, character(1)),
+        time = as.POSIXct(
           vapply(private$.entries, function(e) as.numeric(e$time), numeric(1)),
-          origin = "1970-01-01", tz = "UTC"
+          origin = "1970-01-01",
+          tz = "UTC"
         ),
         current = seq_len(n) == private$.index,
         stringsAsFactors = FALSE
@@ -169,7 +177,9 @@ History <- R6::R6Class(
     # @param ids Character vector of input names.
     scrub_inputs = function(ids) {
       n <- length(private$.entries)
-      if (n == 0L || length(ids) == 0L) return(invisible(self))
+      if (n == 0L || length(ids) == 0L) {
+        return(invisible(self))
+      }
 
       for (i in seq_len(n)) {
         st <- private$.entries[[i]]$state
@@ -183,7 +193,12 @@ History <- R6::R6Class(
       keep <- rep(TRUE, n)
       last <- 1L
       for (i in seq_len(n)[-1]) {
-        if (states_equal(private$.entries[[i]]$state, private$.entries[[last]]$state)) {
+        if (
+          states_equal(
+            private$.entries[[i]]$state,
+            private$.entries[[last]]$state
+          )
+        ) {
           keep[i] <- FALSE
         } else {
           last <- i
@@ -235,14 +250,18 @@ History <- R6::R6Class(
 
   private = list(
     .entries = NULL,
-    .index   = 0L,
-    .depth   = 50L,
+    .index = 0L,
+    .depth = 50L,
 
     entry = function(state, label) {
       list(
         state = state,
-        label = if (is.null(label)) describe_state(state) else as.character(label)[1],
-        time  = Sys.time()
+        label = if (is.null(label)) {
+          describe_state(state)
+        } else {
+          as.character(label)[1]
+        },
+        time = Sys.time()
       )
     }
   )
@@ -262,10 +281,16 @@ History <- R6::R6Class(
 #' @keywords internal
 #' @noRd
 states_equal <- function(a, b) {
-  if (is.null(a) || is.null(b)) return(identical(a, b))
-  if (!is.list(a) || !is.list(b)) return(isTRUE(all.equal(a, b)))
+  if (is.null(a) || is.null(b)) {
+    return(identical(a, b))
+  }
+  if (!is.list(a) || !is.list(b)) {
+    return(isTRUE(all.equal(a, b)))
+  }
 
-  if (!setequal(names(a), names(b))) return(FALSE)
+  if (!setequal(names(a), names(b))) {
+    return(FALSE)
+  }
   nms <- sort(names(a))
   for (nm in nms) {
     if (!values_equal(a[[nm]], b[[nm]])) return(FALSE)
@@ -274,24 +299,42 @@ states_equal <- function(a, b) {
 }
 
 values_equal <- function(x, y) {
-  if (is.null(x) && is.null(y)) return(TRUE)
-  if (is.null(x) || is.null(y)) return(FALSE)
-  if (length(x) != length(y)) return(FALSE)
+  if (is.null(x) && is.null(y)) {
+    return(TRUE)
+  }
+  if (is.null(x) || is.null(y)) {
+    return(FALSE)
+  }
+  if (length(x) != length(y)) {
+    return(FALSE)
+  }
 
   # Examine the lists inside a list. These are usually the tracked values.
   if (is.list(x) && is.list(y)) {
-    if (!setequal(names(x), names(y))) return(FALSE)
-    if (is.null(names(x))) {
-      return(all(vapply(seq_along(x), function(i) values_equal(x[[i]], y[[i]]),
-                        logical(1))))
+    if (!setequal(names(x), names(y))) {
+      return(FALSE)
     }
-    return(all(vapply(names(x), function(nm) values_equal(x[[nm]], y[[nm]]),
-                      logical(1))))
+    if (is.null(names(x))) {
+      return(all(vapply(
+        seq_along(x),
+        function(i) values_equal(x[[i]], y[[i]]),
+        logical(1)
+      )))
+    }
+    return(all(vapply(
+      names(x),
+      function(nm) values_equal(x[[nm]], y[[nm]]),
+      logical(1)
+    )))
   }
 
   if (is.numeric(x) && is.numeric(y)) {
-    return(isTRUE(all.equal(as.numeric(x), as.numeric(y),
-                            tolerance = 1e-8, check.attributes = FALSE)))
+    return(isTRUE(all.equal(
+      as.numeric(x),
+      as.numeric(y),
+      tolerance = 1e-8,
+      check.attributes = FALSE
+    )))
   }
 
   # Dates and times frequently come back from JSON as text. A comparison of
@@ -311,7 +354,9 @@ values_equal <- function(x, y) {
 #' @noRd
 describe_state <- function(state) {
   n <- length(state)
-  if (n == 0L) return("Empty state")
+  if (n == 0L) {
+    return("Empty state")
+  }
   sprintf("%d value%s changed", n, if (n == 1L) "" else "s")
 }
 
@@ -328,16 +373,25 @@ describe_state <- function(state) {
 #' @keywords internal
 #' @noRd
 diff_label <- function(old, new, max_names = 3L, labels = NULL) {
-  if (is.null(old)) return("Initial state")
+  if (is.null(old)) {
+    return("Initial state")
+  }
   nms <- union(names(old), names(new))
-  changed <- nms[!vapply(nms, function(nm) values_equal(old[[nm]], new[[nm]]),
-                         logical(1))]
+  changed <- nms[
+    !vapply(nms, function(nm) values_equal(old[[nm]], new[[nm]]), logical(1))
+  ]
 
-  if (length(changed) == 0L) return("No change")
+  if (length(changed) == 0L) {
+    return("No change")
+  }
   # The names a person reads, from rewind_enable(labels = ).
   changed <- label_for(changed, labels)
-  if (length(changed) <= max_names) return(paste(changed, collapse = ", "))
-  sprintf("%s and %d more",
-          paste(changed[seq_len(max_names)], collapse = ", "),
-          length(changed) - max_names)
+  if (length(changed) <= max_names) {
+    return(paste(changed, collapse = ", "))
+  }
+  sprintf(
+    "%s and %d more",
+    paste(changed[seq_len(max_names)], collapse = ", "),
+    length(changed) - max_names
+  )
 }

@@ -46,7 +46,7 @@ test_that("an undo after a later change goes back to the unrecorded state, not b
     ctrl <- session$userData$.rewind
     settle_unrec(session, region = "North")
     settle_unrec(session, restore = 1)
-    Sys.sleep(0.2)                       # let the window end
+    Sys.sleep(0.2) # let the window end
     session$elapse(250)
     settle_unrec(session, region = "South")
     expect_equal(ctrl$history$size(), 2L)
@@ -83,7 +83,7 @@ test_that("the steps in front of the position go, as for any new change", {
     ctrl$undo()
     expect_true(ctrl$history$can_redo())
 
-    Sys.sleep(2.1)                       # let the echo window of the undo end
+    Sys.sleep(2.1) # let the echo window of the undo end
     session$elapse(2200)
     settle_unrec(session, restore = 1)
     expect_false(ctrl$history$can_redo())
@@ -98,8 +98,11 @@ test_that("rewind_unrecorded runs the code when rewind is not enabled", {
 
 test_that("rewind_unrecorded checks hold_ms", {
   shiny::testServer(function(input, output, session) rewind_enable(), {
-    expect_error(rewind_unrecorded(NULL, hold_ms = -1),
-                 "`hold_ms` must be a single finite number of 0 or more.", fixed = TRUE)
+    expect_error(
+      rewind_unrecorded(NULL, hold_ms = -1),
+      "`hold_ms` must be a single finite number of 0 or more.",
+      fixed = TRUE
+    )
   })
 })
 
@@ -114,33 +117,42 @@ test_that("rewind_unrecorded checks hold_ms", {
 test_that("a view loaded with update*Input() is not a step, and an undo keeps it", {
   testthat::skip_on_cran()
 
-  app <- local_app_driver(shiny::shinyApp(
-    ui = shiny::fluidPage(
-      rewind_buttons(),
-      rewind_ui(),
-      shiny::selectInput("region", "Region", c("North", "South", "East")),
-      shiny::selectInput("year", "Year", c("2020", "2024")),
-      shiny::actionButton("load_view", "Load view")
+  app <- local_app_driver(
+    shiny::shinyApp(
+      ui = shiny::fluidPage(
+        rewind_buttons(),
+        rewind_ui(),
+        shiny::selectInput("region", "Region", c("North", "South", "East")),
+        shiny::selectInput("year", "Year", c("2020", "2024")),
+        shiny::actionButton("load_view", "Load view")
+      ),
+      server = function(input, output, session) {
+        rewind_enable(coalesce_ms = 200)
+        shiny::observeEvent(input$load_view, {
+          rewind_unrecorded(shiny::updateSelectInput(
+            session,
+            "region",
+            selected = "East"
+          ))
+        })
+      }
     ),
-    server = function(input, output, session) {
-      rewind_enable(coalesce_ms = 200)
-      shiny::observeEvent(input$load_view, {
-        rewind_unrecorded(shiny::updateSelectInput(session, "region", selected = "East"))
-      })
-    }
-  ), name = "unrecorded")
+    name = "unrecorded"
+  )
 
   settle <- function() {
     Sys.sleep(1)
     app$wait_for_idle(timeout = 10000L)
   }
-  n_steps <- function() as.integer(app$get_js("document.querySelectorAll('.rewind-step').length"))
+  n_steps <- function() {
+    as.integer(app$get_js("document.querySelectorAll('.rewind-step').length"))
+  }
 
   settle()
   app$click(input = "load_view")
   settle()
   expect_equal(app$get_value(input = "region"), "East")
-  expect_equal(n_steps(), 1L)       # still only the first entry
+  expect_equal(n_steps(), 1L) # still only the first entry
 
   app$set_inputs(year = "2024")
   settle()

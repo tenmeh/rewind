@@ -10,10 +10,10 @@
 #' @export
 rewind_dependency <- function() {
   htmltools::htmlDependency(
-    name       = "rewind",
-    version    = as.character(utils::packageVersion("rewind")),
-    src        = c(file = system.file("www", package = "rewind")),
-    script     = "rewind.js",
+    name = "rewind",
+    version = as.character(utils::packageVersion("rewind")),
+    src = c(file = system.file("www", package = "rewind")),
+    script = "rewind.js",
     stylesheet = "rewind.css"
   )
 }
@@ -56,10 +56,12 @@ rewind_dependency <- function() {
 #' rewind_buttons(undo_label = NULL, redo_label = NULL)
 #' rewind_buttons(button_class = "btn-outline-primary btn-sm")
 #' @export
-rewind_buttons <- function(undo_label = "Undo",
-                           redo_label = "Redo",
-                           class = NULL,
-                           button_class = NULL) {
+rewind_buttons <- function(
+  undo_label = "Undo",
+  redo_label = "Redo",
+  class = NULL,
+  button_class = NULL
+) {
   check_string(undo_label, "undo_label")
   check_string(redo_label, "redo_label")
   check_character(class, "class")
@@ -79,9 +81,12 @@ rewind_buttons <- function(undo_label = "Undo",
         title = "Undo (Ctrl+Z)",
         `aria-label` = undo_label %||% "Undo",
         rewind_icon("undo"),
-        if (!is.null(undo_label)) htmltools::tags$span(
-          class = "rewind-label", undo_label
-        )
+        if (!is.null(undo_label)) {
+          htmltools::tags$span(
+            class = "rewind-label",
+            undo_label
+          )
+        }
       ),
       htmltools::tags$button(
         type = "button",
@@ -90,9 +95,12 @@ rewind_buttons <- function(undo_label = "Undo",
         title = "Redo (Ctrl+Shift+Z or Ctrl+Y)",
         `aria-label` = redo_label %||% "Redo",
         rewind_icon("redo"),
-        if (!is.null(redo_label)) htmltools::tags$span(
-          class = "rewind-label", redo_label
-        )
+        if (!is.null(redo_label)) {
+          htmltools::tags$span(
+            class = "rewind-label",
+            redo_label
+          )
+        }
       )
     ),
     rewind_dependency()
@@ -116,9 +124,7 @@ rewind_buttons <- function(undo_label = "Undo",
 #' rewind_ui()
 #' rewind_ui(label = "Steps", max_height = "12rem")
 #' @export
-rewind_ui <- function(label = "History",
-                      max_height = "20rem",
-                      class = NULL) {
+rewind_ui <- function(label = "History", max_height = "20rem", class = NULL) {
   check_string(label, "label")
   check_character(class, "class")
   # A number is a size in pixels, as in shiny and bslib. A bare 300 used to

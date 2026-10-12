@@ -142,15 +142,17 @@
 #'   shinyApp(ui, server)
 #' }
 #' @export
-rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
-                          inputs = NULL,
-                          exclude = NULL,
-                          depth = 50L,
-                          coalesce_ms = 400L,
-                          restore_timeout = 2,
-                          shortcuts = TRUE,
-                          verbose = FALSE,
-                          labels = NULL) {
+rewind_enable <- function(
+  session = shiny::getDefaultReactiveDomain(),
+  inputs = NULL,
+  exclude = NULL,
+  depth = 50L,
+  coalesce_ms = 400L,
+  restore_timeout = 2,
+  shortcuts = TRUE,
+  verbose = FALSE,
+  labels = NULL
+) {
   session <- require_session(
     session,
     hint = "To name the inputs to capture, use `inputs = c(...)`."
@@ -168,20 +170,22 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
   check_labels(labels)
 
   if (!is.null(session$userData$.rewind)) {
-    warning("rewind is already enabled for this session; ignoring.",
-            call. = FALSE)
+    warning(
+      "rewind is already enabled for this session; ignoring.",
+      call. = FALSE
+    )
     return(invisible(session$userData$.rewind))
   }
 
   ctrl <- RewindController$new(
-    session         = session,
-    inputs          = inputs,
-    exclude         = exclude,
-    depth           = depth,
-    coalesce_ms     = coalesce_ms,
+    session = session,
+    inputs = inputs,
+    exclude = exclude,
+    depth = depth,
+    coalesce_ms = coalesce_ms,
     restore_timeout = restore_timeout,
-    verbose         = verbose,
-    labels          = labels
+    verbose = verbose,
+    labels = labels
   )
   session$userData$.rewind <- ctrl
 
@@ -194,9 +198,9 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
 
   # Add the assets here. The user thus does not have to change the UI.
   shiny::insertUI(
-    selector  = "head",
-    where     = "beforeEnd",
-    ui        = htmltools::attachDependencies(
+    selector = "head",
+    where = "beforeEnd",
+    ui = htmltools::attachDependencies(
       htmltools::tags$script(
         type = "application/json",
         `data-rewind-config` = "",
@@ -210,7 +214,7 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
       rewind_dependency()
     ),
     immediate = TRUE,
-    session   = session
+    session = session
   )
 
   # Capture. This observer reads every tracked reactive. It thus runs again
@@ -228,23 +232,31 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
   #
   # The separate statement forces the reads. The dependencies thus stay
   # alive across a pause and a resume.
-  obs_capture <- shiny::observe({
-    state <- ctrl$snapshot()
-    ctrl$note(state)
-  }, domain = session)
+  obs_capture <- shiny::observe(
+    {
+      state <- ctrl$snapshot()
+      ctrl$note(state)
+    },
+    domain = session
+  )
 
   # Coalesce. This observer waits for the changes to stop. It then writes one
   # entry.
-  obs_coalesce <- shiny::observe({
-    ctrl$tick_dep()
-    wait <- ctrl$time_to_flush()
-    if (!is.finite(wait)) return(NULL)
-    if (wait > 0) {
-      shiny::invalidateLater(ceiling(wait), session)
-    } else {
-      ctrl$flush()
-    }
-  }, domain = session)
+  obs_coalesce <- shiny::observe(
+    {
+      ctrl$tick_dep()
+      wait <- ctrl$time_to_flush()
+      if (!is.finite(wait)) {
+        return(NULL)
+      }
+      if (wait > 0) {
+        shiny::invalidateLater(ceiling(wait), session)
+      } else {
+        ctrl$flush()
+      }
+    },
+    domain = session
+  )
 
   # The buttons, the shortcuts and the rail. Read these inputs from the root
   # session, and not from `session`.
@@ -258,29 +270,53 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
   # section above), so one set of global ids is correct.
   root <- session$rootScope()
 
-  obs_undo <- shiny::observeEvent(root$input$rewind_undo, ctrl$undo(),
-                                  ignoreInit = TRUE, domain = session)
-  obs_redo <- shiny::observeEvent(root$input$rewind_redo, ctrl$redo(),
-                                  ignoreInit = TRUE, domain = session)
-  obs_jump <- shiny::observeEvent(root$input$rewind_jump,
-                                  ctrl$jump(root$input$rewind_jump$index),
-                                  ignoreInit = TRUE, domain = session)
+  obs_undo <- shiny::observeEvent(
+    root$input$rewind_undo,
+    ctrl$undo(),
+    ignoreInit = TRUE,
+    domain = session
+  )
+  obs_redo <- shiny::observeEvent(
+    root$input$rewind_redo,
+    ctrl$redo(),
+    ignoreInit = TRUE,
+    domain = session
+  )
+  obs_jump <- shiny::observeEvent(
+    root$input$rewind_jump,
+    ctrl$jump(root$input$rewind_jump$index),
+    ignoreInit = TRUE,
+    domain = session
+  )
 
   # The password fields in the page, reported by rewind.js. Not
   # ignoreInit: the report can arrive before this observer starts, and it
   # must still be applied.
-  obs_secret <- shiny::observeEvent(root$input$rewind_secret_ids,
-                                    ctrl$set_secret(root$input$rewind_secret_ids),
-                                    ignoreInit = FALSE, domain = session)
+  obs_secret <- shiny::observeEvent(
+    root$input$rewind_secret_ids,
+    ctrl$set_secret(root$input$rewind_secret_ids),
+    ignoreInit = FALSE,
+    domain = session
+  )
 
   # The inputs that the page can restore, reported by rewind.js. By default
   # only these are captured. Not ignoreInit, for the same reason as above.
-  obs_bound <- shiny::observeEvent(root$input$rewind_bound_ids,
-                                   ctrl$set_bound(root$input$rewind_bound_ids),
-                                   ignoreInit = FALSE, domain = session)
+  obs_bound <- shiny::observeEvent(
+    root$input$rewind_bound_ids,
+    ctrl$set_bound(root$input$rewind_bound_ids),
+    ignoreInit = FALSE,
+    domain = session
+  )
 
-  ctrl$set_observers(list(obs_capture, obs_coalesce, obs_undo, obs_redo,
-                          obs_jump, obs_secret, obs_bound))
+  ctrl$set_observers(list(
+    obs_capture,
+    obs_coalesce,
+    obs_undo,
+    obs_redo,
+    obs_jump,
+    obs_secret,
+    obs_bound
+  ))
 
   invisible(ctrl)
 }
@@ -319,10 +355,12 @@ rewind_enable <- function(session = shiny::getDefaultReactiveDomain(),
 #'   }
 #' }
 #' @export
-rewind_track <- function(values,
-                         fields = NULL,
-                         id = NULL,
-                         session = shiny::getDefaultReactiveDomain()) {
+rewind_track <- function(
+  values,
+  fields = NULL,
+  id = NULL,
+  session = shiny::getDefaultReactiveDomain()
+) {
   session <- require_session(session)
 
   if (!shiny::is.reactivevalues(values)) {
@@ -338,14 +376,17 @@ rewind_track <- function(values,
     have <- names(shiny::isolate(shiny::reactiveValuesToList(values)))
     missing <- setdiff(fields, have)
     if (length(missing)) {
-      warning(sprintf(
-        paste(
-          "`fields` names %s that `values` does not have: %s.",
-          "Check the spelling, or ignore this if the field is added later."
+      warning(
+        sprintf(
+          paste(
+            "`fields` names %s that `values` does not have: %s.",
+            "Check the spelling, or ignore this if the field is added later."
+          ),
+          if (length(missing) == 1L) "a field" else "fields",
+          paste0('"', missing, '"', collapse = ", ")
         ),
-        if (length(missing) == 1L) "a field" else "fields",
-        paste0('"', missing, '"', collapse = ", ")
-      ), call. = FALSE)
+        call. = FALSE
+      )
     }
   }
 
@@ -398,18 +439,24 @@ rewind_track <- function(values,
 #'   }
 #' }
 #' @export
-rewind_step <- function(expr,
-                        label = NULL,
-                        hold_ms = NULL,
-                        session = shiny::getDefaultReactiveDomain()) {
+rewind_step <- function(
+  expr,
+  label = NULL,
+  hold_ms = NULL,
+  session = shiny::getDefaultReactiveDomain()
+) {
   ctrl <- get_controller(session)
   # Check this before the controller, so a bad value fails the same way
   # whether rewind is enabled or not. An NA here used to be accepted, and
   # then failed later inside the capture observer.
-  if (!is.null(hold_ms)) check_number(hold_ms, "hold_ms", min = 0, inclusive = TRUE)
+  if (!is.null(hold_ms)) {
+    check_number(hold_ms, "hold_ms", min = 0, inclusive = TRUE)
+  }
   # 1:2 used to give the label "1".
   check_string(label, "label")
-  if (!is.null(ctrl)) ctrl$open_step(label = label, hold_ms = hold_ms)
+  if (!is.null(ctrl)) {
+    ctrl$open_step(label = label, hold_ms = hold_ms)
+  }
   invisible(expr)
 }
 
@@ -468,14 +515,20 @@ rewind_step <- function(expr,
 #'   }
 #' }
 #' @export
-rewind_unrecorded <- function(expr,
-                              hold_ms = NULL,
-                              session = shiny::getDefaultReactiveDomain()) {
-  if (!is.null(hold_ms)) check_number(hold_ms, "hold_ms", min = 0, inclusive = TRUE)
+rewind_unrecorded <- function(
+  expr,
+  hold_ms = NULL,
+  session = shiny::getDefaultReactiveDomain()
+) {
+  if (!is.null(hold_ms)) {
+    check_number(hold_ms, "hold_ms", min = 0, inclusive = TRUE)
+  }
   ctrl <- get_controller(session)
   # Open the window before the block runs. `expr` is evaluated lazily, at
   # the return below.
-  if (!is.null(ctrl)) ctrl$open_unrecorded(hold_ms = hold_ms)
+  if (!is.null(ctrl)) {
+    ctrl$open_unrecorded(hold_ms = hold_ms)
+  }
   invisible(expr)
 }
 
@@ -662,7 +715,9 @@ rewind_resume <- function(session = shiny::getDefaultReactiveDomain()) {
 rewind_disable <- function(session = shiny::getDefaultReactiveDomain()) {
   session <- require_session(session)
   ctrl <- get_controller(session)
-  if (is.null(ctrl)) return(invisible(FALSE))
+  if (is.null(ctrl)) {
+    return(invisible(FALSE))
+  }
 
   ctrl$destroy()
   session$userData$.rewind <- NULL

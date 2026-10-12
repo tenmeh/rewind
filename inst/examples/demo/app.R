@@ -22,19 +22,21 @@ set.seed(1)
 regions <- c("North", "South", "East", "West")
 sales <- data.frame(
   customer = paste("Customer", sprintf("%03d", 1:200)),
-  region   = sample(regions, 200, replace = TRUE),
-  year     = sample(2018:2026, 200, replace = TRUE),
-  revenue  = round(stats::rlnorm(200, 10, 0.8)),
-  active   = sample(c(TRUE, FALSE), 200, replace = TRUE, prob = c(0.7, 0.3)),
+  region = sample(regions, 200, replace = TRUE),
+  year = sample(2018:2026, 200, replace = TRUE),
+  revenue = round(stats::rlnorm(200, 10, 0.8)),
+  active = sample(c(TRUE, FALSE), 200, replace = TRUE, prob = c(0.7, 0.3)),
   stringsAsFactors = FALSE
 )
 
 ui <- fluidPage(
-  tags$style(HTML("
+  tags$style(HTML(
+    "
     body { padding: 1.5rem; }
     .toolbar { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
     .hint { opacity: 0.6; font-size: 0.85rem; }
-  ")),
+  "
+  )),
 
   titlePanel("rewind demo"),
 
@@ -69,11 +71,10 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
-
   # This is the only line that rewind needs. The code below is normal Shiny.
   rewind_enable(
-    inputs      = c("region", "year", "active_only", "search"),
-    depth       = 40,
+    inputs = c("region", "year", "active_only", "search"),
+    depth = 40,
     coalesce_ms = 400
   )
 
@@ -83,9 +84,13 @@ server <- function(input, output, session) {
 
   filtered <- reactive({
     out <- sales
-    if (input$region != "All")   out <- out[out$region == input$region, ]
+    if (input$region != "All") {
+      out <- out[out$region == input$region, ]
+    }
     out <- out[out$year >= input$year[1] & out$year <= input$year[2], ]
-    if (isTRUE(input$active_only)) out <- out[out$active, ]
+    if (isTRUE(input$active_only)) {
+      out <- out[out$active, ]
+    }
     if (nzchar(input$search)) {
       out <- out[grepl(input$search, out$customer, fixed = TRUE), ]
     }
@@ -128,9 +133,12 @@ server <- function(input, output, session) {
     }
   })
 
-  output$table <- renderTable({
-    head(filtered(), 15)
-  }, digits = 0)
+  output$table <- renderTable(
+    {
+      head(filtered(), 15)
+    },
+    digits = 0
+  )
 }
 
 shinyApp(ui, server)

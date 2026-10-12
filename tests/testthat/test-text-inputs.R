@@ -50,7 +50,10 @@ text_app <- function() {
         })))
         seen(union(shiny::isolate(seen()), all_names))
       })
-      output$diff_names <- shiny::renderText(paste(sort(seen()), collapse = ","))
+      output$diff_names <- shiny::renderText(paste(
+        sort(seen()),
+        collapse = ","
+      ))
     }
   )
 }

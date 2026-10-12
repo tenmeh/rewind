@@ -1,0 +1,39 @@
+# Check that the R code is formatted with Air.
+#
+# Air is the formatter that the tidyverse and r-lib use. air.toml at the
+# root marks the project for it, and the editor formats each file on save:
+# Positron and VS Code read .vscode/settings.json, and RStudio uses Air when
+# it is set as the external formatter.
+#
+# This check fails when a file is not formatted. To fix it, run
+#
+#   air format .
+#
+# and commit the result. Air does not run R, so this job needs no R.
+#
+# The version is pinned. A new version of Air can format some code in a
+# different way, and the check would then fail with no change to the code.
+# It is the version that the Air extension of Positron bundles. Raise it
+# together with the extension.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+name: format
+
+permissions: read-all
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: posit-dev/setup-air@v1
+        with:
+          version: "0.9.0"
+
+      - name: Check the format
+        run: air format . --check

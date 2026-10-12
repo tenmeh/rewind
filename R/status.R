@@ -62,13 +62,13 @@ rewind_status <- function(session = shiny::getDefaultReactiveDomain()) {
   settings <- ctrl$capture_settings()
 
   list(
-    captured   = names(reasons)[is.na(reasons)],
-    skipped    = reasons[!is.na(reasons)],
-    tracked    = settings$tracked,
+    captured = names(reasons)[is.na(reasons)],
+    skipped = reasons[!is.na(reasons)],
+    tracked = settings$tracked,
     restorable = settings$bound,
-    paused     = ctrl$is_paused(),
-    size       = ctrl$history$size(),
-    position   = ctrl$history$index()
+    paused = ctrl$is_paused(),
+    size = ctrl$history$size(),
+    position = ctrl$history$index()
   )
 }
 
@@ -121,8 +121,10 @@ rewind_status <- function(session = shiny::getDefaultReactiveDomain()) {
 #'   shinyApp(ui, server)
 #' }
 #' @export
-rewind_exclude <- function(names = character(0),
-                           session = shiny::getDefaultReactiveDomain()) {
+rewind_exclude <- function(
+  names = character(0),
+  session = shiny::getDefaultReactiveDomain()
+) {
   session <- require_session(session)
   if (!is.character(names)) {
     stop("`names` must be a character vector.", call. = FALSE)
@@ -140,7 +142,10 @@ rewind_exclude <- function(names = character(0),
 
   ctrl <- get_controller(session)
   if (is.null(ctrl)) {
-    session$userData$.rewind_exclude <- union(session$userData$.rewind_exclude, full)
+    session$userData$.rewind_exclude <- union(
+      session$userData$.rewind_exclude,
+      full
+    )
   } else {
     ctrl$add_exclude(full)
   }
