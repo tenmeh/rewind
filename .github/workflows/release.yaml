@@ -1,0 +1,117 @@
+# Make a GitHub release when CRAN publishes a new version.
+#
+# A release follows CRAN, and not a merge. The version on main goes to CRAN
+# first, and CRAN can still send it back. A release made at the merge would
+# then say "Latest" for a version that CRAN never published.
+#
+# Once a day the workflow reads the version that CRAN has. When that version
+# has no tag yet, it downloads the tarball from CRAN and tags the commit on
+# main that the tarball was built from (see .github/scripts/find-release-commit.sh).
+# The release notes are the section of NEWS.md for that version.
+#
+# A version released on GitHub only, such as 0.2.1, is not on CRAN, so the
+# daily run does not see it. Run the workflow by hand for that, with the
+# version in the "version" field. It then tags the head of main, which must
+# have that version in DESCRIPTION.
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "A version to release on GitHub only, such as 0.4.1. Leave it empty to use the version on CRAN."
+        required: false
+        default: ""
+
+name: release
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      INPUT_VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The whole history, to find the commit of the release.
+          fetch-depth: 0
+
+      - name: Find the version to release
+        id: version
+        shell: bash
+        run: |
+          pkg=$(sed -n 's/^Package: *//p' DESCRIPTION)
+          version="$INPUT_VERSION"
+          if [ -z "$version" ]; then
+            # The index of CRAN is saved first. awk stops reading at the
+            # match, and in a pipe that would stop curl with an error.
+            curl -fsS --retry 3 -o PACKAGES https://cloud.r-project.org/src/contrib/PACKAGES
+            version=$(awk -v p="$pkg" '
+              $0 == "Package: " p { found = 1; next }
+              found && /^Version:/ { print $2; exit }
+              /^$/ { found = 0 }' PACKAGES)
+          fi
+          if [ -z "$version" ]; then
+            echo "::error::$pkg is not on CRAN, and no version was given."
+            exit 1
+          fi
+          echo "pkg=$pkg" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if git rev-parse -q --verify "refs/tags/v$version" > /dev/null; then
+            echo "v$version is already tagged. There is nothing to do."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Find the commit and the release notes
+        if: steps.version.outputs.exists == 'false'
+        id: commit
+        shell: bash
+        run: |
+          pkg="${{ steps.version.outputs.pkg }}"
+          version="${{ steps.version.outputs.version }}"
+          if [ -z "$INPUT_VERSION" ]; then
+            curl -fsS --retry 3 -o release.tar.gz \
+              "https://cloud.r-project.org/src/contrib/${pkg}_${version}.tar.gz"
+            sha=$(bash .github/scripts/find-release-commit.sh "$pkg" "$version" release.tar.gz)
+          else
+            head_version=$(git show origin/main:DESCRIPTION | sed -n 's/^Version: *//p')
+            if [ "$head_version" != "$version" ]; then
+              echo "::error::DESCRIPTION on main has version $head_version, not $version."
+              exit 1
+            fi
+            sha=$(git rev-parse origin/main)
+          fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          # The section of NEWS.md under "# <pkg> <version>", up to the next
+          # heading of the same level, with the blank lines at the top
+          # removed. It is read from the commit of the release.
+          git show "$sha:NEWS.md" | awk -v heading="# $pkg $version" '
+            $0 == heading { found = 1; next }
+            found && /^# / { exit }
+            found' | sed '/./,$!d' > notes.md
+          if [ ! -s notes.md ]; then
+            echo "::error::NEWS.md has no section for $pkg $version."
+            exit 1
+          fi
+          if [ -z "$INPUT_VERSION" ]; then
+            printf '\nOn CRAN: https://CRAN.R-project.org/package=%s\n' "$pkg" >> notes.md
+          fi
+          echo "Tagging $(git log -1 --format='%h %s' "$sha")"
+          cat notes.md
+
+      - name: Make the release
+        if: steps.version.outputs.exists == 'false'
+        shell: bash
+        run: |
+          # gh needs the full hash here. A short one gives
+          # "Release.target_commitish is invalid".
+          gh release create "v${{ steps.version.outputs.version }}" \
+            --target "${{ steps.commit.outputs.sha }}" \
+            --title "${{ steps.version.outputs.pkg }} ${{ steps.version.outputs.version }}" \
+            --notes-file notes.md
