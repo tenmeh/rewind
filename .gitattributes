@@ -1,0 +1,6 @@
+# Two branches that each add an item to NEWS.md would conflict, because both
+# add lines at the same place. "union" keeps the lines of both sides. It
+# works when git merges or rebases on a machine. The merge button of GitHub
+# does not read it. The tidyverse uses the same line (ggplot2, testthat,
+# devtools). R CMD build leaves this file out by itself.
+NEWS.md merge=union
