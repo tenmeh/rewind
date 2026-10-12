@@ -1,14 +1,10 @@
-Two fonts are kept in this folder. Both are licensed under the SIL Open Font
+One font is kept in this folder. It is licensed under the SIL Open Font
 License, Version 1.1, and the full text is at the end of this file.
 
-recursive-latin-mono.woff2
-  Recursive is Copyright 2019 The Recursive Project Authors
-  (https://github.com/arrowtype/recursive). It is the typeface of the
-  documentation site. The file is the Latin subset, with the weight and the
-  mono axes, as published in the npm package @fontsource-variable/recursive
-  (version 5.3.0). The site serves it itself, so that it makes no request to
-  a third party on any visit. The OFL permits this: the font is bundled with,
-  but not sold as part of, other software, and it is not renamed.
+The typeface of the site is Geist, with Geist Mono for code. It is not kept
+here. bslib downloads it from Google Fonts when the site is built, and the
+site then serves the files itself, so a visitor makes no request to Google.
+Geist is also licensed under the SIL Open Font License, Version 1.1.
 
 poppins-500.woff2
   Poppins is Copyright 2020 The Poppins Project Authors

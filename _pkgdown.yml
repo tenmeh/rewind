@@ -5,52 +5,53 @@ template:
   light-switch: true
   default-theme: light
   bslib:
-    # The ground and the ink come from the blog of the author, so that the
-    # documentation and the blog are one family: warm bone paper, and a
-    # blue-black ink. In the dark mode they are the charcoal of the logo and
-    # a warm cream. Bootstrap makes its own tints and shades from these
-    # values, so they are set here and not only in extra.css, which holds
-    # the same values in its tokens. Change both places together.
-    bg: "#f4efe4"
-    fg: "#17202a"
+    # The site has the shapes of the blog of the author (tenmeh.github.io),
+    # and the colours of the logo: the charcoal (#1F1D1B) and the amber
+    # (#F0A830). In the light mode the ground is a cream with a tint of the
+    # amber, and the ink is the charcoal. In the dark mode the ground is the
+    # charcoal. Bootstrap makes its own tints and shades from these values,
+    # so they are set here and not only in extra.css, which holds the same
+    # values in its tokens. Change both places together.
+    bg: "#fbf6ec"
+    fg: "#1f1d1b"
     body-bg-dark: "#1f1d1b"
-    body-color-dark: "#ece5d6"
-    border-color: "#cfc5b1"
-    border-color-dark: "#3d3833"
-    # A dark amber, to match the logo. It is NOT the amber of the logo
-    # itself (#F0A830). As a link colour on the paper that one has a contrast
-    # of 1.8:1, and a link must have 4.5:1 to pass WCAG AA.
+    body-color-dark: "#f2ebdf"
+    border-color: "#e6dcc8"
+    border-color-dark: "#36312b"
+    # The amber of the logo is too light for text on the cream: 1.8:1, and
+    # WCAG AA asks for 4.5:1. The light mode thus uses a dark amber of the
+    # same hue. It gives 6.8:1 on the paper, and 5.0:1 at the centre of the
+    # glows, where the ground is at its most amber. extra.css lists the
+    # contrast of each colour.
     #
-    # The paper is darker than white, so the amber of the first version of
-    # this site, #96600C, fell to 4.6:1 on it. That still passes, but the
-    # pills and the active tab put this amber on a 12% tint of itself, and
-    # there it was only 4.0:1. #87560B gives 5.4:1 on the paper (#F4EFE4),
-    # 5.9:1 on the cards and the code blocks (#FBF8F1), and 4.6:1 on the
-    # tint of the pills. It is the lightest amber of this hue that passes on
-    # the tint, which is the hardest of the three grounds.
-    #
-    # The dark mode does not derive its link colour from this one any more.
-    # Bootstrap would lighten it by 40%, which gives a tan (#C0A06D) that
-    # looks little like the logo. The logo amber itself gives 8.3:1 on the
-    # charcoal (#1F1D1B), 7.5:1 on the cards (#282523) and 6.1:1 on its 16%
-    # tint, so the dark mode uses it as it is.
-    primary: "#87560B"
+    # The dark mode does not derive its link colour from this one. Bootstrap
+    # would lighten it by 40%, which gives a tan that looks little like the
+    # logo. The logo amber itself gives 8.3:1 on the charcoal, so the dark
+    # mode uses it as it is.
+    primary: "#7A4C06"
     link-color-dark: "#F0A830"
-    # Set as plain Sass variables rather than through bslib's font helpers:
-    # Recursive is served from pkgdown/assets/fonts by @font-face in
-    # extra.css, so there is nothing for bslib to fetch or bundle. One family
-    # does all the work, as on the blog: the plain style for text and
-    # headings, and the mono axis of the same file for code (extra.css turns
-    # it on). The mono stack after it is for the moment before the font
-    # loads, and for a browser that blocks it.
-    font-family-base: "Recursive, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
-    headings-font-family: "Recursive, system-ui, -apple-system, 'Segoe UI', sans-serif"
-    font-family-monospace: "Recursive, 'SF Mono', 'Cascadia Mono', Consolas, monospace"
-    headings-font-weight: 650
-    line-height-base: 1.66
-    # The cards, the code blocks and the sidebar have round corners of 14px,
-    # the same as the cards of the blog.
-    border-radius: "14px"
+    # Geist for the text and the headings, and Geist Mono for the code, as on
+    # the blog. bslib downloads the files from Google Fonts when the site is
+    # built, and the site serves them itself. A visitor thus makes no request
+    # to Google.
+    base_font:
+      google:
+        family: "Geist"
+        wght: "400..800"
+    heading_font:
+      google:
+        family: "Geist"
+        wght: "400..800"
+    code_font:
+      google:
+        family: "Geist Mono"
+        wght: "400..600"
+    font-size-root: "17px"
+    headings-font-weight: 600
+    line-height-base: 1.72
+    # The cards and the code blocks of the blog have round corners of about
+    # 10 to 14px. Bootstrap uses this value for its own boxes.
+    border-radius: "0.6rem"
 
   # The picture that Slack, LinkedIn, X and WhatsApp show when the address of
   # the site is shared. Without it pkgdown uses the logo, which is a small
