@@ -227,6 +227,12 @@ These are the limits of the package. Read them before you start:
 | `rewind_history()`, `rewind_can_undo()`, `rewind_can_redo()` | Read the history in a reactive context |
 | `rewind_buttons()`, `rewind_ui()` | Ready-made controls |
 
+## Support
+
+`rewind` is free and open source, and I work on it in my own time. If it
+helps you or your team, you can
+[sponsor my work on GitHub](https://github.com/sponsors/tenmeh).
+
 ## License
 
 MIT
