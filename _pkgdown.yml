@@ -176,3 +176,4 @@ reference:
   - title: Package
     contents:
       - rewind-package
+      - rewind_example

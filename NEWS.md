@@ -30,8 +30,15 @@
   `c(region = "Region")`. The history rail shows them, and `rewind_diff()`
   has a new `label` column. It is the last column, so code that picks the
   six columns of 0.3.0 by position still gets the same ones.
+* `rewind_example()` runs the demo application. It replaces
+  `shiny::runApp(system.file("examples/demo", package = "rewind"))`.
 
 ## Fixed
+
+* The help of `rewind_track()` has a new section on environments and R6
+  objects. `rewind` keeps such a value by reference, so a change inside the
+  object is not a step, and an undo cannot bring back the old contents. The
+  section shows how to change a copy instead.
 
 * A pause and a resume in the same observer had no effect, although the
   help of `rewind_pause()` suggested exactly that, around code that applies

@@ -69,7 +69,7 @@ remotes::install_github("tenmeh/rewind")
 Then run the demo:
 
 ```r
-shiny::runApp(system.file("examples/demo", package = "rewind"))
+rewind::rewind_example()
 ```
 
 ## Building from source

@@ -38,6 +38,31 @@ cached value does no harm, but it has no use. Do not register a value
 that an observer computes again immediately. The undo step then appears
 to do nothing.
 }
+\section{Environments and R6 objects}{
+\code{rewind} keeps each value as it is, and does not copy it. For a vector,
+a list or a data frame, that is a true record, because R copies such a
+value when you change it.
+
+An environment and an R6 object are different. The history holds the
+object itself, not a copy. A change inside the object thus has two
+effects:
+\itemize{
+\item It is not a step. When you assign the same object back, Shiny sees no
+change, so \code{rewind} sees none.
+\item An undo cannot bring back the old contents. Each entry holds the same
+object, as it is now.
+}
+
+To make each change a step, change a copy, then assign the copy:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{model <- state$model$clone(deep = TRUE)
+model$fit(data)
+state$model <- model
+}\if{html}{\out{</div>}}
+
+For an environment, keep a list in the reactive values instead.
+}
+
 \examples{
 if (interactive()) {
   library(shiny)
