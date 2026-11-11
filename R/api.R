@@ -334,6 +334,31 @@ rewind_enable <- function(
 #' that an observer computes again immediately. The undo step then appears
 #' to do nothing.
 #'
+#' # Environments and R6 objects
+#'
+#' `rewind` keeps each value as it is, and does not copy it. For a vector,
+#' a list or a data frame, that is a true record, because R copies such a
+#' value when you change it.
+#'
+#' An environment and an R6 object are different. The history holds the
+#' object itself, not a copy. A change inside the object thus has two
+#' effects:
+#'
+#' - It is not a step. When you assign the same object back, Shiny sees no
+#'   change, so `rewind` sees none.
+#' - An undo cannot bring back the old contents. Each entry holds the same
+#'   object, as it is now.
+#'
+#' To make each change a step, change a copy, then assign the copy:
+#'
+#' ```r
+#' model <- state$model$clone(deep = TRUE)
+#' model$fit(data)
+#' state$model <- model
+#' ```
+#'
+#' For an environment, keep a list in the reactive values instead.
+#'
 #' @param values A [shiny::reactiveValues()] object.
 #' @param fields Character vector of the field names to track. Use `NULL`
 #'   for all the fields that exist when `rewind` takes the snapshot.
