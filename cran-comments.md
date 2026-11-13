@@ -40,7 +40,8 @@ Fixed:
   tarball, with `_R_CHECK_CRAN_INCOMING_=TRUE`,
   `_R_CHECK_CRAN_INCOMING_REMOTE_=TRUE`, the PDF manual, and pandoc. Run once
   without `NOT_CRAN` and once with it.
-* win-builder: Windows, R-devel (VERSION TO FILL IN), Status (TO FILL IN)
+* win-builder: Windows Server 2022, R-devel (2026-11-12 r90881 ucrt),
+  Status OK
 * GitHub Actions with `--as-cran`: macOS (release), Windows (release),
   Ubuntu (devel, release, and the four versions before release), and Ubuntu
   with R 4.1, the minimum in `DESCRIPTION`.
