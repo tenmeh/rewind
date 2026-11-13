@@ -1,4 +1,4 @@
-# rewind (development version)
+# rewind 0.4.0
 
 ## A change to what is captured
 
