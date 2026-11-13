@@ -1,7 +1,7 @@
 Package: rewind
 Type: Package
 Title: Undo and Redo for 'shiny' Applications
-Version: 0.3.0.9000
+Version: 0.4.0
 Authors@R: person(
     given = "Tanmay",
     family = "Chanda",

@@ -3,30 +3,36 @@
 ## Submission
 
 This is an update of a package that is on CRAN. It moves the version from
-0.2.0 to 0.3.0. Version 0.2.1 was released on GitHub only, so this update
-holds its changes as well. `NEWS.md` gives the full list.
+0.3.0 to 0.4.0. `NEWS.md` gives the full list of changes.
+
+One change of behaviour:
+
+* By default, `rewind` now captures only the inputs that the page can put
+  back. A plot's hover, click and brush, and the values that DT keeps, have
+  no element in the page to restore them. They were recorded before, so each
+  move of the mouse over a plot became a step that an undo could not reverse.
+  A list of inputs that the user gives is used as before.
 
 New:
 
-* `rewind_diff()` shows what changed between two steps: the value before, the
-  value after, and a short description.
-* `rewind_enable()` takes a `restore_timeout` argument. The wait for the
-  browser to finish a restore was fixed at 2 seconds, which can be too short
-  on a slow connection.
-* `rewind_buttons()` takes a `button_class` argument.
+* `rewind_status()` lists what `rewind` captures, and why each other input
+  is left out.
+* `rewind_exclude()` leaves inputs out of the history, also from inside a
+  module.
+* `rewind_unrecorded()` runs a block of code whose changes are not a step,
+  such as code that restores a saved view.
+* `rewind_enable()` takes a `labels` argument: the names that a person reads,
+  in the history rail and in `rewind_diff()`.
+* `rewind_example()` runs the demo application.
 
 Fixed:
 
-* Undo, redo and the history rail did nothing when `rewind_enable()` was
-  called inside a `moduleServer()`, which the documents say is supported.
-* The history rail scrolled the page or sidebar that holds it on every
-  change.
-* The history rail showed times in UTC, not in the viewer's time zone.
-* `NA` and `Inf` in `coalesce_ms`, `restore_timeout` and `hold_ms` were
-  either accepted or stopped with an unclear message. They are now refused
-  with a message that names the argument.
-* A data frame of the user with the same column names as a `fileInput()`
-  value was dropped from the history with no message.
+* Every argument is checked, with a message that names it. Several wrong
+  values were accepted before, and did the wrong thing with no message.
+* Password fields are never kept in the history.
+* An input that changes all the time no longer holds back every step.
+* The help of `rewind_pause()` suggested a use that cannot work. It now says
+  so, and points to `rewind_unrecorded()`.
 
 ## Test environments
 
@@ -34,13 +40,14 @@ Fixed:
   tarball, with `_R_CHECK_CRAN_INCOMING_=TRUE`,
   `_R_CHECK_CRAN_INCOMING_REMOTE_=TRUE`, the PDF manual, and pandoc. Run once
   without `NOT_CRAN` and once with it.
-* win-builder: Windows Server 2022, R-devel (2026-09-21 r90579 ucrt),
+* win-builder: Windows Server 2022, R-devel (2026-11-12 r90881 ucrt),
   Status OK
 * GitHub Actions with `--as-cran`: macOS (release), Windows (release),
-  Ubuntu (devel, release, oldrel-1)
+  Ubuntu (devel, release, and the four versions before release), and Ubuntu
+  with R 4.1, the minimum in `DESCRIPTION`.
 
 R-devel was checked on win-builder (Windows) and in the Ubuntu (devel) job
-(Linux). The local machine has the release version of R only.
+(Linux).
 
 ## R CMD check results
 
@@ -55,16 +62,20 @@ There are no reverse dependencies.
 Examples for the session-scoped functions are wrapped in `if (interactive())`.
 These functions need a live Shiny session (`shiny::getDefaultReactiveDomain()`)
 and stop with a clear message without one, so there is no useful
-non-interactive example. The functions with no session requirement
-(`rewind_buttons()`, `rewind_ui()`, `rewind_dependency()`) have examples that
-run during the check.
+non-interactive example. `rewind_example()` starts a Shiny application, so
+its example is wrapped in the same way. The functions with no session
+requirement (`rewind_buttons()`, `rewind_ui()`, `rewind_dependency()`) have
+examples that run during the check.
 
-Four test files drive a small Shiny application in a headless browser through
-shinytest2: `test-app-smoke.R`, `test-module-browser.R`, `test-rail-scroll.R`
-and `test-rail-time.R`. Each calls `skip_on_cran()`, and also skips rather
-than fails when a browser cannot be started. They therefore do not run on the
-CRAN check machines and do not need Chrome.
+Seven test files drive a small Shiny application in a headless browser
+through shinytest2: `test-app-smoke.R`, `test-module-browser.R`,
+`test-rail-scroll.R`, `test-rail-time.R`, `test-restorable.R`,
+`test-text-inputs.R` and `test-unrecorded.R`. Each of those tests calls
+`skip_on_cran()`, and also skips rather than fails when a browser cannot be
+started. They therefore do not run on the CRAN check machines and do not need
+Chrome.
 
 The package code writes nothing to the filesystem, opens no connections and
 starts no processes. All state is held per Shiny session in
-`session$userData`.
+`session$userData`. `rewind_example()` starts the demo application with
+`shiny::runApp()` only when the user calls it.

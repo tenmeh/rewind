@@ -1,0 +1,9 @@
+# Commits that change only the format of the code. git blame skips them, so
+# a line points to the change that last changed its meaning.
+#
+# GitHub reads this file by itself. For git blame on a machine, run once:
+#
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# style: format the code with Air (part of #30)
+6c6d4a8c217a66be0e80006fd5b282e7de843747
